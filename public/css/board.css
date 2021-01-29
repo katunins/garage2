@@ -9,7 +9,7 @@
 .lineBlock .line .template {
   position: relative;
   width: 300px;
-  height: 270px;
+  height: 300px;
   border: 1px solid #dfdfdf;
   border-radius: 10px;
   margin: 20px 10px;
@@ -32,6 +32,9 @@
   cursor: pointer;
 }
 .lineBlock .line .template .buttons {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
   display: flex;
   justify-content: flex-end;
 }
