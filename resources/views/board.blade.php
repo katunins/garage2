@@ -4,7 +4,7 @@
 
 <link rel="stylesheet" href="/css/board.css">
 @php
-    $positionCount = 10;
+    $positionCount = 30;
 @endphp
 <div class="lineBlock">
 
