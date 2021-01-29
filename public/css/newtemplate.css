@@ -1,0 +1,107 @@
+@import url(https://fonts.googleapis.com/css2?family=Bellota+Text:wght@400;700&display=swap);
+* {
+  font-family: "Bellota Text", cursive;
+}
+
+.input-blocks {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+input {
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: none;
+  margin: 5px 5px 0 0;
+  background: fbfbfb;
+}
+
+input::-moz-placeholder {
+  opacity: 0.3;
+}
+
+input:-ms-input-placeholder {
+  opacity: 0.3;
+}
+
+input::placeholder {
+  opacity: 0.3;
+}
+
+label {
+  display: block;
+  font-size: 22px;
+  margin: 10px auto 5px;
+  font-weight: bold;
+}
+
+.input-group,
+.json-input-group {
+  padding: 20px;
+  background: white;
+  margin: 10px;
+  width: 600px;
+  background-color: #efefef;
+}
+
+p.help {
+  width: 580px;
+}
+
+p.help::before {
+  content: "* ";
+}
+
+input.max-size {
+  width: 600px;
+}
+
+input.middle-size {
+  width: 300px;
+}
+
+input.mini-size {
+  width: 200px;
+}
+
+a,
+input[type=submit] {
+  width: 170px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  margin: 0 10px;
+  border-radius: 5px;
+}
+
+a {
+  background: white;
+  color: black;
+  border: 1px solid grey;
+  height: 40px;
+}
+
+a.remove {
+  color: red;
+}
+
+input[type=submit] {
+  background: green;
+  color: white;
+  border: 1px solid green;
+  height: 42px;
+  font-size: 14px;
+}
+
+.buttons {
+  margin-top: 30px;
+  display: flex;
+}
+
+.alert {
+  color: red;
+  font-size: 16px;
+  margin-top: 0px;
+}

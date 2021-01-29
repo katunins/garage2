@@ -1,0 +1,69 @@
+@import url(https://fonts.googleapis.com/css2?family=Bellota+Text:wght@400;700&display=swap);
+* {
+  font-family: "Bellota Text", cursive;
+}
+
+.lineBlock .line {
+  display: flex;
+}
+.lineBlock .line .template {
+  position: relative;
+  width: 300px;
+  height: 270px;
+  border: 1px solid #dfdfdf;
+  border-radius: 10px;
+  margin: 20px 10px;
+  flex-shrink: 0;
+  padding: 15px;
+}
+.lineBlock .line .template form.plus {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+.lineBlock .line .template form.plus input[type=submit] {
+  font-size: 25px;
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.lineBlock .line .template .buttons {
+  display: flex;
+  justify-content: flex-end;
+}
+.lineBlock .line .template .buttons form {
+  margin: 0 5px;
+}
+.lineBlock .line .template .buttons form.remove input[type=submit] {
+  color: red;
+}
+.lineBlock .line .template .buttons p {
+  line-height: 1.5;
+  margin-right: 5px;
+  opacity: 0.6;
+}
+.lineBlock .line .template p {
+  margin: 0;
+  color: grey;
+}
+.lineBlock .line .template p.title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: initial;
+}
+.lineBlock .line .template p.description {
+  font-size: 14px;
+}
+.lineBlock .line .template p.description span {
+  font-weight: bold;
+  color: initial;
+}
+
+button.newLine {
+  margin-left: 10px;
+}
