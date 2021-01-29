@@ -8,7 +8,7 @@
 @endphp
 <div class="lineBlock">
 
-    @for($line = 1; $line <= $lineCount; $line++)
+    @for ($line = 1; $line <= $lineCount; $line++)
         <div class="line" line={{ $line }}>
 
             @php
@@ -18,13 +18,13 @@
                 $plusPosition = $lastElemInLine? $lastElemInLine+1:1;
             @endphp
 
-            @for($position=1; $position <=$positionCount; $position++)
+            @for ($position=1; $position <=$positionCount; $position++)
 
                 @php
                     $template=$templates->where('line', $line)->where('position', $position)->first();
                 @endphp
 
-                @if($template && $template->taskidbefore)
+                @if ($template && $template->taskidbefore)
                     @php
                         $prevTemplate = $templates->where('id', $template->taskidbefore)->first();
                         $emptyCount = $prevTemplate?$prevTemplate->position+1-$position:0;
@@ -41,15 +41,16 @@
 
                     @if ($template)
 
-
                         <p class="title">{{ $template->taskname }}</p>
                         <hr>
                         <p class="description">Мастер: <span>{{ $template->masters }}</span></p>
                         <p class="description">Информация: <span>{{ $template->params }}</span></p>
                         <br>
-                        <p class="description">Базовое / расчетное время: <span>{{ $template->producttime }} / {{ $template->paramtime }} мин.</span>
+                        <p class="description">Базовое / расчетное время: <span>{{ $template->producttime }} /
+                                {{ $template->paramtime }} мин.</span>
                         </p>
-                        {{-- <p class="description">Расчетное время: <span>{{ $template->paramtime }} мин.</span></p> --}}
+                        {{-- <p class="description">Расчетное время: <span>{{ $template->paramtime }}
+                        мин.</span></p> --}}
                         <p class="description">ID предыдущей задачи: <span>{{ $template->taskidbefore }}</span></p>
                         <p class="description">Буфер: <span>{{ $template->buffer }} мин.</span></p>
                         <br>
@@ -57,7 +58,8 @@
                             <span>{{ $template->period1 }}, {{ $template->period2 }}.</span>
                         </p>
                         <p class="description">Условия выполнения:
-                            <span> {{ $template->condition1 }} <br> {{ $template->condition2 }}; {{ $template->condition3 }}</span>
+                            <span> {{ $template->condition1 }} <br> {{ $template->condition2 }};
+                                {{ $template->condition3 }}</span>
                         </p>
                         <br>
                         <div class="buttons">
@@ -81,17 +83,17 @@
                         </div>
 
                     @else
-{{--                        @if ($lastIsEmpty === true)--}}
-                            @if ($position == $plusPosition)
-                                <form class="plus" action="/newtemplate" method="get">
-                                    @csrf
-                                    <input type="hidden" name="line" value="{{ $line }}">
-                                    <input type="hidden" name="position" value="{{ $position }}">
-                                    <input type="hidden" name="productid" value="{{ $productId }}">
-                                    <input type="submit" value="+">
-                                </form>
-                            @endif
-{{--                        @endif--}}
+                        {{-- @if ($lastIsEmpty === true) --}}
+                        @if ($position == $plusPosition)
+                            <form class="plus" action="/newtemplate" method="get">
+                                @csrf
+                                <input type="hidden" name="line" value="{{ $line }}">
+                                <input type="hidden" name="position" value="{{ $position }}">
+                                <input type="hidden" name="productid" value="{{ $productId }}">
+                                <input type="submit" value="+">
+                            </form>
+                        @endif
+                        {{-- @endif --}}
                     @endif
                 </div>
 
@@ -113,10 +115,12 @@
         plusElem.action = '/newtemplate'
         plusElem.method = 'get'
         let html = ''
-        html += '<input type="hidden" name="_token" value="' + document.querySelector('input[name="_token"]').value + '">'
+        html += '<input type="hidden" name="_token" value="' + document.querySelector('input[name="_token"]').value +
+            '">'
         html += '<input type="hidden" name="line" value="' + Number(lastLine + 1) + '">'
         html += '<input type="hidden" name="position" value="1">'
-        html += '<input type="hidden" name="productid" value="' + document.querySelector('input[name="productid"]').value + '">'
+        html += '<input type="hidden" name="productid" value="' + document.querySelector('input[name="productid"]')
+            .value + '">'
         html += '<input type="submit" value="+">'
         plusElem.innerHTML = html
 
