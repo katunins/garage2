@@ -12,13 +12,18 @@ class TemplateController extends Controller
         $templates = Templates::where('productid', $productId)->get();
 
         $lineCount = 1;
+        $positionCount = 1;
+
         if ($templates->count() > 0) {
             $lineCount = $templates->max('line');
+            $positionCount = $templates->max('position');
         }
+
 
         return view('board', [
             'templates' => $templates,
             'lineCount' => $lineCount,
+            'positionCount' => $positionCount,
             'productId' => $productId,
         ]);
     }
@@ -32,12 +37,12 @@ class TemplateController extends Controller
     {
         $currentTemplate = Templates::find($templateId);
         // проверим нужно ли сместить задачи?
-        $templatesInLine = Templates::where(['productid' => $currentTemplate->productid, 'line' => $currentTemplate->line])->get()->sortBy('position');
-        $currentPosition = $currentTemplate->position;
+        $templatesInLine = Templates::where(['productid' => $currentTemplate['productid'], 'line' => $currentTemplate['line']])->get()->sortBy('position');
+        $currentPosition = $currentTemplate['position'];
         $lastPosition = $templatesInLine->max('position');
 
         // проверим, если есть элементы в других линиях, которые привязын к этому
-        Templates::where(['productid' => $currentTemplate->productid, 'taskidbefore' => $currentTemplate->id])->update(['taskidbefore'=>NULL]);
+        Templates::where(['productid' => $currentTemplate['productid'], 'taskidbefore' => $currentTemplate->id])->update(['taskidbefore' => NULL]);
 
         if ($lastPosition > $currentPosition) {
             $x = $currentPosition;
@@ -46,13 +51,97 @@ class TemplateController extends Controller
                 $elem = $templatesInLine->where('position', $x)->first();
                 // если позиция не зависит от другой линии, то сдвинем на -1
                 if (!$elem->taskidbefore) {
-                    $elem->position = $x - 1;
+                    $elem['position'] = $x - 1;
                     $elem->save();
                 };
                 dump($x);
             } while ($x < $lastPosition);
         }
         return $currentTemplate->delete();
+    }
+    static function rebuildPosition($productId, $line)
+    {
+        $templatesToSort = Templates::where([
+            'productid' => $productId,
+            'line' => $line,
+        ])->get()->sortBy('position');
+        $truePosition = 1;
+        foreach ($templatesToSort as $item) {
+            if ($item->position != $truePosition) {
+                $item->position = $truePosition;
+                $item->save();
+            }
+            $truePosition++;
+        }
+    }
+
+
+
+    // "line" => "1"
+    // "position" => "1"
+    // "lineshift" => "1"
+    // "positionshift" => "0"
+    // "productid" => "1"
+    // "templateid" => "11"
+    static function moveTemplate($data)
+    {
+        $currentTemplate = Templates::find($data['templateid']);
+
+        // Меняем позицией с соседом в линии
+
+        if ($data['positionshift'] != 0) {
+
+            $newPosition = $data['position'] + $data['positionshift'];
+
+            // вдруг нет шаблонов перед новым
+            $minPosition = Templates::where([
+                'productid' => $data['productid'],
+                'line' => $data['line'],
+            ])->min('position');
+
+            $changeTemplate = Templates::where([
+                'productid' => $data['productid'],
+                'line' => $data['line'],
+                'position' => $newPosition
+            ])->first();
+
+
+            if ($newPosition <=  $minPosition) {
+                $newPosition = 1;
+            }
+            $currentTemplate->position = $newPosition;
+            $changeTemplate->position = $data['position'];
+            $currentTemplate->save();
+            $changeTemplate->save();
+
+
+            // На всякий случай переименуем последовательность позиций 2,3,5 - 1, 2, 3
+            self::rebuildPosition($data['productid'], $data['line']);
+        }
+
+        // Cмещаяем на другую линию
+        
+        // Проверим не привязан ли к этому элементу какой то шаблон
+        if (Templates::where('taskidbefore', $data['templateid'])->get()->count()>0) return;
+
+        if ($data['lineshift'] != 0) {
+
+            $newLine = $data['line'] + $data['lineshift'];
+            $newLineTemplates = Templates::where([
+                'productid' => $data['productid'],
+                'line' => $newLine,
+            ])->get();
+            // $newPosition = $newLineTemplates->count() > 0 ? $newLineTemplates->max('position') + 1 : 1;
+
+            $currentTemplate->line = $newLine;
+            // $currentTemplate->position = $newPosition;
+            $currentTemplate->save();
+
+
+            // переименуем последовательность позиций 2,3,5 - 1, 2, 3
+            self::rebuildPosition($data['productid'], $newLine);
+            self::rebuildPosition($data['productid'], $data['line']);
+        }
     }
 
     // "_token" => "2zQgKq9AI1IZ9gnMUxW4S9ftzJlSIPfBLhLY25yT"
@@ -96,9 +185,9 @@ class TemplateController extends Controller
         }
 
 
-        $template->productid = $request->productid;
-        $template->line = $request->line;
-        $template->position = $request->position;
+        $template['productid'] = $request['productid'];
+        $template['line'] = $request['line'];
+        $template['position'] = $request['position'];
         $template->taskidbefore = $request->taskidbefore;
 
         $template->taskname = $request->taskname;
@@ -116,6 +205,6 @@ class TemplateController extends Controller
         $template->condition3 = $request->condition3;
 
         $template->save();
-        return redirect('/board/' . $request->productid);
+        return redirect('/board/' . $request['productid']);
     }
 }

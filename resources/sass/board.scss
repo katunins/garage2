@@ -1,6 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Bellota+Text:wght@400;700&display=swap');
+
 * {
     font-family: 'Bellota Text', cursive;
+}
+
+.inactive {
+    pointer-events: none;
+    opacity: 0.3;
+    // display: none;
 }
 
 .lineBlock {
@@ -38,7 +45,6 @@
 
             .buttons {
                 position: absolute;
-                right: 20px;
                 bottom: 20px;
                 display: flex;
                 justify-content: flex-end;
@@ -49,13 +55,30 @@
 
                 form.remove {
                     input[type="submit"] {
-                        color:red
+                        color: red
                     }
                 }
+
                 p {
                     line-height: 1.5;
                     margin-right: 5px;
                     opacity: 0.6;
+                }
+            }
+
+            .edit-buttons {
+                right: 20px;
+            }
+
+            .arrows-buttons {
+                left: 20px;
+
+                input[type="submit"] {
+                    border: none;
+                    border-radius: 10px;
+                    padding: 5px;
+                    width: 24px;
+                    line-height: 1;
                 }
             }
 
@@ -73,16 +96,18 @@
 
             p.description {
                 font-size: 14px;
-                span{
+
+                span {
                     font-weight: bold;
                     color: initial;
                 }
             }
-            
+
         }
     }
-    
+
 }
+
 button.newLine {
-    margin-left:10px;
+    margin-left: 10px;
 }

@@ -1,11 +1,9 @@
 {{-- $templates --}}
 {{-- $lineCount --}}
 {{-- $productId --}}
+{{-- $positionCount --}}
 
 <link rel="stylesheet" href="/css/board.css">
-@php
-    $positionCount = 30;
-@endphp
 <div class="lineBlock">
 
     @for ($line = 1; $line <= $lineCount; $line++)
@@ -18,8 +16,8 @@
                 $plusPosition = $lastElemInLine? $lastElemInLine+1:1;
             @endphp
 
-            @for ($position=1; $position <=$positionCount; $position++)
-
+            @for ($position=1; $position <=$positionCount+1; $position++)
+            
                 @php
                     $template=$templates->where('line', $line)->where('position', $position)->first();
                 @endphp
@@ -62,7 +60,53 @@
                                 {{ $template->condition3 }}</span>
                         </p>
                         <br>
-                        <div class="buttons">
+                        <div class="buttons arrows-buttons">
+                            {{-- ←, →, ↑, ↓ --}}
+
+                            <form action="/movetemplate" method="get">
+                                @csrf
+                                <input type="hidden" name="line" value="{{ $line }}">
+                                <input type="hidden" name="position" value="{{ $position }}">
+                                <input type="hidden" name="lineshift" value="0">
+                                <input type="hidden" name="positionshift" value="-1">
+                                <input type="hidden" name="productid" value="{{ $productId }}">
+                                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                                <input @if ($position == 1) class="inactive" @endif type="submit" value="←">
+                            </form>
+                            <form action="/movetemplate" method="get">
+                                @csrf
+                                <input type="hidden" name="line" value="{{ $line }}">
+                                <input type="hidden" name="position" value="{{ $position }}">
+                                <input type="hidden" name="lineshift" value="0">
+                                <input type="hidden" name="positionshift" value="1">
+                                <input type="hidden" name="productid" value="{{ $productId }}">
+                                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                                <input @if ($position == $templates->where('line', $line)->max('position')) class="inactive" @endif type="submit" value="→">
+                            </form>
+                            <form action="/movetemplate" method="get">
+                                @csrf
+                                <input type="hidden" name="line" value="{{ $line }}">
+                                <input type="hidden" name="position" value="{{ $position }}">
+                                <input type="hidden" name="lineshift" value="-1">
+                                <input type="hidden" name="positionshift" value="0">
+                                <input type="hidden" name="productid" value="{{ $productId }}">
+                                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                                <input @if ($line == 1) class="inactive" @endif type="submit" value="↑">
+                            </form>
+                            <form action="/movetemplate" method="get">
+                                @csrf
+                                <input type="hidden" name="line" value="{{ $line }}">
+                                <input type="hidden" name="position" value="{{ $position }}">
+                                <input type="hidden" name="lineshift" value="1">
+                                <input type="hidden" name="positionshift" value="0">
+                                <input type="hidden" name="productid" value="{{ $productId }}">
+                                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                                {{-- <input @if ($line == $lineCount) class="inactive" @endif type="submit" value="↓"> --}}
+                                {{-- <input type="submit" value="↓"> --}}
+                                <input @if ($templates->where('line', $line)->max('position') == 1 && $templates->where('line', $line+1)->count() == 0) class="inactive" @endif type="submit" value="↓">
+                            </form>
+                        </div>
+                        <div class="buttons edit-buttons">
                             <p>id: {{ $template->id }}</p>
                             <form class="edit" action="/edittemplate" method="get">
                                 @csrf

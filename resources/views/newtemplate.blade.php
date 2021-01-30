@@ -9,8 +9,9 @@
 
 {{-- {{ dd($template->first()) }} --}}
 <h1>Новый шаблон</h1>
-<p>Линия {{ $line }}, Продукт {{ $productId }}</p>
-<p></p>
+<p>
+    Линия {{ $line }}, Позиция {{ $position }}, Продукт {{ $productId }}
+</p>
 
 <form action="/savetemplate" method="POST">
     @csrf
