@@ -75,6 +75,130 @@ class TemplateController extends Controller
         }
     }
 
+    // парсит строку условий
+    static function parseCondition($condition)
+    {
+        foreach (['!==', '!=', '==', '='] as $sign) {
+            $conditionExplode = explode($sign, $condition);
+            if (count($conditionExplode) > 1) {
+                return [
+                    'param' => $conditionExplode[0],
+                    'sign' => $sign,
+                    'values' => explode('/', $conditionExplode[1])
+                ];
+            }
+        }
+        return false;
+    }
+
+    static function taskGenegator($productParams)
+    {
+        // "productname" => "Фотокниги"
+        // "Формат" => "20х20 см"
+        // "Материал обложки" => "Toronto Toronto Белый"
+        // "Персонализация" => "Без персонализации"
+        // "Форзацы" => "Белые Без печати"
+        // "Первая страница книги" => "Без кальки"
+        // "Печать" => "Шелк"
+        // "Короб в комплекте" => "Без короба"
+        // "Количество разворотов" => 12
+        // "Ссылка на макет" => "yadi.sk/d/M_crzlp8U5vVfA?w=1"
+        // "Количество" => 1
+        // "Комментарий" => ""
+        // "Рабочих дней на заказ" => 7
+        // "Срок готовности" => "2021.02.09|"
+        // "ПВЗ" => "ул. Профсоюзная, 126, ТЦ Крокус, 1 этаж"
+        // "Доставка" => "До склада"
+        // "Город" => "44"
+        // "Получатель" => "Костина Татьяна"
+        // "Телефон" => "+7(903) 110-52-07"
+
+        // получим id продукта
+        $productId = 2;
+        $taskArr = [];
+
+        $templates = Templates::where('productid', $productId)->get();
+        for ($line = 1; $line <= $templates->max('line'); $line++) {
+            foreach ($templates->where('line', $line)->sortBy('position') as $templateItem) {
+
+                // Проверим условия шаблона. Работают по принципу OR
+                $conditionResult = 0; // 0 - не сработало / 1 - сработало
+                $conditionCount = 0; // количество не пустых условий
+                for ($i = 1; $i <= 3; $i++) {
+                    if ($templateItem->{'condition' . $i}) {
+                        $conditionCount++;
+                        $conditionArr = self::parseCondition($templateItem->{'condition' . $i});
+
+                        $productValue = $productParams[$conditionArr['param']];
+                        foreach ($conditionArr['values'] as $value) {
+                            switch ($conditionArr['sign']) {
+                                case '=':
+                                    $conditionResult += strpos($productValue, $value) !== false ? 1 : 0;
+                                    break;
+                                case '!=':
+                                    $conditionResult += strpos($productValue, $value) === false ? 1 : 0;
+                                    break;
+                                case '==':
+                                    $conditionResult += strcasecmp($productValue, $value) == 0 ? 1 : 0;
+                                    break;
+
+                                case '!==':
+                                    $conditionResult += strcasecmp($productValue, $value) != 0 ? 1 : 0;
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+                if ($conditionCount == 0 || $conditionResult > 0) {
+                    // тут шаблон прошел условия, поэтому создадим задачу
+
+                    // если есть минипараметры, которые нужно отобразить в сделке
+                    $taskInfo = NULL;
+                    if ($templateItem->params) {
+                    
+                        foreach (explode('/', $templateItem->params) as $itemInfo) {
+                            if (isset($productParams[$itemInfo])) {
+                                $taskInfo[] = $itemInfo . ' : ' . $productParams[$itemInfo];
+                            }
+                        }
+                    }
+
+                    // расчитаем время
+                    $taskTime = 0;
+                    if ($templateItem->producttime) $taskTime += $templateItem->producttime * $productParams['Количество'];
+                    if ($templateItem->paramtime) {
+
+                        // посчитаем площадь разовротов в квадратных дециметрах (разделим на 100)
+                        $size = explode(' ', $productParams['Формат']);
+                        $widthHeight = explode('x', $size[0]); //английская литера x
+                        if (!isset($widthHeight[1])) $widthHeight = explode('х', $size[0]); //русская литера x;
+                        
+                        $area = (int) $widthHeight[0] * (int) $widthHeight[1] * (int)$productParams['Количество разворотов']/ 100;
+                        $taskTime += $area * $templateItem->paramtime;
+                    }
+
+                    $taskArr[$line][] = [
+                        'templateid' => $templateItem->id,
+                        'time' => $taskTime,
+                        'info' => $taskInfo,
+                        'deal' => $productParams['deal']
+                    ];
+                }
+            }
+        }
+        return $taskArr;
+    }
+
+    static function tasksFromDeal($dealArr)
+    {
+        foreach ($dealArr['products'] as $key => $dealItem) {
+            $tasks[$key] = self::taskGenegator(array_merge($dealItem, $dealArr['params']));
+            dd($tasks);
+        }
+        return true;
+    }
+
 
 
     // "line" => "1"
@@ -120,9 +244,9 @@ class TemplateController extends Controller
         }
 
         // Cмещаяем на другую линию
-        
+
         // Проверим не привязан ли к этому элементу какой то шаблон
-        if (Templates::where('taskidbefore', $data['templateid'])->get()->count()>0) return;
+        if (Templates::where('taskidbefore', $data['templateid'])->get()->count() > 0) return;
 
         if ($data['lineshift'] != 0) {
 

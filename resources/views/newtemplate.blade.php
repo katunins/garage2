@@ -19,9 +19,9 @@
     <input type="hidden" name="line" value="{{ $line }}">
     <input type="hidden" name="position" value="{{ $position }}">
     @isset($template)
-    <input type="hidden" name="templateid" value="{{ $template->id }}">    
+    <input type="hidden" name="templateid" value="{{ $template->id }}">
     @endisset
-    
+
     <div class="input-blocks">
         <div class="input-group">
             @error('taskname')
@@ -36,7 +36,9 @@
             <label for="params">Мини-параметры</label>
             <input class="max-size" type="text" id="params" name="params"
                 value="{{ old('params', $template->params ?? '') }}" placeholder="Тип печати/Форзац">
-            <p class="help">Параметры, которые необходимо видеть мастеру в кратком описании в дополнение к основным</p>
+            <p class="help">Параметры, которые будет видеть мастер в задаче, не открывая ее. (указываются через слеш,
+                без пробелов). Основные параметры (номер
+                заказа и название продукта указывать не нужно, так как они присутсвуют в задаче по умолчанию)</p>
         </div>
 
         <div class="input-group">
@@ -46,13 +48,15 @@
             <label for="masters">ID мастеров</label>
             <input class="mini-size" type="text" id="masters" name="masters"
                 value="{{ old('masters', $template->masters ?? '') }}" placeholder="1/2">
-            <p class="help">Если первому мастеру нет возможности поставить задачу, то робот ищет возможность у
+            <p class="help">Список мастеров (указываются через слеш, без пробелов). Если первому мастеру нет возможности
+                поставить задачу, то робот ищет свободное время у
                 следующего</p>
-            
+
             <label for="taskidbefore">ID предыдущей задачи</label>
             <input class="mini-size" type="text" id="taskidbefore" name="taskidbefore"
                 value="{{ old('taskidbefore', $template->taskidbefore ?? '') }}" placeholder="123">
-            <p class="help">Новая задача будет поставлена после предварительной</p>
+            <p class="help">Если задача должна быть поставлена после времени окончания задачи из другой линии, то
+                укажите ID задачи из другой линии
         </div>
 
         <div class="json-input-group">
@@ -64,10 +68,13 @@
             <input class="middle-size" type="text" name="condition3"
                 value="{{ old('condition3', $template->condition3 ?? '') }}" placeholder="Доставка">
 
-            <p class="help">Параметр и значения нужно вводить также, как и в параметрах заказа (20x20 - может быть
-                русское "Х" или наоборот английский "X-Икс". Поэтому лучше copy-paste). <br>Выражения "=" - равно, "!="
-                - не равно. Возможые значения можно разделять слешем. Он означет, что уловие выполниться при
-                соответствии одному или другому значению</p>
+            <p class="help">Задача будет поставлена, если выполнится одно из условий.
+
+                Параметр и значения нужно вводить без пробелов. Лучше делать copy-paste из параметров заказа, так как к
+                примеру литера Х в 20х20 может быть и русской и латинецей. Выражения: "=" - значение в параметре
+                содержит параметр условия, "!="
+                - тоже самое, но не содержит. "==" - точное совпадение, "!==" - точное не совпадене. Также можно
+                указывать несколько значений для условия, разделив их через слеш без проеблов</p>
         </div>
 
 
@@ -79,15 +86,16 @@
             <label for="time">Базовое время задачи, мин.</label>
             <input class="mini-size" type="text" id="producttime" name="producttime"
                 value="{{ old('producttime', $template->producttime ?? '') }}" placeholder="10">
-            <p class="help">Время в минутах задачи одного продукта не зависимо от параметров</p>
+            <p class="help">Время в минутах для выполнения задачи одного продукта не зависимо от формата и разворотов
+            </p>
             {{-- @error('paramtime')
             <p class="alert">{{ $message }}</p>
             @enderror --}}
             <label for="time">Расчетное время задачи, мин.</label>
             <input class="mini-size" type="text" id="paramtime" name="paramtime"
                 value="{{ old('paramtime', $template->paramtime ?? '') }}" placeholder="0.5">
-            <p class="help">Время в минтах за расчтеный параметр. К примеру в фотокниге расчетный параметр - 1кв см
-                площади. Если необходимо установить время меньше минуты, то можно использовать 0.5 = 30 секунд, 0.25 =
+            <p class="help">Время в минутах за квадратный дециметр площади. Если необходимо установить время меньше
+                минуты, то можно использовать десятичные числа с точнкой: 0.5 = 30 секунд, 0.25 =
                 15 сек.</p>
         </div>
 
@@ -98,9 +106,8 @@
             <label for="buffer">Буферное время, мин.</label>
             <input class="mini-size" type="text" id="buffer" name="buffer"
                 value="{{ old('buffer', $template->buffer ?? '') }}" placeholder="3600">
-            <p class="help">Буфреное время - период в минутах на сушку клея или на возможное ожидание из-за брака).
-                Следующая задача в линии будет поставлена спустя этот период. Также есть стандартное запасное время
-                между задачами</p>
+            <p class="help">Время, спустя которое будет поставлена следующая задача в конвеере. В каждую задачу также
+                закладывается стандартный запасный период</p>
         </div>
         <div class="json-input-group">
             <label>Допустимые периоды времени</label>
@@ -108,7 +115,9 @@
                 placeholder="9:00-11:00">
             <input class="mini-size" type="text" name="period2" value="{{ old('period2', $template->period2 ?? '') }}"
                 placeholder="16:00-18:00">
-            <p class="help">Допустимый промежуток времени, в который можно ставить данную задачу. Вводить без пробелов
+            <p class="help">Промежутки времени в которые будет поставлена задача. Перерыв на обед указывать не нужно,
+                так
+                как он учитывается по умолчанию
             </p>
         </div>
 

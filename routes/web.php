@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DealsController;
 use App\Http\Controllers\TemplateController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,3 +49,7 @@ Route::get('/movetemplate', function(){
 
 
 Route::post('/savetemplate', [TemplateController::class, 'saveTemplate']);
+Route::get('/deal2tasks/{id}', function ($id){
+    $dealArr = DealsController::getDeal($id);
+    dd (TemplateController::tasksFromDeal($dealArr));
+});
