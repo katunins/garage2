@@ -3,6 +3,10 @@
   font-family: "Bellota Text", cursive;
 }
 
+.hide {
+  display: none;
+}
+
 a.to-main-page {
   text-decoration: none;
   border: 1px solid grey;
@@ -14,17 +18,30 @@ a.to-main-page {
   align-items: center;
 }
 
+.mini-arrows {
+  border: none;
+  border-radius: 10px;
+  padding: 5px;
+  width: 24px;
+  line-height: 1;
+}
+
 .inactive {
   pointer-events: none;
   opacity: 0.3;
 }
 
+.lineBlock .line-number {
+  display: flex;
+  width: 110px;
+  justify-content: space-between;
+  margin-left: 10px;
+}
+.lineBlock .line-number form {
+  margin: 0;
+}
 .lineBlock .line {
   display: flex;
-}
-.lineBlock .line .line-number {
-  position: absolute;
-  left: 20px;
 }
 .lineBlock .line .template {
   position: relative;
@@ -32,7 +49,7 @@ a.to-main-page {
   height: 330px;
   border: 1px solid #dfdfdf;
   border-radius: 10px;
-  margin: 20px 10px;
+  margin: 5px 10px 20px;
   flex-shrink: 0;
   padding: 15px;
 }

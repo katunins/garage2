@@ -49,12 +49,18 @@ Route::get('/edittemplate', function () {
         'template' => TemplateController::getTemplate($_GET['templateid']),
     ]);
 });
+
 Route::get('/deletetemplate', function () {
     TemplateController::deleteTemplate($_GET['templateid']);
     return redirect('/board/' . $_GET['productid']);
 });
 Route::get('/movetemplate', function () {
     TemplateController::moveTemplate($_GET);
+    return redirect('/board/' . $_GET['productid']);
+});
+
+Route::get('/moveline', function () {
+    TemplateController::moveLine($_GET);
     return redirect('/board/' . $_GET['productid']);
 });
 

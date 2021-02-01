@@ -2,6 +2,11 @@
 * {
     font-family: 'Bellota Text', cursive;
 }
+
+.hide {
+    display: none;
+}
+
 a.to-main-page {
     text-decoration: none;
     border: 1px solid grey;
@@ -13,6 +18,14 @@ a.to-main-page {
     align-items: center;
 }
 
+.mini-arrows {
+    border: none;
+    border-radius: 10px;
+    padding: 5px;
+    width: 24px;
+    line-height: 1;
+}
+
 .inactive {
     pointer-events: none;
     opacity: 0.3;
@@ -20,11 +33,18 @@ a.to-main-page {
 }
 
 .lineBlock {
-    .line {
-        .line-number{
-            position: absolute;
-            left: 20px;
+    .line-number{
+        display: flex;
+        width: 110px;
+        justify-content: space-between;
+        margin-left: 10px;
+
+        form {
+            margin: 0;
         }
+    }
+    .line {
+        
         display: flex;
 
         .template {
@@ -34,7 +54,7 @@ a.to-main-page {
             // height: fit-content;
             border: 1px solid rgb(223, 223, 223);
             border-radius: 10px;
-            margin: 20px 10px;
+            margin: 5px 10px 20px;
             flex-shrink: 0;
             padding: 15px;
             form.plus {

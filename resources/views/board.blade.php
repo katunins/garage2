@@ -7,9 +7,26 @@
 <h1><a class="to-main-page" href="/">←</a>
     {{ $productTitle }}</h1>
 <div class="lineBlock">
+    
+    @for ($line = 1; $line <= $lineCount; $line++) 
 
-    @for ($line = 1; $line <= $lineCount; $line++) <div class="line" line={{ $line }}>
-        <div class="line-number">Линия {{ $line }}</div>
+    <div class="line-number">Линия {{ $line }}
+        <form action="/moveline" method="get">
+            <input type="hidden" name="line" value="{{ $line }}">
+            <input type="hidden" name="lineshift" value="-1">
+            <input type="hidden" name="productid" value="{{ $productId }}">
+            <input class="mini-arrows @if ($line==1) hide @endif" type="submit" value="↑">
+        </form>
+        <form action="/moveline" method="get">
+            <input type="hidden" name="line" value="{{ $line }}">
+            <input type="hidden" name="lineshift" value="1">
+            <input type="hidden" name="productid" value="{{ $productId }}">
+            <input class="mini-arrows @if ($line==$lineCount) hide @endif" type="submit" value="↓">
+        </form>
+    </div>
+
+    
+    <div class="line" line={{ $line }}>
         @php
             //$lastIsEmpty = true; //предыдущий Template пустой, в нем стоит плюс
             // определим позицию элемента Plus
@@ -33,15 +50,10 @@
 @endif
 @endif
 @php
-
     if ($template) $colorMaster = (int)explode('/', $template->masters)[0]*14;
-
 @endphp
-{{-- <div class="template" style="background-color: #{{ $colorMaster }};
-"> --}}
-{{-- <div class="template" @if($template) style="background-color: hsl({{ $colorMaster }},
-50%, 85%);"@endif> --}}
-<div class="template" @if($template) style="box-shadow:inset 0px -61px 0px 0px hsl({{ $colorMaster }}, 50%, 80%);" @endif>
+<div class="template" @if($template) style="box-shadow:inset 0px -61px 0px 0px hsl({{ $colorMaster }}, 50%, 80%);"
+    @endif>
 
 
 

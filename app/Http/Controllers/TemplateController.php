@@ -158,7 +158,7 @@ class TemplateController extends Controller
                     // если есть минипараметры, которые нужно отобразить в сделке
                     $taskInfo = NULL;
                     if ($templateItem->params) {
-                    
+
                         foreach (explode('/', $templateItem->params) as $itemInfo) {
                             if (isset($productParams[$itemInfo])) {
                                 $taskInfo[] = $itemInfo . ' : ' . $productParams[$itemInfo];
@@ -175,8 +175,8 @@ class TemplateController extends Controller
                         $size = explode(' ', $productParams['Формат']);
                         $widthHeight = explode('x', $size[0]); //английская литера x
                         if (!isset($widthHeight[1])) $widthHeight = explode('х', $size[0]); //русская литера x;
-                        
-                        $area = (int) $widthHeight[0] * (int) $widthHeight[1] * (int)$productParams['Количество разворотов']/ 100;
+
+                        $area = (int) $widthHeight[0] * (int) $widthHeight[1] * (int)$productParams['Количество разворотов'] / 100;
                         $taskTime += $area * $templateItem->paramtime;
                     }
 
@@ -268,6 +268,28 @@ class TemplateController extends Controller
             self::rebuildPosition($data['productid'], $newLine);
             self::rebuildPosition($data['productid'], $data['line']);
         }
+    }
+
+    // "line" => "1"
+    // "lineshift" => "1"
+    static function moveLine($data)
+    {
+        $newLine = (int)$data['line'] + (int)$data['lineshift'];
+        $currentLine = (int)$data['line'];
+
+        $templates = Templates::where(['productid' => $data['productid']])->get();
+        foreach ($templates as $item) {
+            $elem = Templates::find($item->id);
+            if ($item->line == $currentLine) {
+                $elem->line = $newLine;
+                $elem->save();
+            }
+            if ($item->line == $newLine) {
+                $elem->line = $currentLine;
+                $elem->save();
+            }
+        };
+
     }
 
     // "_token" => "2zQgKq9AI1IZ9gnMUxW4S9ftzJlSIPfBLhLY25yT"
