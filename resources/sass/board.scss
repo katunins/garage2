@@ -37,7 +37,13 @@ a.to-main-page {
         display: flex;
         width: 110px;
         justify-content: space-between;
+        align-items: center;
         margin-left: 10px;
+        // line-height: 1;
+
+        p {
+            margin: 0;
+        }
 
         form {
             margin: 0;

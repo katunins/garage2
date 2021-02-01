@@ -10,19 +10,24 @@
     
     @for ($line = 1; $line <= $lineCount; $line++) 
 
-    <div class="line-number">Линия {{ $line }}
-        <form action="/moveline" method="get">
-            <input type="hidden" name="line" value="{{ $line }}">
-            <input type="hidden" name="lineshift" value="-1">
-            <input type="hidden" name="productid" value="{{ $productId }}">
-            <input class="mini-arrows @if ($line==1) hide @endif" type="submit" value="↑">
-        </form>
-        <form action="/moveline" method="get">
-            <input type="hidden" name="line" value="{{ $line }}">
-            <input type="hidden" name="lineshift" value="1">
-            <input type="hidden" name="productid" value="{{ $productId }}">
-            <input class="mini-arrows @if ($line==$lineCount) hide @endif" type="submit" value="↓">
-        </form>
+    <div class="line-number">
+        <p>
+            Линия {{ $line }}
+        </p>
+        <div>
+            <form action="/moveline" method="get">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="lineshift" value="-1">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input class="mini-arrows @if ($line==1) hide @endif" type="submit" value="↑">
+            </form>
+            <form action="/moveline" method="get">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="lineshift" value="1">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input class="mini-arrows @if ($line==$lineCount) hide @endif" type="submit" value="↓">
+            </form>
+        </div>
     </div>
 
     

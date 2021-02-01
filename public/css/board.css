@@ -35,7 +35,11 @@ a.to-main-page {
   display: flex;
   width: 110px;
   justify-content: space-between;
+  align-items: center;
   margin-left: 10px;
+}
+.lineBlock .line-number p {
+  margin: 0;
 }
 .lineBlock .line-number form {
   margin: 0;
