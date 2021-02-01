@@ -8,7 +8,7 @@
 <div class="lineBlock">
 
     @for ($line = 1; $line <= $lineCount; $line++) <div class="line" line={{ $line }}>
-
+        <div class="line-number">Линия {{ $line }}</div>
         @php
         //$lastIsEmpty = true; //предыдущий Template пустой, в нем стоит плюс
         // определим позицию элемента Plus

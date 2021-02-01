@@ -11,6 +11,10 @@
 .lineBlock .line {
   display: flex;
 }
+.lineBlock .line .line-number {
+  position: absolute;
+  left: 20px;
+}
 .lineBlock .line .template {
   position: relative;
   width: 300px;
