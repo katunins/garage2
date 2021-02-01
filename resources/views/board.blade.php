@@ -17,12 +17,14 @@
         <div>
             <form action="/moveline" method="get">
                 <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="time" value="{{ time() }}">
                 <input type="hidden" name="lineshift" value="-1">
                 <input type="hidden" name="productid" value="{{ $productId }}">
                 <input class="mini-arrows @if ($line==1) hide @endif" type="submit" value="↑">
             </form>
             <form action="/moveline" method="get">
                 <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="time" value="{{ time() }}">
                 <input type="hidden" name="lineshift" value="1">
                 <input type="hidden" name="productid" value="{{ $productId }}">
                 <input class="mini-arrows @if ($line==$lineCount) hide @endif" type="submit" value="↓">
@@ -89,7 +91,7 @@
             {{-- ←, →, ↑, ↓ --}}
 
             <form action="/movetemplate" method="get">
-                @csrf
+                <input type="hidden" name="time" value="{{ time() }}">
                 <input type="hidden" name="line" value="{{ $line }}">
                 <input type="hidden" name="position" value="{{ $position }}">
                 <input type="hidden" name="lineshift" value="0">
@@ -99,7 +101,7 @@
                 <input @if ($position==1) class="inactive" @endif type="submit" value="←">
             </form>
             <form action="/movetemplate" method="get">
-                @csrf
+                <input type="hidden" name="time" value="{{ time() }}">
                 <input type="hidden" name="line" value="{{ $line }}">
                 <input type="hidden" name="position" value="{{ $position }}">
                 <input type="hidden" name="lineshift" value="0">
@@ -110,7 +112,7 @@
                 type="submit" value="→">
             </form>
             <form action="/movetemplate" method="get">
-                @csrf
+                <input type="hidden" name="time" value="{{ time() }}">
                 <input type="hidden" name="line" value="{{ $line }}">
                 <input type="hidden" name="position" value="{{ $position }}">
                 <input type="hidden" name="lineshift" value="-1">
@@ -120,7 +122,7 @@
                 <input @if ($line==1) class="inactive" @endif type="submit" value="↑">
             </form>
             <form action="/movetemplate" method="get">
-                @csrf
+                <input type="hidden" name="time" value="{{ time() }}">
                 <input type="hidden" name="line" value="{{ $line }}">
                 <input type="hidden" name="position" value="{{ $position }}">
                 <input type="hidden" name="lineshift" value="1">
@@ -136,7 +138,7 @@
         <div class="buttons edit-buttons">
             <p>id: {{ $template->id }}</p>
             <form class="edit" action="/edittemplate" method="get">
-                @csrf
+                <input type="hidden" name="time" value="{{ time() }}">
                 <input type="hidden" name="line" value="{{ $line }}">
                 <input type="hidden" name="position" value="{{ $position }}">
                 <input type="hidden" name="productid" value="{{ $productId }}">
@@ -144,7 +146,7 @@
                 <input type="submit" value="✎">
             </form>
             <form class="remove" action="/deletetemplate" method="get">
-                @csrf
+                <input type="hidden" name="time" value="{{ time() }}">
                 <input type="hidden" name="line" value="{{ $line }}">
                 <input type="hidden" name="position" value="{{ $position }}">
                 <input type="hidden" name="productid" value="{{ $productId }}">
@@ -157,7 +159,7 @@
         {{-- @if ($lastIsEmpty === true) --}}
         @if ($position == $plusPosition)
             <form class="plus" action="/newtemplate" method="get">
-                @csrf
+                <input type="hidden" name="time" value="{{ time() }}">
                 <input type="hidden" name="line" value="{{ $line }}">
                 <input type="hidden" name="position" value="{{ $position }}">
                 <input type="hidden" name="productid" value="{{ $productId }}">
@@ -186,8 +188,8 @@
         plusElem.action = '/newtemplate'
         plusElem.method = 'get'
         let html = ''
-        html += '<input type="hidden" name="_token" value="' + document.querySelector('input[name="_token"]').value +
-            '">'
+        // html += '<input type="hidden" name="_token" value="' + document.querySelector('input[name="_token"]').value +
+        //     '">'
         html += '<input type="hidden" name="line" value="' + Number(lastLine + 1) + '">'
         html += '<input type="hidden" name="position" value="1">'
         html += '<input type="hidden" name="productid" value="' + document.querySelector('input[name="productid"]')

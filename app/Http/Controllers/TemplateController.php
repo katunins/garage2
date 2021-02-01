@@ -116,7 +116,10 @@ class TemplateController extends Controller
         // "Телефон" => "+7(903) 110-52-07"
 
         // получим id продукта
-        $productId = 2;
+        $productData = Products::where('title', $productParams['productname'])->get();
+        if ($productData->count() > 0) {
+            $productId = $productData->first()->korobookid;
+        };
         $taskArr = [];
 
         $templates = Templates::where('productid', $productId)->get();
@@ -130,25 +133,27 @@ class TemplateController extends Controller
                     if ($templateItem->{'condition' . $i}) {
                         $conditionCount++;
                         $conditionArr = self::parseCondition($templateItem->{'condition' . $i});
-
-                        $productValue = $productParams[$conditionArr['param']];
-                        foreach ($conditionArr['values'] as $value) {
-                            switch ($conditionArr['sign']) {
-                                case '=':
-                                    $conditionResult += strpos($productValue, $value) !== false ? 1 : 0;
-                                    break;
-                                case '!=':
-                                    $conditionResult += strpos($productValue, $value) === false ? 1 : 0;
-                                    break;
-                                case '==':
-                                    $conditionResult += strcasecmp($productValue, $value) == 0 ? 1 : 0;
-                                    break;
-
-                                case '!==':
-                                    $conditionResult += strcasecmp($productValue, $value) != 0 ? 1 : 0;
-                                    break;
+                        if (isset($productParams[$conditionArr['param']])) {
+                            $productValue = $productParams[$conditionArr['param']];
+                            foreach ($conditionArr['values'] as $value) {
+                                switch ($conditionArr['sign']) {
+                                    case '=':
+                                        $conditionResult += strpos($productValue, $value) !== false ? 1 : 0;
+                                        break;
+                                    case '!=':
+                                        $conditionResult += strpos($productValue, $value) === false ? 1 : 0;
+                                        break;
+                                    case '==':
+                                        $conditionResult += strcasecmp($productValue, $value) == 0 ? 1 : 0;
+                                        break;
+    
+                                    case '!==':
+                                        $conditionResult += strcasecmp($productValue, $value) != 0 ? 1 : 0;
+                                        break;
+                                }
                             }
                         }
+                        
                     }
                 }
 

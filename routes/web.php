@@ -51,28 +51,25 @@ Route::get('/edittemplate', function () {
 });
 
 Route::get('/deletetemplate', function () {
+    if ($_GET['time'] - time()>1) return view('/'); //защитимся от перехода в браузере назад
     TemplateController::deleteTemplate($_GET['templateid']);
     return redirect('/board/' . $_GET['productid']);
 });
 Route::get('/movetemplate', function () {
+    if ($_GET['time'] - time()>1) return view('/'); //защитимся от перехода в браузере назад
     TemplateController::moveTemplate($_GET);
     return redirect('/board/' . $_GET['productid']);
 });
 
 Route::get('/moveline', function () {
+    if ($_GET['time'] - time()>1) return view('/'); //защитимся от перехода в браузере назад
     TemplateController::moveLine($_GET);
     return redirect('/board/' . $_GET['productid']);
 });
 
 
 Route::post('/savetemplate', [TemplateController::class, 'saveTemplate']);
-Route::get('/deal2tasks', function () {
-    $dealArr = DealsController::getDeal($_GET['id']);
-    if ($dealArr !== false)
-        dd(TemplateController::tasksFromDeal($dealArr));
-    else
-        return redirect()->back()->withErrors(['deal'=>'Возможно нет такой сделки']);
-});
+
 
 Route::get('/masteredit', function () {
     User::masterEdit($_GET);
@@ -85,4 +82,12 @@ Route::get('/tasksboard', function () {
 
 Route::get('master/{id}', function ($id) {
     return view('tasklist')->with('tasks', Tasks::where('master', $id)->get());
+});
+
+Route::get('/deal2tasks', function () {
+    $dealArr = DealsController::getDeal($_GET['id']);
+    if ($dealArr !== false)
+        dd(TemplateController::tasksFromDeal($dealArr));
+    else
+        return redirect()->back()->withErrors(['deal'=>'Возможно нет такой сделки']);
 });
