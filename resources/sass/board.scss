@@ -2,9 +2,15 @@
 * {
     font-family: 'Bellota Text', cursive;
 }
-
-color {
-    color: gray;
+a.to-main-page {
+    text-decoration: none;
+    border: 1px solid grey;
+    background: white;
+    border-radius: 20px;
+    width: 40px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .inactive {

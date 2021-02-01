@@ -4,7 +4,8 @@
 {{-- $positionCount --}}
 
 <link rel="stylesheet" href="/css/board.css">
-<h1>{{ $productTitle }}</h1>
+<h1><a class="to-main-page" href="/">←</a>
+    {{ $productTitle }}</h1>
 <div class="lineBlock">
 
     @for ($line = 1; $line <= $lineCount; $line++) <div class="line" line={{ $line }}>
@@ -33,12 +34,15 @@
 @endif
 @php
 
-if ($template) $colorMaster = (int)explode('/', $template->masters)[0]*14;
+    if ($template) $colorMaster = (int)explode('/', $template->masters)[0]*14;
 
 @endphp
-{{-- <div class="template" style="background-color: #{{ $colorMaster }}; "> --}}
-    <div class="template" style="background-color: hsl({{ $colorMaster }}, 50%, 70%);">
-    
+{{-- <div class="template" style="background-color: #{{ $colorMaster }};
+"> --}}
+{{-- <div class="template" @if($template) style="background-color: hsl({{ $colorMaster }},
+50%, 85%);"@endif> --}}
+<div class="template" @if($template) style="box-shadow:inset 0px -61px 0px 0px hsl({{ $colorMaster }}, 50%, 80%);" @endif>
+
 
 
     @if ($template)
