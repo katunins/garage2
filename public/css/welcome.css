@@ -1,0 +1,19 @@
+@import url(https://fonts.googleapis.com/css2?family=Bellota+Text:wght@400;700&display=swap);
+* {
+  font-family: "Bellota Text", cursive;
+}
+
+form {
+  margin: 0;
+  display: inline;
+}
+
+table {
+  text-align: left;
+}
+
+table,
+th,
+td {
+  border: 1px solid #dbdbdb;
+}

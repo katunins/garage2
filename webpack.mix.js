@@ -12,5 +12,7 @@ const mix = require('laravel-mix');
  */
 
 mix
-.sass('resources/sass/newtemplate.scss', 'public/css')
-.sass('resources/sass/board.scss', 'public/css');
+    .sass('resources/sass/newtemplate.scss', 'public/css')
+    .sass('resources/sass/welcome.scss', 'public/css')
+    .sass('resources/sass/tasklist.scss', 'public/css')
+    .sass('resources/sass/board.scss', 'public/css');

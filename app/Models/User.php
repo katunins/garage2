@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
@@ -40,4 +41,24 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    static function masterEdit($data)
+    {
+        switch ($data['type']) {
+            case 'new':
+                $user = new User();
+                $user->name = $data['name'];
+                $user->type = 'master';
+                $user->bitrixid = $data['bitrixid'] == "" ? null : $data['bitrixid'];
+                $user->password = Hash::make($data['password']);
+                $user->save();
+                return;
+            case 'newpass':
+                User::find($data['id'])->update(['password'=>Hash::make($data['password'])]);
+                return;
+            case 'delete':
+                User::find($data['id'])->delete();
+                return;
+        }
+    }
 }

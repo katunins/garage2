@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Products;
 use App\Models\Templates;
 use Illuminate\Http\Request;
 
@@ -25,6 +26,7 @@ class TemplateController extends Controller
             'lineCount' => $lineCount,
             'positionCount' => $positionCount,
             'productId' => $productId,
+            'productTitle' => Products::where('korobookid', $productId)->first()->title,
         ]);
     }
 

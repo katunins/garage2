@@ -1,0 +1,12 @@
+@import url(https://fonts.googleapis.com/css2?family=Bellota+Text:wght@400;700&display=swap);
+* {
+  font-family: "Bellota Text", cursive;
+}
+
+.container {
+  display: flex;
+}
+.container .filters {
+  width: 300px;
+  background-color: aqua;
+}
