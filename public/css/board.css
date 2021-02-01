@@ -78,6 +78,7 @@
 }
 .lineBlock .line .template p.description {
   font-size: 14px;
+  word-wrap: break-word;
 }
 .lineBlock .line .template p.description span {
   font-weight: bold;
