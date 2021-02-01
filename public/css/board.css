@@ -3,6 +3,10 @@
   font-family: "Bellota Text", cursive;
 }
 
+color {
+  color: gray;
+}
+
 .inactive {
   pointer-events: none;
   opacity: 0.3;
@@ -19,7 +23,6 @@
   position: relative;
   width: 300px;
   height: 330px;
-  border: 1px solid #dfdfdf;
   border-radius: 10px;
   margin: 20px 10px;
   flex-shrink: 0;
@@ -72,7 +75,6 @@
 }
 .lineBlock .line .template p {
   margin: 0;
-  color: grey;
 }
 .lineBlock .line .template p.title {
   font-size: 18px;
