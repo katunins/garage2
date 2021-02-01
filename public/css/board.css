@@ -38,6 +38,9 @@ a.to-main-page {
   align-items: center;
   margin-left: 10px;
 }
+.lineBlock .line-number div {
+  display: flex;
+}
 .lineBlock .line-number p {
   margin: 0;
 }

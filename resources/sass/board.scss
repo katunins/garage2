@@ -41,6 +41,10 @@ a.to-main-page {
         margin-left: 10px;
         // line-height: 1;
 
+        div {
+            display: flex;
+        }
+
         p {
             margin: 0;
         }
