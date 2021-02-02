@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 
 class TemplateController extends Controller
 {
+    // возвращает шаблоны для продукта
     static function getBoard($productId)
     {
         $templates = Templates::where('productid', $productId)->get();
@@ -30,11 +31,11 @@ class TemplateController extends Controller
         ]);
     }
 
+    // возвращает шаблон
     static function getTemplate($templateId)
     {
         return Templates::where('id', $templateId)->first();
     }
-
     static function deleteTemplate($templateId)
     {
         $currentTemplate = Templates::find($templateId);
@@ -61,6 +62,8 @@ class TemplateController extends Controller
         }
         return $currentTemplate->delete();
     }
+
+    // перестраивает позиции в линии по порядку от 1 до 9
     static function rebuildPosition($productId, $line)
     {
         $templatesToSort = Templates::where([
@@ -77,7 +80,7 @@ class TemplateController extends Controller
         }
     }
 
-    // парсит строку условий
+    // парсит строку условий - делит ее на массив
     static function parseCondition($condition)
     {
         foreach (['!==', '!=', '==', '='] as $sign) {
@@ -93,6 +96,7 @@ class TemplateController extends Controller
         return false;
     }
 
+    // Подбирет шаблоны под параметры заказа и расчитывает длительность задачи
     static function taskGenegator($productParams)
     {
         // "productname" => "Фотокниги"
@@ -133,6 +137,7 @@ class TemplateController extends Controller
                     if ($templateItem->{'condition' . $i}) {
                         $conditionCount++;
                         $conditionArr = self::parseCondition($templateItem->{'condition' . $i});
+
                         if (isset($productParams[$conditionArr['param']])) {
                             $productValue = $productParams[$conditionArr['param']];
                             foreach ($conditionArr['values'] as $value) {
@@ -146,14 +151,13 @@ class TemplateController extends Controller
                                     case '==':
                                         $conditionResult += strcasecmp($productValue, $value) == 0 ? 1 : 0;
                                         break;
-    
+
                                     case '!==':
                                         $conditionResult += strcasecmp($productValue, $value) != 0 ? 1 : 0;
                                         break;
                                 }
                             }
                         }
-                        
                     }
                 }
 
@@ -197,25 +201,53 @@ class TemplateController extends Controller
         return $taskArr;
     }
 
+    // преобразует предварительно подобранные шаблоны задач в список задач со временем
+    static function planGenerator($tasksArr)
+    {
+
+        //         "templateid" => 6
+        //         "time" => 3
+        //         "info" => null
+        //         "deal" => "20 #8293"
+
+        // Необходимо расчитать
+        // name
+        // master
+        // status
+        // start
+
+        foreach ($tasksArr as $line) {
+            foreach ($line as $task) {
+                $template = Templates::find($task['templateid']);
+                $task['name'] = $template->taskname;
+                $task['status'] = 'wait';
+                dd($task);
+            }
+        }
+    }
+
+    // проходит по каждому продукту в сделке
     static function tasksFromDeal($dealArr)
     {
         foreach ($dealArr['products'] as $key => $dealItem) {
-            $tasks[$key] = self::taskGenegator(array_merge($dealItem, $dealArr['params']));
-            dd($tasks);
+            $tasks = self::taskGenegator(array_merge($dealItem, $dealArr['params']));
+            $tasksPlan = self::planGenerator($tasks);
         }
         return true;
     }
 
 
 
-    // "line" => "1"
-    // "position" => "1"
-    // "lineshift" => "1"
-    // "positionshift" => "0"
-    // "productid" => "1"
-    // "templateid" => "11"
+    // перемещает шаблон на другую позицию
     static function moveTemplate($data)
+
     {
+        // "line" => "1"
+        // "position" => "1"
+        // "lineshift" => "1"
+        // "positionshift" => "0"
+        // "productid" => "1"
+        // "templateid" => "11"
         $currentTemplate = Templates::find($data['templateid']);
 
         // Меняем позицией с соседом в линии
@@ -275,10 +307,12 @@ class TemplateController extends Controller
         }
     }
 
-    // "line" => "1"
-    // "lineshift" => "1"
+    // перемещает линию вверх или вниз
     static function moveLine($data)
     {
+        // "line" => "1"
+        // "lineshift" => "1"
+
         $newLine = (int)$data['line'] + (int)$data['lineshift'];
         $currentLine = (int)$data['line'];
 
@@ -294,7 +328,6 @@ class TemplateController extends Controller
                 $elem->save();
             }
         };
-
     }
 
     // "_token" => "2zQgKq9AI1IZ9gnMUxW4S9ftzJlSIPfBLhLY25yT"

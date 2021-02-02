@@ -18,7 +18,7 @@ class CreateTasksTable extends Migration
             $table->string('name');
             $table->integer('master');
             $table->float('time'); //min
-            $table->string('status'); //ready, finished, crashed
+            $table->string('status'); //wait, finished, repair
             $table->string('mastercomment');
             $table->dateTime('start');
             $table->dateTime('end');
