@@ -393,10 +393,13 @@ class TemplateController extends Controller
         }
 
         // Проверим данное время на совпадение с запланированными задачами:
-        return !Tasks::where('master', $masterId)
+        $taskHere = Tasks::where('master', $masterId)
             ->where('start', '>=', self::$startTime)
             ->orWhere('end', '>=', self::$startTime)
-            ->where('start', '<=', self::$startTime)->get()->count() > 0;
+            ->where('start', '<=', self::$startTime)->get();
+        if ($taskHere->count() > 0) {
+            
+        };
 
         return true;
     }
