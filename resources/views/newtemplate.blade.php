@@ -110,13 +110,12 @@
                 закладывается стандартный запасный период</p>
         </div>
         <div class="json-input-group">
-            <label>Допустимые периоды времени</label>
+            <label>Запретные периоды времени</label>
             <input class="mini-size" type="text" name="period1" value="{{ old('period1', $template->period1 ?? '') }}"
                 placeholder="9:00-11:00">
             <input class="mini-size" type="text" name="period2" value="{{ old('period2', $template->period2 ?? '') }}"
                 placeholder="16:00-18:00">
-            <p class="help">Промежутки времени в которые будет поставлена задача. Перерыв на обед указывать не нужно,
-                так
+            <p class="help">Промежутки времени в которые нелься планировать задачу. Перерыв на обед указывать не нужно,
                 как он учитывается по умолчанию
             </p>
         </div>

@@ -79,7 +79,7 @@
         <p class="description">ID предыдущей задачи: <span>{{ $template->taskidbefore }}</span></p>
         <p class="description">Буфер: <span>{{ $template->buffer }} мин.</span></p>
         <br>
-        <p class="description">Доступный период:
+        <p class="description">Запретный период:
             <span>{{ $template->period1 }}, {{ $template->period2 }}.</span>
         </p>
         <p class="description">Условия выполнения:

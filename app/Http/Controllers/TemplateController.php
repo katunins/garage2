@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Products;
+use App\Models\Tasks;
 use App\Models\Templates;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class TemplateController extends Controller
 {
@@ -211,19 +213,57 @@ class TemplateController extends Controller
         //         "deal" => "20 #8293"
 
         // Необходимо расчитать
-        // name
+        // + name
         // master
-        // status
+        // + status
         // start
 
         foreach ($tasksArr as $line) {
             foreach ($line as $task) {
+
                 $template = Templates::find($task['templateid']);
+
                 $task['name'] = $template->taskname;
                 $task['status'] = 'wait';
+
+                // найдем свободное время у мастера
+                foreach (explode('/', $template->masters) as $masterId) {
+                    self::getFreePlan($masterId, $task['time'], [
+                        $template->period1,
+                        $template->period2,
+                    ]);
+                }
+
                 dd($task);
             }
         }
+    }
+
+    // возвращает первое возможное свободное время в графике мастера
+    static function getFreePlan($masterId, $time, $periods){
+        // $time - длительность задачи в минутах
+        // $periods - массив с возможными периодами
+
+        $timeBeforeStart = 12; //промежуток в часах между запуском и времени начала задач
+        
+        $startTime = new Carbon();
+        dump ($startTime);
+        $startTime->add($timeBeforeStart.' hours');
+        dd ($startTime);
+
+        $workDayPeriods = [
+            '9:00-12:00',
+            '13:00-18:00',
+        ]; //период рабочего дня, с учетом обеда
+
+        $activeTasks = Tasks::where('master', $masterId)->where('start', '=>', '$startTime') ->get();
+        if ($activeTasks->count() > 0) {
+            // в графике есть задачи
+        } else {
+            // график мастера пустой
+        }
+        dd ($activeTasks);
+        
     }
 
     // проходит по каждому продукту в сделке
