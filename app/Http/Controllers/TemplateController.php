@@ -10,6 +10,18 @@ use Carbon\Carbon;
 
 class TemplateController extends Controller
 {
+
+    static  $isHoliday; //праздники
+    // 0	Рабочий день	200
+    // 1	Нерабочий день	200
+    // 2	Сокращённый рабочий день	200
+    // 4	Рабочий день	200
+    // 100	Ошибка в дате	400
+    // 101	Данные не найдены	404
+    // 199	Ошибка сервиса	400
+
+    static $startTime;
+
     // возвращает шаблоны для продукта
     static function getBoard($productId)
     {
@@ -204,7 +216,7 @@ class TemplateController extends Controller
     }
 
     // преобразует предварительно подобранные шаблоны задач в список задач со временем
-    static function planGenerator($tasksArr)
+    static function planGenerator($tasksArr, $dealItem)
     {
 
         //         "templateid" => 6
@@ -219,59 +231,190 @@ class TemplateController extends Controller
         // start
 
         foreach ($tasksArr as $line) {
+            $taskBefore = NULL;
+
             foreach ($line as $task) {
 
                 $template = Templates::find($task['templateid']);
-
-                $task['name'] = $template->taskname;
-                $task['status'] = 'wait';
+                $lastTaskId = NULL;
+                if ($template->taskidbefore) {
+                    // предварительная задача из другой линии
+                    $startFrom = new Carbon; //время с которого можно ставить задачи
+                    $startFrom->addHours(300);
+                } elseif ($taskBefore) {
+                    // есть предыдущая задача в линии
+                    $startFrom = Carbon::parse($taskBefore->end);
+                    $startFrom->addMinutes($taskBefore->buffer);
+                    $lastTaskId = $taskBefore->id;
+                } else {
+                    // это первая задача в линии
+                    $startFrom = new Carbon; //время с которого можно ставить задачи
+                    $startFrom->addHours(20);
+                }
 
                 // найдем свободное время у мастера
-                foreach (explode('/', $template->masters) as $masterId) {
-                    self::getFreePlan($masterId, $task['time'], [
+                $mastersArr = explode('/', $template->masters);
+
+                // сделаем специально познее вермя старта, что бы потом выбрать самого свободного мастера
+                $start = new Carbon; //
+                $start->addYear();
+
+                foreach ($mastersArr as $masterId) {
+                    $resultTime = self::getFreePlan($masterId, $task['time'], $startFrom, [
                         $template->period1,
                         $template->period2,
                     ]);
+                    if ($resultTime < $start) {
+                        $start = clone $resultTime;
+                        $end = clone $start;
+                        $end->addMinutes((int)$task['time']);
+                    }
                 }
+                $taskBefore = new Tasks;
+                $taskBefore->name = $template->taskname;
+                $taskBefore->master = $masterId;
+                $taskBefore->time = $task['time'];
+                $taskBefore->status = 'temp';
+                if ($lastTaskId) $taskBefore->taskidbefore = $lastTaskId; //предварительная задача
+                $taskBefore->start = $start->format('Y-m-d H:i:s');
+                $taskBefore->end = $end->format('Y-m-d H:i:s');
+                $taskBefore->buffer = $template->buffer + 10; //стандартный буфер задержки после задачи
+                $taskBefore->info = $dealItem['productname'] . ' ' . $dealItem['Формат'] ?? '' . ' / ' . $task['info'];
+                $taskBefore->deal = $task['deal'];
+                $taskBefore->save();
 
-                dd($task);
+
+
+                // результат 
+                // masterId
+                // start
+                // end
+                // startFrom - время с которого можно ставить следующую задачу
             }
+
+            // dd (Tasks::where(''))
         }
     }
 
-    // возвращает первое возможное свободное время в графике мастера
-    static function getFreePlan($masterId, $time, $periods){
+
+
+    // возвращает первое свободное время в графике мастера
+    static function getFreePlan($masterId, $time, $startFrom, $periods)
+    {
         // $time - длительность задачи в минутах
-        // $periods - массив с возможными периодами
+        // $periods - массив с запрещенными периодами
 
-        $timeBeforeStart = 12; //промежуток в часах между запуском и времени начала задач
-        
-        $startTime = new Carbon();
-        dump ($startTime);
-        $startTime->add($timeBeforeStart.' hours');
-        dd ($startTime);
+        self::$startTime = clone $startFrom;
+        // self::$startTime->add('12 hours'); //промежуток в часах между запуском и времени начала задач
 
-        $workDayPeriods = [
-            '9:00-12:00',
-            '13:00-18:00',
-        ]; //период рабочего дня, с учетом обеда
+        // Проверим можно ли поставить задачу в данное время
+        // Если нет, то возвращает время окончания препятствия
+        // self::$startTime = Carbon::create(2021, 02, 04, 13, 0);
 
-        $activeTasks = Tasks::where('master', $masterId)->where('start', '=>', '$startTime') ->get();
-        if ($activeTasks->count() > 0) {
-            // в графике есть задачи
-        } else {
-            // график мастера пустой
+        $test = 0; //защита от зависания
+        $result = false;
+        do {
+            $test++;
+
+            if ($test > 20) {
+                echo '<h1>test-stop!!!</h1>';
+                break;
+            }
+            echo 'Проверим ' . self::$startTime->format('Y-m-d H:i:s') . '<br>';
+            $result = self::tryToPlan($time, $periods, $masterId);
+            // echo 'После '.self::$startTime->format('Y-m-d H:i:s').'<br>';
+        } while ($result == false);
+        return self::$startTime;
+    }
+
+    // Проверяет можно ли запланировать задачу мастеру в данное время
+    static function tryToPlan($time, $periods, $masterId)
+    {
+
+        // $startTime - время начала
+        // $periods - запретные периоды
+
+        $endTime = clone self::$startTime;
+        $endTime->addMinutes(round($time)); //время окончания задачи
+        // dump (self::$startTime->toDateTimeString(), $endTime->toDateTimeString());
+        $periods[] = '12:00-13:00'; //Перерыв на обед
+
+        // рабочее время
+        $workDayStart = clone self::$startTime;
+        $workDayEnd = clone self::$startTime;
+        $workDayStart->setTime(9, 0, 0);
+        $workDayEnd->setTime(18, 0, 0);
+
+        // Проерим startTime на: выходные (масивв номер дня года - результат)
+        if (self::$isHoliday[self::$startTime->format('z')] != 0 && self::$isHoliday[self::$startTime->format('z')] != 4) {
+            echo ' - Выходной<br>';
+            self::$startTime->setTime(9, 0, 0);
+            self::$startTime->addDay();
+            return false;
         }
-        dd ($activeTasks);
-        
+
+        // Проверим startTime если раньше начала рабочего дня или endTime позже времени окончания, то вернем 9:00 следующего дня
+        if (self::$startTime < $workDayStart || $endTime < $workDayStart) {
+            echo ' - Слишком рано<br>';
+            self::$startTime->setTime(9, 0, 0);
+            return false;
+        }
+
+        // если время позже рабочего времени, то + 1 день
+        if (self::$startTime > $workDayEnd || $endTime > $workDayEnd) {
+            echo ' - Слишком поздно<br>';
+            self::$startTime->setTime(9, 0, 0);
+            self::$startTime->addDay();
+            return false;
+        }
+
+
+        // Проверим данное время на попадание в запрещенные периоды:
+        foreach ($periods as $item) {
+            if ($item) {
+                $periodArr = explode('-', $item);
+                $periodStartArr = explode(':', $periodArr[0]);
+                $periodEndArr = explode(':', $periodArr[1]);
+
+                $periodStart = clone self::$startTime;
+                $periodEnd = clone self::$startTime;
+
+
+                $periodStart->setTime($periodStartArr[0], $periodStartArr[1]);
+                $periodEnd->setTime($periodEndArr[0], $periodEndArr[1]);
+
+                // если данное время попадает в период запрещенных вернем 
+                if (self::$startTime->between($periodStart, $periodEnd, false) || $endTime->between($periodStart, $periodEnd, false)) {
+                    self::$startTime = clone $periodEnd;
+                    echo ' - Запретный период<br>';
+                    return false;
+                }
+            }
+        }
+
+        // Проверим данное время на совпадение с запланированными задачами:
+        return !Tasks::where('master', $masterId)
+            ->where('start', '>=', self::$startTime)
+            ->orWhere('end', '>=', self::$startTime)
+            ->where('start', '<=', self::$startTime)->get()->count() > 0;
+
+        return true;
     }
 
     // проходит по каждому продукту в сделке
     static function tasksFromDeal($dealArr)
     {
+        // Загрузим выходные
+        $ch = curl_init('https://isdayoff.ru/api/getdata?year=' . date('Y') . '&delimeter=/');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        self::$isHoliday = explode('/', curl_exec($ch));
+        curl_close($ch);
+
         foreach ($dealArr['products'] as $key => $dealItem) {
             $tasks = self::taskGenegator(array_merge($dealItem, $dealArr['params']));
-            $tasksPlan = self::planGenerator($tasks);
+            $tasksPlan = self::planGenerator($tasks, $dealItem);
         }
         return true;
     }

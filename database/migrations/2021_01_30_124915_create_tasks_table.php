@@ -18,10 +18,12 @@ class CreateTasksTable extends Migration
             $table->string('name');
             $table->integer('master');
             $table->float('time'); //min
-            $table->string('status'); //wait, finished, repair
-            $table->string('mastercomment');
+            $table->string('status'); //temp временная, wait ожитает выполнения, finished выполнена, repair зависла
+            $table->string('mastercomment')->nullable();
+            $table->integer('taskidbefore')->nullable(); //предварительная задача
             $table->dateTime('start');
             $table->dateTime('end');
+            $table->integer('buffer')->nullable(); //задержка в минутах
             $table->string('info');
             $table->string('deal');
             $table->timestamps();
