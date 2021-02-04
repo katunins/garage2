@@ -316,7 +316,7 @@ class TemplateController extends Controller
         do {
             $test++;
 
-            if ($test > 20) {
+            if ($test > 10) {
                 echo '<h1>test-stop!!!</h1>';
                 break;
             }
@@ -392,13 +392,37 @@ class TemplateController extends Controller
             }
         }
 
+        // 10:00-10:10
+        // 11:00
+        // 12:00
+        // 13:00
+        // 14:00-14:30
+
+        // 9:40-9:50 - ok  start > startTime && start > endTime
+        // 9:40-10:00 - ok 
+        // 10:05-10:10 - false
+        // 9:40-10:10 - false
+        // 10:09 - 10:20 - false
+        // 10:10-10:20 - ok
+        // 9:40-10:10 - false
+        // 14:28-14:40 - false
+        // 14:30 - 15:00 - ok
+
+
         // Проверим данное время на совпадение с запланированными задачами:
         $taskHere = Tasks::where('master', $masterId)
-            ->where('start', '>=', self::$startTime)
-            ->orWhere('end', '>=', self::$startTime)
-            ->where('start', '<=', self::$startTime)->get();
+            ->whereBetween('start', [self::$startTime, $endTime])
+            ->orWhereBetween('end', [self::$startTime, $endTime])
+            ->orWhere([['start', '<=', self::$startTime], ['end', '>=', $endTime]])->get();
+        // $taskHere = Tasks::where('master', $masterId)
+        //     ->where('start', '>=', self::$startTime)
+        //     ->orWhere('end', '>=', self::$startTime)
+        //     ->where('start', '<=', self::$startTime)->get();
         if ($taskHere->count() > 0) {
-            
+            self::$startTime = Carbon::parse($taskHere->first()->end);
+            self::$startTime->addSecond();
+            echo ' - есть задача в это время '.$taskHere->count().'<br>';
+            return false;
         };
 
         return true;
