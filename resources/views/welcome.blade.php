@@ -7,6 +7,7 @@
             <li><a href="/templates">Шаблоны задач</a></li>
             <li><a href="/masters">Список мастеров</a></li>
             <li><a href="/tasksboard">Задачи</a></li>
+            <li><a href="/calendar">Календарь</a></li>
         </div>
         <div class="">
             <form action="/deal2tasks" method="GET">

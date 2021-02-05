@@ -17,14 +17,18 @@ class CreateTasksTable extends Migration
             $table->id();
             $table->string('name');
             $table->integer('master');
+            $table->integer('templateid'); //шаблон, по которому создана задача
             $table->float('time'); //min
             $table->string('status'); //temp временная, wait ожитает выполнения, finished выполнена, repair зависла
-            $table->string('mastercomment')->nullable();
+            $table->text('mastercomment')->nullable();
             $table->integer('taskidbefore')->nullable(); //предварительная задача
             $table->dateTime('start');
             $table->dateTime('end');
             $table->integer('buffer')->nullable(); //задержка в минутах
-            $table->string('info');
+            $table->integer('line'); //линия параллельного производства
+            $table->integer('position'); //позиция в линии
+            $table->string('generalinfo');
+            $table->text('info')->nullable();
             $table->string('deal');
             $table->timestamps();
         });

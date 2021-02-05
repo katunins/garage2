@@ -1,5 +1,7 @@
 {
+    "/js/general.js": "/js/general.js",
     "/css/board.css": "/css/board.css",
+    "/css/calendar.css": "/css/calendar.css",
     "/css/tasklist.css": "/css/tasklist.css",
     "/css/welcome.css": "/css/welcome.css",
     "/css/newtemplate.css": "/css/newtemplate.css"

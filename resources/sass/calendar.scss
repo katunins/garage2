@@ -1,0 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=Bellota+Text:wght@400;700&display=swap');
+
+* {
+    font-family: 'Bellota Text', cursive;
+}
+
+.calendar-block {
+    display: grid;
+    gap: 2px;
+
+    .linehead {
+        grid-row: 1 /2;
+    }
+
+    .task {
+        border-radius: 5px;
+        max-width: 100%;
+        padding: 2px;
+        // margin: 0 auto;
+        margin-left: -1px;
+        font-size: 12px;
+        overflow: hidden;
+        z-index: 1;
+        .title {
+            font-weight: bold;
+            .dealname {
+                // font-size: 16px;
+                background-color: rgb(228, 228, 228);
+                padding: 1px 5px;
+                border-radius: 3px;
+                margin-right: 5px;
+            }
+        }
+
+        .taskname {
+            font-size: 13px;
+            margin-left: 4px;
+            color: rgb(58, 58, 58);
+        }
+
+        .task-buttons button{
+            border-radius: 10px;
+            border: 1px solid grey;
+            font-size: 12px;
+            padding: 2px 6px;
+        }
+        
+    }
+
+    .task[status="temp"] {
+        background-color: #f3ea81;
+    }
+
+    .task[status="wait"] {
+        background-color: #a6cc69;
+    }
+
+    .task[status="repair"] {
+        background-color: #e46d6d;
+    }
+
+    .task[status="finished"] {
+        background-color: #c1bbbb;
+    }
+
+    .hour-line {
+        opacity: 0.7;
+        border-right: 1px solid #d0d0d0;
+        border-top: 1px solid #d0d0d0;
+z-index: 0;
+        .time-tag {
+            color: grey;
+            margin-top: 5px;
+        }
+    }
+
+}
+
+.footer-block {
+    height: 200px;
+}

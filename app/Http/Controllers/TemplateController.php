@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+const LUNCH_BREACK = '12:00-13:00'; //перевыр на обед
+const STANDART_BUFFER = 10; //стандартный буфер в минутах
+const TIME_AFTER_SCRIPT = 12; //время задержки после запуска скрипта в часах
+const LOG = true; //true - идет вывод echo;
+
 use App\Models\Products;
 use App\Models\Tasks;
 use App\Models\Templates;
@@ -21,6 +26,8 @@ class TemplateController extends Controller
     // 199	Ошибка сервиса	400
 
     static $startTime;
+    static $needExtraSort; //true если необходимо досортировать задачи, к примеру если были задачи, зависящие от других
+    static $scriptErrors; //ошибки
 
     // возвращает шаблоны для продукта
     static function getBoard($productId)
@@ -94,20 +101,165 @@ class TemplateController extends Controller
         }
     }
 
-    // парсит строку условий - делит ее на массив
-    static function parseCondition($condition)
+    // проходит по каждому продукту в сделке
+    static function tasksFromDeal($dealArr)
     {
-        foreach (['!==', '!=', '==', '='] as $sign) {
-            $conditionExplode = explode($sign, $condition);
-            if (count($conditionExplode) > 1) {
-                return [
-                    'param' => $conditionExplode[0],
-                    'sign' => $sign,
-                    'values' => explode('/', $conditionExplode[1])
-                ];
-            }
+        self::$scriptErrors = [];
+
+        // Загрузим выходные
+        $ch = curl_init('https://isdayoff.ru/api/getdata?year=' . date('Y') . '&delimeter=/');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        $result = curl_exec($ch);
+        if (!$result) self::$scriptErrors[] = 'Не загрузились данные о выходных и праздниках';
+        self::$isHoliday = explode('/', $result);
+        curl_close($ch);
+
+        foreach ($dealArr['products'] as $key => $dealItem) {
+
+            // self::extraSort('20 #8293');
+
+            self::$scriptErrors = [];
+            self::$needExtraSort = [];
+
+            $dealname = count($dealArr['products']) > 1 ? $dealArr['params']['deal'] . '/' . $key : $dealArr['params']['deal'];
+
+            $productDataArr = array_merge($dealItem, $dealArr['params']);
+            $productDataArr['dealname'] = $dealname;
+
+            $tasks = self::taskGenegator($productDataArr);
+            self::planGenerator($tasks, $dealItem);
+
+            // если есть задачи, зависящие от других и еще не передвинутые на нужное стартовое время - передвинем их
+            if (count(self::$needExtraSort) > 0) self::extraSort($dealname);
+            dump('errors', self::$scriptErrors);
+
+            dd('finish tasksFromDeal()');
         }
-        return false;
+        return true;
+    }
+
+    // дополнительно передвинем зависящие задачи от предыдущих 
+    static function extraSort($dealName)
+    {
+        $tasks = Tasks::where('deal', $dealName)->get();
+
+        // обработка ошибок
+        if ($tasks->count() == 0) {
+            self::$scriptErrors[] = 'extraSort() При дополнительной сортировке зависящих задач возникла ошибка';
+            return false;
+        }
+
+        // возьмем все задачи с taskidbefore = NULL
+        foreach ($tasks->whereNull('taskidbefore') as $item) {
+            // проверим, если их шаблон имеет taskidbefore
+            $itemTemplate = Templates::find($item->templateid);
+            if ($itemTemplate->taskidbefore) {
+                // шаблон связан с предыдущим шаблоном. Найдем задачу, созданную предыдущим шаблоном
+                $beforeTask = $tasks->where('templateid', $itemTemplate->taskidbefore);
+
+                // обработка ошибок
+                if ($beforeTask->count() > 1) {
+                    self::$scriptErrors[] = 'extraSort() В созданных задачах по следке ' . $item->deal . ' есть задачи, созданные по одному и тому же шаблону ' . $itemTemplate->taskidbefore;
+                    return false;
+                }
+
+                // обработка ошибок
+                if ($beforeTask->count() == 0) {
+                    self::$scriptErrors[] = 'extraSort() В созданных задачах по следке ' . $item->deal . ' есть задачи, предыдущей задачи по шаблону ' . $itemTemplate->taskidbefore . ', но таких задач не существует';
+                    return false;
+                }
+
+                // $beforeTask->first() - найденная предыдущая задача для задачи $item
+                // Пометим taskidbefore в задаче $item
+                $item->taskidbefore = $beforeTask->first()->id;
+                $item->save();
+            };
+        }
+
+        self::rebuildTrueTime($dealName);
+    }
+
+    // проверяет и исправляет правильную последовательность в задачах во времени
+    static function rebuildTrueTime($dealName)
+    {
+        $tasks = Tasks::where('deal', $dealName)->get();
+
+        // обработка ошибок
+        if ($tasks->count() == 0) {
+            self::$scriptErrors[] = 'rebuildTrueTime() Нет задач по такой сделке';
+            return false;
+        }
+
+        // проверим последовательность. 
+        $errorCount = 0; //защитный счетчик
+        do {
+            $falseTasks = 0; //количество задач, у которых не правильно выставлено время
+            $errorCount++;
+
+            foreach ($tasks->groupBy('line') as $lineItem) {
+
+                foreach ($lineItem->sortBy('position') as $item) {
+
+                    // возьмем задачи, у которых есть привязка к предыдущей
+                    if ($item->taskidbefore) {
+                        $beforeTask = $tasks->find($item->taskidbefore);
+
+
+                        $itemStart = Carbon::createFromFormat('Y-m-d H:i:s', $item->start); //время начала данной задачи
+                        $beforeEnd = Carbon::createFromFormat('Y-m-d H:i:s', $beforeTask->end); //время окончания предыдущей задачи
+                        $beforeEnd->addMinutes($beforeTask->buffer);
+
+                        // 
+                        // $different = $itemStart->greaterThan($beforeEnd);//разница
+                        // $itemStart->toDateTimeString().' > '.$beforeEnd->toDateTimeString().'-'.
+
+                        // dump($item->id);
+
+                        // Если время старта данной задачи < времени окончания предыдущей
+                        if (!$itemStart->greaterThan($beforeEnd)) {
+
+                            // сделаем специально познее вермя старта, что бы потом выбрать самого свободного мастера
+                            $start = new Carbon; //
+                            $start->addYear();
+
+                            // выберем ближайшего свободного мастера
+                            $resultMasterId = 0;
+
+                            // найдем ближайшее свободное время у возможных мастеров
+                            $template = Templates::find($item->templateid);
+                            foreach (explode('/', $template->masters) as $masterId) {
+                                $resultTime = self::getFreePlan($masterId, $item->time, $beforeEnd, [
+                                    $template->period1,
+                                    $template->period2,
+                                ]);
+
+                                if ($resultTime < $start) {
+                                    $start = clone $resultTime;
+                                    $end = clone $start;
+                                    $end->addMinutes($item->time);
+                                    $resultMasterId = $masterId;
+                                }
+                            }
+
+                            $item->master = $resultMasterId;
+                            $item->start = $start->toDateTimeString();
+                            $item->end = $end->toDateTimeString();
+                            $item->save();
+
+                            $falseTasks++;
+                            // dump ($start->toDateTimeString(), $end->toDateTimeString());
+                        }
+                    }
+                }
+            }
+            if ($errorCount > 15) {
+                self::$scriptErrors[] = 'rebuildTrueTime() В дополнительной сортировке количество циклов превысело максимальное значение. Цикл остановлен. Проверьте порядок у задач';
+                break;
+            }
+        } while ($falseTasks > 0);
+        return true;
     }
 
     // Подбирет шаблоны под параметры заказа и расчитывает длительность задачи
@@ -165,7 +317,6 @@ class TemplateController extends Controller
                                     case '==':
                                         $conditionResult += strcasecmp($productValue, $value) == 0 ? 1 : 0;
                                         break;
-
                                     case '!==':
                                         $conditionResult += strcasecmp($productValue, $value) != 0 ? 1 : 0;
                                         break;
@@ -177,8 +328,8 @@ class TemplateController extends Controller
 
                 if ($conditionCount == 0 || $conditionResult > 0) {
                     // тут шаблон прошел условия, поэтому создадим задачу
-
                     // если есть минипараметры, которые нужно отобразить в сделке
+
                     $taskInfo = NULL;
                     if ($templateItem->params) {
 
@@ -207,12 +358,28 @@ class TemplateController extends Controller
                         'templateid' => $templateItem->id,
                         'time' => $taskTime,
                         'info' => $taskInfo,
-                        'deal' => $productParams['deal']
+                        'dealname' => $productParams['dealname']
                     ];
                 }
             }
         }
         return $taskArr;
+    }
+
+    // парсит строку условий - делит ее на массив
+    static function parseCondition($condition)
+    {
+        foreach (['!==', '!=', '==', '='] as $sign) {
+            $conditionExplode = explode($sign, $condition);
+            if (count($conditionExplode) > 1) {
+                return [
+                    'param' => $conditionExplode[0],
+                    'sign' => $sign,
+                    'values' => explode('/', $conditionExplode[1])
+                ];
+            }
+        }
+        return false;
     }
 
     // преобразует предварительно подобранные шаблоны задач в список задач со временем
@@ -222,13 +389,7 @@ class TemplateController extends Controller
         //         "templateid" => 6
         //         "time" => 3
         //         "info" => null
-        //         "deal" => "20 #8293"
-
-        // Необходимо расчитать
-        // + name
-        // master
-        // + status
-        // start
+        //         "deal" => "20 #8293
 
         foreach ($tasksArr as $line) {
             $taskBefore = NULL;
@@ -237,19 +398,36 @@ class TemplateController extends Controller
 
                 $template = Templates::find($task['templateid']);
                 $lastTaskId = NULL;
+                $extraSort = false;
+
                 if ($template->taskidbefore) {
+
                     // предварительная задача из другой линии
-                    $startFrom = new Carbon; //время с которого можно ставить задачи
-                    $startFrom->addHours(300);
+                    $beforeTask = Tasks::where('deal', $task['dealname'])->where('status', 'temp')->where('templateid', $template->taskidbefore)->get();
+                    if ($beforeTask->count() > 0) {
+                        // такая уже задача создана
+                        $startFrom = Carbon::parse($beforeTask->last()->end);
+                        $startFrom->addMinutes($beforeTask->last()->buffer + STANDART_BUFFER);
+                        $lastTaskId = $beforeTask->last()->id;
+                        if ($beforeTask->count() > 1) {
+                            // найдено предварительных задач больше 1.
+                            $scriptErrors[] = 'Template ID ' . $template->id . 'устанавливается после ID' . $template->taskidbefore . '. В графике уже заплпанировано ' . $beforeTask->count() . 'таких временных задач!';
+                        }
+                    } else {
+                        // такая задача пока не создана, поэтому поставим пометку на передвижение задач после выполнения всех скриптов
+                        $startFrom = new Carbon; //время с которого можно ставить задачи
+                        // $startFrom->addDays(30);
+                        $extraSort = true; //в конце цикла добавим эту задачу в массив не отсортированных по времени старта задач
+                    }
                 } elseif ($taskBefore) {
                     // есть предыдущая задача в линии
                     $startFrom = Carbon::parse($taskBefore->end);
-                    $startFrom->addMinutes($taskBefore->buffer);
+                    $startFrom->addMinutes($taskBefore->buffer + STANDART_BUFFER);
                     $lastTaskId = $taskBefore->id;
                 } else {
                     // это первая задача в линии
                     $startFrom = new Carbon; //время с которого можно ставить задачи
-                    $startFrom->addHours(20);
+                    $startFrom->addHours(TIME_AFTER_SCRIPT);
                 }
 
                 // найдем свободное время у мастера
@@ -259,40 +437,50 @@ class TemplateController extends Controller
                 $start = new Carbon; //
                 $start->addYear();
 
+                // выберем ближайшего свободного мастера
+                $resultMasterId = 0;
+
                 foreach ($mastersArr as $masterId) {
                     $resultTime = self::getFreePlan($masterId, $task['time'], $startFrom, [
                         $template->period1,
                         $template->period2,
                     ]);
+
                     if ($resultTime < $start) {
                         $start = clone $resultTime;
                         $end = clone $start;
                         $end->addMinutes((int)$task['time']);
+                        $resultMasterId = $masterId;
                     }
                 }
+
                 $taskBefore = new Tasks;
                 $taskBefore->name = $template->taskname;
-                $taskBefore->master = $masterId;
+                $taskBefore->templateid = $template->id;
+                $taskBefore->master = $resultMasterId;
                 $taskBefore->time = $task['time'];
+                $taskBefore->line = $template->line;
+                $taskBefore->position = $template->position;
                 $taskBefore->status = 'temp';
                 if ($lastTaskId) $taskBefore->taskidbefore = $lastTaskId; //предварительная задача
                 $taskBefore->start = $start->format('Y-m-d H:i:s');
                 $taskBefore->end = $end->format('Y-m-d H:i:s');
-                $taskBefore->buffer = $template->buffer + 10; //стандартный буфер задержки после задачи
-                $taskBefore->info = $dealItem['productname'] . ' ' . $dealItem['Формат'] ?? '' . ' / ' . $task['info'];
-                $taskBefore->deal = $task['deal'];
+                $taskBefore->buffer = $template->buffer + STANDART_BUFFER; //стандартный буфер задержки после задачи
+                $taskBefore->generalinfo = $dealItem['productname'] . ' ' . $dealItem['Формат'] ?? '';
+                if ($template->params) {
+                    $info = '';
+                    foreach (explode('/', $template->params) as $param) {
+                        if (isset($dealItem[$param]) !== false) $info .= $param . ': ' . $dealItem[$param] . '; ';
+                        // else self::$scriptErrors[] = 'Не найден параметр, проверьте "' . $param . '"';
+                    }
+                    $taskBefore->info = $info;
+                }
+                $taskBefore->deal = $task['dealname'];
                 $taskBefore->save();
 
+                if ($extraSort == true) self::$needExtraSort[] = $taskBefore->id; //добавим ID задачи в 
 
-
-                // результат 
-                // masterId
-                // start
-                // end
-                // startFrom - время с которого можно ставить следующую задачу
             }
-
-            // dd (Tasks::where(''))
         }
     }
 
@@ -316,14 +504,16 @@ class TemplateController extends Controller
         do {
             $test++;
 
-            if ($test > 10) {
-                echo '<h1>test-stop!!!</h1>';
+            if ($test > 100) {
+                self::$scriptErrors[] = 'getFreePlan() цикл поиска свободного времени превысил допустимое значение. Мастер - ' . $masterId . ', startFrom - ' . $startFrom->toDateTimeString() . ', Длительность ' . $time . ' мин.';
+                // echo '<h1>test-stop!!!</h1>';
                 break;
             }
-            echo 'Проверим ' . self::$startTime->format('Y-m-d H:i:s') . '<br>';
+            if (LOG == true) echo 'Мастер ' . $masterId . ' / Поиск  ' . self::$startTime->format('Y-m-d H:i:s') . ' / ' . $time . ' мин.';
             $result = self::tryToPlan($time, $periods, $masterId);
             // echo 'После '.self::$startTime->format('Y-m-d H:i:s').'<br>';
         } while ($result == false);
+        if (LOG == true) echo ' OK<br><br>';
         return self::$startTime;
     }
 
@@ -337,7 +527,7 @@ class TemplateController extends Controller
         $endTime = clone self::$startTime;
         $endTime->addMinutes(round($time)); //время окончания задачи
         // dump (self::$startTime->toDateTimeString(), $endTime->toDateTimeString());
-        $periods[] = '12:00-13:00'; //Перерыв на обед
+        $periods[] = LUNCH_BREACK; //Перерыв на обед
 
         // рабочее время
         $workDayStart = clone self::$startTime;
@@ -347,7 +537,7 @@ class TemplateController extends Controller
 
         // Проерим startTime на: выходные (масивв номер дня года - результат)
         if (self::$isHoliday[self::$startTime->format('z')] != 0 && self::$isHoliday[self::$startTime->format('z')] != 4) {
-            echo ' - Выходной<br>';
+            if (LOG == true) echo ' - Выходной<br>';
             self::$startTime->setTime(9, 0, 0);
             self::$startTime->addDay();
             return false;
@@ -355,14 +545,14 @@ class TemplateController extends Controller
 
         // Проверим startTime если раньше начала рабочего дня или endTime позже времени окончания, то вернем 9:00 следующего дня
         if (self::$startTime < $workDayStart || $endTime < $workDayStart) {
-            echo ' - Слишком рано<br>';
+            if (LOG == true) echo ' - Слишком рано<br>';
             self::$startTime->setTime(9, 0, 0);
             return false;
         }
 
         // если время позже рабочего времени, то + 1 день
         if (self::$startTime > $workDayEnd || $endTime > $workDayEnd) {
-            echo ' - Слишком поздно<br>';
+            if (LOG == true) echo ' - Слишком поздно<br>';
             self::$startTime->setTime(9, 0, 0);
             self::$startTime->addDay();
             return false;
@@ -386,66 +576,43 @@ class TemplateController extends Controller
                 // если данное время попадает в период запрещенных вернем 
                 if (self::$startTime->between($periodStart, $periodEnd, false) || $endTime->between($periodStart, $periodEnd, false)) {
                     self::$startTime = clone $periodEnd;
-                    echo ' - Запретный период<br>';
+                    if (LOG == true) echo ' - Запретный период<br>';
                     return false;
                 }
             }
         }
 
-        // 10:00-10:10
-        // 11:00
-        // 12:00
-        // 13:00
-        // 14:00-14:30
-
-        // 9:40-9:50 - ok  start > startTime && start > endTime
-        // 9:40-10:00 - ok 
-        // 10:05-10:10 - false
-        // 9:40-10:10 - false
-        // 10:09 - 10:20 - false
-        // 10:10-10:20 - ok
-        // 9:40-10:10 - false
-        // 14:28-14:40 - false
-        // 14:30 - 15:00 - ok
-
 
         // Проверим данное время на совпадение с запланированными задачами:
+
+        // временно добавим 1 секунду, что бы не было времени 9:01
+        self::$startTime->addSecond();
+        $endTime->subSecond();
+
         $taskHere = Tasks::where('master', $masterId)
+            // ->whereIn('status', ['wait', 'repair'])
             ->whereBetween('start', [self::$startTime, $endTime])
             ->orWhereBetween('end', [self::$startTime, $endTime])
-            ->orWhere([['start', '<=', self::$startTime], ['end', '>=', $endTime]])->get();
-        // $taskHere = Tasks::where('master', $masterId)
-        //     ->where('start', '>=', self::$startTime)
-        //     ->orWhere('end', '>=', self::$startTime)
-        //     ->where('start', '<=', self::$startTime)->get();
+            ->orWhere([['start', '<=', self::$startTime], ['end', '>=', $endTime]])->get()->sortBy('end');
+
         if ($taskHere->count() > 0) {
-            self::$startTime = Carbon::parse($taskHere->first()->end);
-            self::$startTime->addSecond();
-            echo ' - есть задача в это время '.$taskHere->count().'<br>';
+
+            // уберем временную 1 секунду
+            self::$startTime->subSecond(); //addSecond();
+            $endTime->addSecond();
+
+            // if ($taskHere->count() > 2) dump ($taskHere);
+            self::$startTime = Carbon::createFromFormat('Y-m-d H:i:s', $taskHere->last()->end);
+            if (LOG == true) echo ' - в это вреия есть задачи: ' . $taskHere->count() . '<br>';
             return false;
         };
 
+        // уберем временную 1 секунду
+        self::$startTime->subSecond(); //addSecond();
+        $endTime->addSecond();
+
         return true;
     }
-
-    // проходит по каждому продукту в сделке
-    static function tasksFromDeal($dealArr)
-    {
-        // Загрузим выходные
-        $ch = curl_init('https://isdayoff.ru/api/getdata?year=' . date('Y') . '&delimeter=/');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        self::$isHoliday = explode('/', curl_exec($ch));
-        curl_close($ch);
-
-        foreach ($dealArr['products'] as $key => $dealItem) {
-            $tasks = self::taskGenegator(array_merge($dealItem, $dealArr['params']));
-            $tasksPlan = self::planGenerator($tasks, $dealItem);
-        }
-        return true;
-    }
-
 
 
     // перемещает шаблон на другую позицию

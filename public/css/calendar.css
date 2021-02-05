@@ -1,0 +1,67 @@
+@import url(https://fonts.googleapis.com/css2?family=Bellota+Text:wght@400;700&display=swap);
+* {
+  font-family: "Bellota Text", cursive;
+}
+
+.calendar-block {
+  display: grid;
+  gap: 2px;
+}
+.calendar-block .linehead {
+  grid-row: 1/2;
+}
+.calendar-block .task {
+  border-radius: 5px;
+  max-width: 100%;
+  padding: 2px;
+  margin-left: -1px;
+  font-size: 12px;
+  overflow: hidden;
+  z-index: 1;
+}
+.calendar-block .task .title {
+  font-weight: bold;
+}
+.calendar-block .task .title .dealname {
+  background-color: #e4e4e4;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-right: 5px;
+}
+.calendar-block .task .taskname {
+  font-size: 13px;
+  margin-left: 4px;
+  color: #3a3a3a;
+}
+.calendar-block .task .task-buttons button {
+  border-radius: 10px;
+  border: 1px solid grey;
+  font-size: 12px;
+  padding: 2px 6px;
+}
+.calendar-block .task[status=temp] {
+  background-color: #f3ea81;
+}
+.calendar-block .task[status=wait] {
+  background-color: #a6cc69;
+}
+.calendar-block .task[status=repair] {
+  background-color: #e46d6d;
+}
+.calendar-block .task[status=finished] {
+  background-color: #c1bbbb;
+}
+.calendar-block .hour-line {
+  opacity: 0.7;
+  border-right: 1px solid #d0d0d0;
+  border-top: 1px solid #d0d0d0;
+  z-index: 0;
+}
+.calendar-block .hour-line .time-tag {
+  color: grey;
+  margin-top: 5px;
+}
+
+.footer-block {
+  height: 200px;
+}
