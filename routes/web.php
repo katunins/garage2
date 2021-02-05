@@ -130,3 +130,7 @@ Route::get('/calendar', function () {
     ->with('scale', $scale)
     ->with('Tasks', CalendarController::getTask($startCalendarTime, $endCalendarTime, $gridInHour, $scale));
 });
+
+
+// Функционал
+// менять мастера
