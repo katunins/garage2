@@ -34,6 +34,9 @@
 .head-block .filter-block form {
   margin: 0;
 }
+.head-block .status-filter-title {
+  font-weight: bold;
+}
 .head-block .status-filter {
   display: flex;
 }

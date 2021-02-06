@@ -62,19 +62,22 @@
     </div>
 
 
-    <div class="status-filter">
-        @foreach ([
-        'temp'=>'Временные',
-        'wait'=>'Новые',
-        'repair'=>'В ремонте',
-        'finished'=>'Завершены',
-        ] as $key=>$item)
-        <form action="/calendar" method="get">
-            <input type="hidden" name="status-{{ $key }}" value={{ !$statusFilter['status-'.$key]}}>
-            <input class="status-filter-buttons task-status-{{ $key }}" type="submit"
-                value="{{ $statusFilter['status-'.$key]?'✓':'   ' }} {{ $item }}">
-        </form>
-        @endforeach
+    <div class="">
+        <div class="status-filter-title">Фильтр по стадиям</div>
+        <div class="status-filter">
+            @foreach ([
+            'temp'=>'Временные',
+            'wait'=>'Новые',
+            'repair'=>'В ремонте',
+            'finished'=>'Завершены',
+            ] as $key=>$item)
+            <form action="/calendar" method="get">
+                <input type="hidden" name="status-{{ $key }}" value={{ !$statusFilter['status-'.$key]}}>
+                <input class="status-filter-buttons task-status-{{ $key }}" type="submit"
+                    value="{{ $statusFilter['status-'.$key]?'✓':'   ' }} {{ $item }}">
+            </form>
+            @endforeach
+        </div>
     </div>
 </div>
 
