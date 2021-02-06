@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 const LUNCH_BREACK = '12:00-13:00'; //перевыр на обед
 const STANDART_BUFFER = 10; //стандартный буфер в минутах
 const TIME_AFTER_SCRIPT = 12; //время задержки после запуска скрипта в часах
-const LOG = true; //true - идет вывод echo;
+const LOG = false; //true - идет вывод echo;
 
 use App\Models\Products;
 use App\Models\Tasks;
@@ -57,6 +57,7 @@ class TemplateController extends Controller
     {
         return Templates::where('id', $templateId)->first();
     }
+
     static function deleteTemplate($templateId)
     {
         $currentTemplate = Templates::find($templateId);
@@ -137,17 +138,22 @@ class TemplateController extends Controller
             // запустим дополнительную - проверку последовательностей
             self::rebuildTrueTime($dealName);
 
-            dump('errors', self::$scriptErrors);
+            if (LOG) dump('errors', self::$scriptErrors);
 
-            dd('finish tasksFromDeal()');
+            // переведем все задачи в статус Wait
+            Tasks::where('deal', $dealName)->where('status', 'temp')->update(['status'=>'wait']);
+            // dd('finish tasksFromDeal()');
         }
-        return true;
+        if (self::$scriptErrors == []) return true;
+        else {
+            dd (self::$scriptErrors);
+        }
     }
 
     // дополнительно передвинем зависящие задачи от предыдущих 
     static function extraSort($dealName)
     {
-        $tasks = Tasks::where('deal', $dealName)->get();
+        $tasks = Tasks::where('deal', $dealName)->where('status', 'temp')->get();
 
         // обработка ошибок
         if ($tasks->count() == 0) {
@@ -186,7 +192,7 @@ class TemplateController extends Controller
     // проверяет и исправляет правильную последовательность в задачах во времени
     static function rebuildTrueTime($dealName)
     {
-        $tasks = Tasks::where('deal', $dealName)->get();
+        $tasks = Tasks::where('deal', $dealName)->where('status', 'temp')->get();
 
         // обработка ошибок
         if ($tasks->count() == 0) {
@@ -229,11 +235,18 @@ class TemplateController extends Controller
                     $tasksInSafePeriod = Tasks::where('master', $item->master)
                         ->whereBetween('end', [$SafeTimeBefore, $itemStart])
                         ->get();
-                    if ($tasksInSafePeriod->count() > 1) {
+
+                    // if ($item->id == 14) {
+                    //     dump('$SafeTimeBefore'.$SafeTimeBefore->toDateTimeString());
+                    //     dump($tasksInSafePeriod);
+                    // }
+
+
+                    if ($tasksInSafePeriod->count() > 0) {
                         $beforeTask = $tasksInSafePeriod->last();
                         $beforeEnd = Carbon::createFromFormat('Y-m-d H:i:s', $beforeTask->end); //время окончания предыдущей задачи
                         $beforeEnd->addMinutes(STANDART_BUFFER);
-                        if ($beforeEnd> $trueStart) $trueStart = $beforeEnd;
+                        if ($beforeEnd > $trueStart) $trueStart = $beforeEnd;
                         $needRebuild = true;
                     }
 
@@ -428,7 +441,10 @@ class TemplateController extends Controller
                 if ($template->taskidbefore) {
 
                     // предварительная задача из другой линии
-                    $beforeTask = Tasks::where('deal', $task['dealname'])->where('status', 'temp')->where('templateid', $template->taskidbefore)->get();
+                    $beforeTask = Tasks::where('deal', $task['dealname'])
+                        ->where('status', 'temp')
+                        ->where('templateid', $template->taskidbefore)
+                        ->get();
                     if ($beforeTask->count() > 0) {
                         // такая уже задача создана
                         $startFrom = Carbon::parse($beforeTask->last()->end);
@@ -452,8 +468,7 @@ class TemplateController extends Controller
                 } else {
                     // это первая задача в линии
                     $startFrom = new Carbon; //время с которого можно ставить задачи
-
-                    $startFrom = Carbon::parse('2021-02-04 17:16:12'); //для теста
+                    // $startFrom = Carbon::parse('2021-02-04 17:16:12'); //для теста
                     $startFrom->addHours(TIME_AFTER_SCRIPT);
                 }
 
@@ -531,7 +546,7 @@ class TemplateController extends Controller
         do {
             $test++;
 
-            if ($test > 100) {
+            if ($test > 1500) {
                 self::$scriptErrors[] = 'getFreePlan() цикл поиска свободного времени превысил допустимое значение. Мастер - ' . $masterId . ', startFrom - ' . $startFrom->toDateTimeString() . ', Длительность ' . $time . ' мин.';
                 // echo '<h1>test-stop!!!</h1>';
                 break;

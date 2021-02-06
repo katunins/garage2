@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="css/welcome.css">
+<link rel="stylesheet" href="css/general.css">
 
 <div class="container">
     <h1>korobook Администратор</h1>
@@ -6,7 +7,6 @@
         <div class="menu">
             <li><a href="/templates">Шаблоны задач</a></li>
             <li><a href="/masters">Список мастеров</a></li>
-            <li><a href="/tasksboard">Задачи</a></li>
             <li><a href="/calendar">Календарь</a></li>
         </div>
         <div class="">

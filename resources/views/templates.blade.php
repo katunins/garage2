@@ -1,6 +1,9 @@
 <link rel="stylesheet" href="css/welcome.css">
+<link rel="stylesheet" href="css/general.css">
 
-<h1>Шаблоны задач</h1>
+<h1>
+    <a class="to-main-page" href="/">←</a>
+    Шаблоны задач</h1>
 <div class="products-menu">
     @foreach ($products as $item)
     <li>

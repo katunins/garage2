@@ -28,6 +28,83 @@ window.ajax = function (url, data) {
   });
 };
 
+window.modal = function (action) {
+  var title = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+  var text = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+  var button1 = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+  var button2 = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : null;
+  var modal = document.getElementById('modal');
+  var modalTitle = modal.querySelector('.modal-title');
+  var modalText = modal.querySelector('.modal-text');
+  var modalButtons = modal.querySelector('.modal-buttons');
+  var modalButton1 = modal.querySelector('.modal-button1');
+  var modalButton2 = modal.querySelector('.modal-button2');
+
+  if (action == 'open') {
+    if (modal.classList.contains('hide')) modal.classList.remove('hide');
+
+    if (title) {
+      if (modalTitle.classList.contains('hide')) modalTitle.classList.remove('hide');
+      modalTitle.innerHTML = title;
+    }
+
+    if (text) {
+      if (modalText.classList.contains('hide')) modalText.classList.remove('hide');
+      modalText.innerHTML = text;
+    }
+
+    if (button1) {
+      if (modalButtons.classList.contains('hide')) modalButtons.classList.remove('hide');
+      if (modalButton1.classList.contains('hide')) modalButton1.classList.remove('hide');
+      modalButton1.innerHTML = button1.name;
+      modalButton1.onclick = button1["function"];
+    }
+
+    if (button2) {
+      if (modalButtons.classList.contains('hide')) modalButtons.classList.remove('hide');
+      if (modalButton2.classList.contains('hide')) modalButton2.classList.remove('hide');
+      modalButton2.innerHTML = button2.name;
+      modalButton2.onclick = button2["function"];
+    }
+
+    document.addEventListener('keydown', escapeModal = function escapeModal(e) {
+      var keyCode = e.keyCode;
+
+      if (keyCode === 27) {
+        //keycode is an Integer, not a String
+        window.modal('close');
+      }
+    });
+  } else {
+    document.removeEventListener('keydown', escapeModal);
+    modal.classList.add('hide');
+    modalButtons.classList.add('hide');
+    modalTitle.innerHTML = '';
+    modalText.innerHTML = '';
+    modalButton1.innerHTML = '';
+    modalButton1.onclick = null;
+    modalButton2.innerHTML = '';
+    modalButton2.onclick = null;
+    modalTitle.classList.add('hide');
+    modalText.classList.add('hide');
+    modalButton1.classList.add('hide');
+    modalButton2.classList.add('hide');
+  }
+};
+
+/***/ }),
+
+/***/ "./resources/sass/board.scss":
+/*!***********************************!*\
+  !*** ./resources/sass/board.scss ***!
+  \***********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+// extracted by mini-css-extract-plugin
+
+
 /***/ }),
 
 /***/ "./resources/sass/newtemplate.scss":
@@ -56,6 +133,19 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./resources/sass/general.scss":
+/*!*************************************!*\
+  !*** ./resources/sass/general.scss ***!
+  \*************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+// extracted by mini-css-extract-plugin
+
+
+/***/ }),
+
 /***/ "./resources/sass/tasklist.scss":
 /*!**************************************!*\
   !*** ./resources/sass/tasklist.scss ***!
@@ -73,19 +163,6 @@ __webpack_require__.r(__webpack_exports__);
 /*!**************************************!*\
   !*** ./resources/sass/calendar.scss ***!
   \**************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-// extracted by mini-css-extract-plugin
-
-
-/***/ }),
-
-/***/ "./resources/sass/board.scss":
-/*!***********************************!*\
-  !*** ./resources/sass/board.scss ***!
-  \***********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -158,6 +235,7 @@ __webpack_require__.r(__webpack_exports__);
 /******/ 			["./resources/js/general.js"],
 /******/ 			["./resources/sass/newtemplate.scss"],
 /******/ 			["./resources/sass/welcome.scss"],
+/******/ 			["./resources/sass/general.scss"],
 /******/ 			["./resources/sass/tasklist.scss"],
 /******/ 			["./resources/sass/calendar.scss"],
 /******/ 			["./resources/sass/board.scss"]

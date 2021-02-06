@@ -1,23 +1,77 @@
-@import url(https://fonts.googleapis.com/css2?family=Bellota+Text:wght@400;700&display=swap);
-* {
-  font-family: "Bellota Text", cursive;
+.head-block {
+  display: flex;
+}
+.head-block .date-block {
+  width: 380px;
+  justify-content: flex-end;
+}
+.head-block .date-block .date-title {
+  font-size: 25px;
+}
+.head-block .date-block .buttons {
+  justify-content: flex-end;
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  width: fit-content;
+  margin-top: 3px;
+}
+.head-block .date-block .buttons form {
+  display: inline;
+}
+.head-block input[type=text] {
+  font-size: 18px;
+  padding: 3px 10px;
+  margin-top: 3px;
+}
+.head-block .filter-block {
+  width: 300px;
+  display: flex;
+}
+.head-block .filter-block label {
+  font-weight: bold;
+  font-size: 16px;
+}
+.head-block .filter-block form {
+  margin: 0;
+}
+.head-block .status-filter {
+  display: flex;
+}
+.head-block .status-filter .status-filter-buttons {
+  padding: 2px 10px;
+  list-style: none;
+  margin-right: 10px;
+  border-radius: 5px;
+  outline: none;
+  width: 120px;
+  height: 40px;
+  align-items: center;
+  border: 1px solid grey;
+}
+.head-block .status-filter .status-filter-buttons label {
+  margin-left: 5px;
 }
 
 .calendar-block {
   display: grid;
   gap: 2px;
+  margin-top: 20px;
 }
 .calendar-block .linehead {
   grid-row: 1/2;
+  font-weight: bold;
+  font-size: 13px;
 }
 .calendar-block .task {
   border-radius: 5px;
   max-width: 100%;
   padding: 2px;
+  filter: drop-shadow(2px 2px 2px #747474);
   margin-left: -1px;
   font-size: 12px;
   overflow: hidden;
   z-index: 1;
+  cursor: pointer;
 }
 .calendar-block .task .title {
   font-weight: bold;
@@ -39,18 +93,6 @@
   font-size: 12px;
   padding: 2px 6px;
 }
-.calendar-block .task[status=temp] {
-  background-color: #f3ea81;
-}
-.calendar-block .task[status=wait] {
-  background-color: #a6cc69;
-}
-.calendar-block .task[status=repair] {
-  background-color: #e46d6d;
-}
-.calendar-block .task[status=finished] {
-  background-color: #c1bbbb;
-}
 .calendar-block .hour-line {
   opacity: 0.7;
   border-right: 1px solid #d0d0d0;
@@ -62,6 +104,58 @@
   margin-top: 5px;
 }
 
+.task-status-temp {
+  background-color: #eb34cc;
+}
+
+.task-status-wait {
+  background-color: #a6cc69;
+}
+
+.task-status-repair {
+  background-color: #f3ea81;
+}
+
+.task-status-finished {
+  background-color: #e46d6d;
+}
+
 .footer-block {
   height: 200px;
+}
+
+#modal {
+  width: 100%;
+  height: 100%;
+  background: #d8d8d8ad;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+}
+#modal .modal-container {
+  position: relative;
+  width: 800px;
+  height: 400px;
+  background-color: white;
+  position: relative;
+  width: 800px;
+  height: 500px;
+  background-color: white;
+  border-radius: 5px;
+  filter: drop-shadow(3px 2px 4px black);
+  padding: 20px;
+}
+#modal .modal-container .modal-close-button {
+  top: 10px;
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: 1px solid grey;
+  color: grey;
+  padding: 2px 5px;
+  border-radius: 12px;
 }

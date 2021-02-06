@@ -1,6 +1,10 @@
 <link rel="stylesheet" href="css/welcome.css">
+<link rel="stylesheet" href="css/general.css">
+
 <div class="container">
-    <h1>Мастера</h1>
+    <h1>
+        <a class="to-main-page" href="/">←</a>
+        Мастера</h1>
     <table>
         <tr>
             <th>id</th>

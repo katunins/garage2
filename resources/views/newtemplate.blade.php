@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="css/newtemplate.css">
+<link rel="stylesheet" href="css/general.css">
 
 {{-- 
     $line
@@ -8,7 +9,9 @@
 --}}
 
 {{-- {{ dd($template->first()) }} --}}
-<h1>Новый шаблон</h1>
+<h1>
+    <a class="to-main-page" href="/">←</a>
+    Новый шаблон</h1>
 <p>
     Линия {{ $line }}, Позиция {{ $position }}, Продукт {{ $productId }}
 </p>
