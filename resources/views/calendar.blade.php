@@ -107,12 +107,18 @@
     $modalMessage = '';
     foreach ($item->getAttributes() as $param => $value) {
     if ($param == 'master') $value = $Users->find($value)->name;
-    $modalMessage .='<b>'.$param.'</b>'.' '.$value.'<br>';
+
+    $skip = false;
+    foreach (['templateid', 'status', 'deal', 'created_at', 'updated_at', 'startGrid', 'endGrid'] as $el) {
+    if ($param == $el) $skip = true;
+    }
+
+    if (!$skip) $modalMessage .='<b>'.$param.'</b>'.' '.$value.'<br>';
     }
     @endphp
     <div class="task task-status-{{ $item->status }}"
         style="grid-row: {{ $item->startGrid }}/{{ $item->endGrid }}; grid-column: {{ $userColumn[$item->master] }}"
-        onclick="modal('open', '{{ $item->deal }}','{{ $modalMessage }}', {name: `ok`, function: ()=>{modal(`close`)}})">
+        onclick="modal('open', '{{ $item->deal }} - {{ $item->generalinfo }}','{{ $modalMessage }}', {name: `ok`, function: ()=>{modal(`close`)}})">
 
         <div class="title"><span class="dealname">{{ $item->deal }}</span>{{ $item->name }}</div>
         <div class="taskname">{{ $item->generalinfo }}</div>
