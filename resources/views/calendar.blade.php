@@ -42,7 +42,7 @@
 
         <form action="/calendar" method="get">
             <label for="filterdealname">Фильтр сделки</label>
-            <input type="text" name="filterdealname" value="{{ $filterDealName }}">
+            <input type="text" name="filterdealname" value="{{ $filterDealName }}" size="10">
             {{-- что бы не потерять другие настройки GET --}}
             @foreach ($_GET as $key=>$value)
             @if ($key !='filterdealname') <input type="hidden" name="{{ $key }}" value="{{ $value }}"> @endif
