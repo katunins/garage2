@@ -6,7 +6,6 @@ use App\Http\Controllers\TemplateController;
 use App\Models\Products;
 use App\Models\Tasks;
 use App\Models\User;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -91,8 +90,13 @@ Route::get('/deal2tasks', function () {
     $dealArr = DealsController::getDeal($_GET['id']);
     if ($dealArr !== false)
         if (TemplateController::tasksFromDeal($dealArr)) return redirect('/calendar');
-    else
-        return redirect()->back()->withErrors(['deal' => 'Возможно нет такой сделки']);
+        else
+            return redirect()->back()->withErrors(['deal' => 'Возможно нет такой сделки']);
+});
+Route::get('/deletealltasks', function () {
+    if ($_GET['time'] - time() > 1 || isset($_GET['confirm']) === false) return redirect()->back(); //защитимся от перехода в браузере назад
+    Tasks::whereIn('id', json_decode($_GET['taskstodelete']))->delete();
+    return redirect('/calendar');
 });
 
 Route::get('/calendar', [CalendarController::class, 'initCalendar']);

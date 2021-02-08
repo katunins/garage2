@@ -71,6 +71,19 @@ class CalendarController extends Controller
             }
         }
 
+        if (isset($_GET['calendarstyle']) !== false) {
+            $calendarStyle = $_GET['calendarstyle'];
+            session()->put('calendarStyle', $calendarStyle);
+        } else {
+            if (session()->has('calendarStyle')) {
+                $calendarStyle = session()->get('calendarStyle');
+            } else {
+                $calendarStyle = 0;
+                session()->put('calendarStyle', $calendarStyle);
+            }
+        }
+        
+
         $workTimeStart = 9; //вермя начала и конца
         $workTimeEnd = 18;
         $beforeAfter = 0.5; //дополнительные часы в сетки до и после
@@ -103,6 +116,7 @@ class CalendarController extends Controller
             ->with('scale', $scale)
             ->with('filterDealName', $filterDealName)
             ->with('statusFilter', $statusFilter)
+            ->with('calendarStyle', $calendarStyle)
             ->with('Tasks', self::getTask($startCalendarTime, $endCalendarTime, $gridInHour, $scale, $filterDealName, $statusFilter));
     }
 
