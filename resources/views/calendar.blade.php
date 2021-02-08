@@ -215,4 +215,4 @@
         </div>
         <button class="modal-close-button" onclick="modal('close')">✕</button>
     </div>
-</div>
+</div><script src="js/general.js"></script>
