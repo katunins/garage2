@@ -3,7 +3,7 @@
 
 <div class="container">
     <h1>
-        <a class="to-main-page" href="/">←</a>
+        <a class="to-main-page" href="/"></a>
         Мастера</h1>
     <table>
         <tr>

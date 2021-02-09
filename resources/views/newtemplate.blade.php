@@ -10,7 +10,7 @@
 
 {{-- {{ dd($template->first()) }} --}}
 <h1>
-    <a class="to-main-page" href="/">←</a>
+    <a class="to-main-page" href="/"></a>
     Новый шаблон</h1>
 <p>
     Линия {{ $line }}, Позиция {{ $position }}, Продукт {{ $productId }}

@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="css/general.css">
 
 <h1>
-    <a class="to-main-page" href="/">←</a>
+    <a class="to-main-page" href="/"></a>
     Шаблоны задач</h1>
 <div class="products-menu">
     @foreach ($products as $item)

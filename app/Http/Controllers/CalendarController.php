@@ -82,6 +82,18 @@ class CalendarController extends Controller
                 session()->put('calendarStyle', $calendarStyle);
             }
         }
+
+        if (isset($_GET['calendardays']) !== false) {
+            $calendarDays = $_GET['calendardays'];
+            session()->put('calendarDays', $calendarDays);
+        } else {
+            if (session()->has('calendarDays')) {
+                $calendarDays = session()->get('calendarDays');
+            } else {
+                $calendarDays = 1;
+                session()->put('calendarDays', $calendarDays);
+            }
+        }
         
 
         $workTimeStart = 9; //вермя начала и конца
@@ -90,13 +102,16 @@ class CalendarController extends Controller
 
         $scale = 5; //масштаб пикселей для одной строки ячейки
         $gridRowCount = ($workTimeEnd - $workTimeStart + 1 + $beforeAfter * 2) * $gridInHour; //строк в одной линии для рабочего дня
-
+        
         $startCalendarTime = clone $Date;
         $startCalendarTime->hour = floor($workTimeStart - $beforeAfter);
         $startCalendarTime->minute = $beforeAfter * 60;
         $startCalendarTime->second = 0;
 
+        
         $endCalendarTime = clone $Date;
+        if ($calendarDays == 7) $endCalendarTime->addWeek();
+
         $endCalendarTime->hour = floor($workTimeEnd + $beforeAfter);
         $endCalendarTime->minute = $beforeAfter * 60;
         $endCalendarTime->second = 0;
@@ -117,6 +132,7 @@ class CalendarController extends Controller
             ->with('filterDealName', $filterDealName)
             ->with('statusFilter', $statusFilter)
             ->with('calendarStyle', $calendarStyle)
+            ->with('calendarDays', $calendarDays)
             ->with('Tasks', self::getTask($startCalendarTime, $endCalendarTime, $gridInHour, $scale, $filterDealName, $statusFilter));
     }
 
@@ -146,6 +162,7 @@ class CalendarController extends Controller
         foreach ($tasks as $item) {
             $taskStartTime = Carbon::createFromFormat('Y-m-d H:i:s', $item->start);
             $taskEndTime = Carbon::createFromFormat('Y-m-d H:i:s', $item->end);
+            $startCalendarTime->setDateFrom ($taskStartTime);
 
             $starlGridLine = (int)ceil($taskStartTime->diffInMinutes($startCalendarTime) * $oneRow + $gridStart);
             $endGridLine = (int)floor($taskEndTime->diffInMinutes($startCalendarTime) * $oneRow + $gridStart);

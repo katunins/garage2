@@ -5,7 +5,7 @@
 
 <div class="head-block">
 
-    <a class="to-main-page" href="/">←</a>
+    <a class="to-main-page" href="/"></a>
     <div class="date-block">
         <div class="date-title">
 
@@ -13,8 +13,11 @@
         <input type="hidden" name="date" value="">
         <div class="buttons">
             <form action="/calendar" method="get">
-                <input type="submit" value="- День">
-                <input type="hidden" name="date" value="{{ $Date->subDay()->toDateString() }}">
+                <input type="submit" value="- @if ($calendarDays == 1) День @else Неделя @endif">
+                @php
+                    if ($calendarDays == 1) $Date->subDay(); else $Date->subWeek();
+                @endphp
+                <input type="hidden" name="date" value="{{ $Date->toDateString() }}">
                 {{-- что бы не потерять другие настройки GET --}}
                 @foreach ($_GET as $key=>$value)
                     @if ($key !='date') <input type="hidden" name="{{ $key }}" value="{{ $value }}"> @endif
@@ -29,13 +32,20 @@
                     @endforeach
             </form>
             <form action="/calendar" method="get">
-                <input type="submit" value="+ День">
-                <input type="hidden" name="date" value="{{ $Date->addDays(2)->toDateString() }}">
+                <input type="submit" value="+ @if ($calendarDays == 1) День @else Неделя @endif">
+                @php
+                    // поправим Date на неделю или день назад. Она изменилась в шапке при создании кнопки
+                    if ($calendarDays == 1) $Date->addDays(2); else $Date->addWeeks(2);
+                @endphp
+                <input type="hidden" name="date" value="{{ $Date->toDateString() }}">
                 {{-- что бы не потерять другие настройки GET --}}
                 @foreach ($_GET as $key=>$value)
                     @if ($key !='date') <input type="hidden" name="{{ $key }}" value="{{ $value }}"> @endif
                     @endforeach
             </form>
+            @php
+                if ($calendarDays == 7) $Date->subWeek(); else $Date->subDay();
+            @endphp
         </div>
         <div class="list-option">
             <form action="/calendar" method="get">
@@ -46,11 +56,11 @@
                 <label for="calendar-style">Отображение списком</label>
             </form>
             <form action="/calendar" method="get">
-                <input type="hidden" name="calendarstyle" value={{ $calendarStyle==1?0:1 }}>
-                <input id="calendar-style" type="checkbox"
-                    {{ $calendarStyle==1?'checked':'' }}
+                <input type="hidden" name="calendardays" value={{ $calendarDays==1?7:1 }}>
+                <input id="calendar-days" type="checkbox"
+                    {{ $calendarDays==7?'checked':'' }}
                     onclick="this.parentNode.submit()">
-                <label for="calendar-style">Календарь за неделю</label>
+                <label for="calendar-days">Календарь за неделю</label>
             </form>
         </div>
     </div>
@@ -97,54 +107,73 @@
         </div>
     </div>
 </div>
-@foreach (['1'] as $i)
-<div class="calendar-block" @if ($calendarStyle==0) style="grid-template-columns: 60px repeat({{ $Users->count() }}, 240px); 
+@for ($day = 0; $day < $calendarDays; $day++)
+    @php
+        // Отфильтруем задачи на один день из недели, для случая если это календарь недели
+        $weekCalendarDay = clone $Date;
+        $weekCalendarDay->addDay($day);
+        $weekCalendarDay->setTime(0,0,1);
+
+        $weekEndTimeFilter = clone $weekCalendarDay;
+        $weekEndTimeFilter->setTime(23,59,59);
+
+        if ($calendarDays == 7)
+        {
+            echo '<div class="every-day-date">'.\App\Http\Controllers\CalendarController::getRusDate($weekCalendarDay).'</div>';
+    }
+    @endphp
+
+    <div class="calendar-block" @if ($calendarStyle==0) style="grid-template-columns: 60px repeat({{ $Users->count() }}, 240px); 
     grid-template-rows: 1fr repeat({{ $gridRowCount }}, {{ $scale }}px);" @endif>
 
 
-    @if ($calendarStyle==0)
-        {{-- заголовок --}}
-        @foreach ($Users as $key => $item)
+        @if ($calendarStyle==0)
+            {{-- заголовок --}}
+            @foreach ($Users as $key => $item)
+                @php
+                    // пометим колонку определенным юзером
+                    $userColumn[$item->id] = ($key+2).'/'.($key+3);
+                @endphp
+                <div class="linehead" style="grid-row: 1/2; grid-column: {{ $userColumn[$item->id] }};">
+                    {{-- <input type="hidden" name="user-id-{{ $item->id }}"
+                    value="{{ $userColumn[$item->id] }}">--}}
+                    {{ $item->name }}
+                </div>
+            @endforeach
+        @endif
+        {{-- Задачи --}}
+
+        @foreach ($Tasks->whereBetween('start', [$weekCalendarDay, $weekEndTimeFilter]) as $item)
+
             @php
-                // пометим колонку определенным юзером
-                $userColumn[$item->id] = ($key+2).'/'.($key+3);
+
+                // подготовим тектс для модального окна
+                $modalMessage = '';
+                foreach ($item->getAttributes() as $param => $value) {
+                if ($param == 'master') $value = $Users->find($value)->name;
+
+                $skip = false;
+                foreach (['templateid', 'status', 'deal', 'created_at', 'updated_at', 'startGrid', 'endGrid'] as $el) {
+                if ($param == $el) $skip = true;
+                }
+
+                if (!$skip) $modalMessage .='<b>'.$param.'</b>'.' '.$value.'<br>';
+                }
+
+                if ($calendarStyle!=0) $tasksToDelete[]=$item->id;
             @endphp
-            <div class="linehead" style="grid-row: 1/2; grid-column: {{ $userColumn[$item->id] }};">
-                {{-- <input type="hidden" name="user-id-{{ $item->id }}"
-                value="{{ $userColumn[$item->id] }}">--}}
-                {{ $item->name }}
-            </div>
-        @endforeach
-    @endif
-    {{-- Задачи --}}
+            <div class="task task-status-{{ $item->status }}" @if ($calendarStyle==0)
+                style="grid-row: {{ $item->startGrid }}/{{ $item->endGrid }}; grid-column: {{ $userColumn[$item->master] }}"
+            @else style="width: 600px; height: 40px;" @endif
+            onclick="modal('open', '{{ $item->deal }} - {{ $item->generalinfo }}','{{ $modalMessage }}', {name:
+            `ok`,
+            function: ()=>{modal(`close`)}})">
 
-    @foreach ($Tasks as $item)
-        @php
-            // подготовим тектс для модального окна
-            $modalMessage = '';
-            foreach ($item->getAttributes() as $param => $value) {
-            if ($param == 'master') $value = $Users->find($value)->name;
-
-            $skip = false;
-            foreach (['templateid', 'status', 'deal', 'created_at', 'updated_at', 'startGrid', 'endGrid'] as $el) {
-            if ($param == $el) $skip = true;
-            }
-
-            if (!$skip) $modalMessage .='<b>'.$param.'</b>'.' '.$value.'<br>';
-            }
-
-            if ($calendarStyle!=0) $tasksToDelete[]=$item->id;
-        @endphp
-        <div class="task task-status-{{ $item->status }}" @if ($calendarStyle==0)
-            style="grid-row: {{ $item->startGrid }}/{{ $item->endGrid }}; grid-column: {{ $userColumn[$item->master] }}"
-        @else style="width: 600px; height: 40px;" @endif
-        onclick="modal('open', '{{ $item->deal }} - {{ $item->generalinfo }}','{{ $modalMessage }}', {name: `ok`,
-        function: ()=>{modal(`close`)}})">
-
-        <div class="title"><span class="dealname">{{ $item->deal }}</span>{{ $item->name }}@if ($calendarStyle!=0) -
-            {{ $Users->find($item->master)->name }}@endif</div>
-        <div class="taskname">{{ $item->generalinfo }}</div>
-</div>
+            <div class="title"><span class="dealname">{{ $item->deal }}</span>{{ $item->name }}
+                @if($calendarStyle!=0)
+                {{ $Users->find($item->master)->name }}@endif</div>
+            <div class="taskname">{{ $item->generalinfo }}</div>
+    </div>
 
 @endforeach
 
@@ -201,8 +230,9 @@
 
 </div>
 
-</div>  
-@endforeach
+</div>
+
+@endfor
 
 @if ($calendarStyle!=0 && isset($tasksToDelete) !==false)
     <form class="erase-all-button" action="/deletealltasks" method="GET">
@@ -224,4 +254,5 @@
         </div>
         <button class="modal-close-button" onclick="modal('close')">✕</button>
     </div>
-</div><script src="js/general.js"></script>
+</div>
+<script src="js/general.js"></script>
