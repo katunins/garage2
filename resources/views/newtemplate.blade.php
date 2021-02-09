@@ -59,7 +59,7 @@
                 </div>
                 <div class="all-masters-buttons">
                     @php
-                        $mastersArr = explode('/', $template->masters ?? []);
+                        $mastersArr = explode('/', $template->masters ?? '');
                     @endphp
                     @foreach ($Users as $item)
 

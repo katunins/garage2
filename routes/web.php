@@ -40,6 +40,7 @@ Route::get('/newtemplate', function () {
         'line' => $_GET['line'],
         'position' => $_GET['position'],
         'productId' => $_GET['productid'],
+        'Users' =>User::all()
     ]);
 });
 Route::get('/edittemplate', function () {
