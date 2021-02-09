@@ -87,13 +87,13 @@
 
         <div class="json-input-group">
             <label>Условия создания задачи</label>
-            <input class="middle-size" type="text" name="condition1"
+            <input class="max-size" type="text" name="condition1"
                 value="{{ old('condition1', $template->condition1 ?? '') }}"
                 placeholder="Формат=20х20/25х25/30х30">
-            <input class="middle-size" type="text" name="condition2"
+            <input class="max-size" type="text" name="condition2"
                 value="{{ old('condition2', $template->condition2 ?? '') }}"
                 placeholder="Тип печати!=шелк">
-            <input class="middle-size" type="text" name="condition3"
+            <input class="max-size" type="text" name="condition3"
                 value="{{ old('condition3', $template->condition3 ?? '') }}"
                 placeholder="Доставка">
 
