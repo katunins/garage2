@@ -94,3 +94,28 @@ input[type="submit"] {
     font-size: 16px;
     margin-top: 0px;
 }
+
+.master-buttons {
+    display: flex;
+    justify-content: space-between;
+
+    .all-masters-buttons {
+        width: 350px;
+
+        button {
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-size: 11px;
+            border: 1px solid grey;
+            background: rgb(170, 196, 170);
+            margin: 2px 5px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .half-opacity {
+            opacity: 0.5;
+            background: initial;
+        }
+    }
+}

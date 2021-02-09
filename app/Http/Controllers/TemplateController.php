@@ -726,6 +726,36 @@ class TemplateController extends Controller
         }
     }
 
+        // копирует шаблон и вставляет в соседнюю позицию
+        static function copyTemplate($data)
+
+        {
+            // "line" => "1"
+            // "position" => "1"
+            // "lineshift" => "1"
+            // "positionshift" => "0"
+            // "productid" => "1"
+            // "templateid" => "11"
+
+            // сместим позиции следующих шаблонов в линии на +1
+            $nextTemplates = Templates::where([
+                'productid'=> $data['productid'],
+                'line'=> $data['line']
+            ])->where('position', '>', $data['position'])->get();
+            foreach ($nextTemplates as $item) {
+                $item->position++;
+                $item->save();
+            }
+
+            $currentTemplate = Templates::find($data['templateid']);
+            $newTemplate= $currentTemplate->replicate();
+            $newTemplate->position++;
+            $newTemplate->save();
+    
+            
+        }
+
+
     // перемещает линию вверх или вниз
     static function moveLine($data)
     {

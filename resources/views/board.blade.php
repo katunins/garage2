@@ -4,7 +4,7 @@
 {{-- $positionCount --}}
 
 <link rel="stylesheet" href="/css/board.css">
-<link rel="stylesheet" href="css/general.css">
+<link rel="stylesheet" href="/css/general.css">
 
 <h1>
     <a class="to-main-page" href="/">←</a>
@@ -139,6 +139,14 @@ if ($template) $colorMaster = (int)explode('/', $template->masters)[0]*14;
     </div>
     <div class="buttons edit-buttons">
         <p>id: {{ $template->id }}</p>
+        <form class="remove" action="/deletetemplate" method="get">
+            <input type="hidden" name="time" value="{{ time() }}">
+            <input type="hidden" name="line" value="{{ $line }}">
+            <input type="hidden" name="position" value="{{ $position }}">
+            <input type="hidden" name="productid" value="{{ $productId }}">
+            <input type="hidden" name="templateid" value="{{ $template->id }}">
+            <input type="submit" value="x">
+        </form>
         <form class="edit" action="/edittemplate" method="get">
             <input type="hidden" name="time" value="{{ time() }}">
             <input type="hidden" name="line" value="{{ $line }}">
@@ -147,13 +155,13 @@ if ($template) $colorMaster = (int)explode('/', $template->masters)[0]*14;
             <input type="hidden" name="templateid" value="{{ $template->id }}">
             <input type="submit" value="✎">
         </form>
-        <form class="remove" action="/deletetemplate" method="get">
+        <form class="edit" action="/copytemplate" method="get">
             <input type="hidden" name="time" value="{{ time() }}">
             <input type="hidden" name="line" value="{{ $line }}">
             <input type="hidden" name="position" value="{{ $position }}">
             <input type="hidden" name="productid" value="{{ $productId }}">
             <input type="hidden" name="templateid" value="{{ $template->id }}">
-            <input type="submit" value="x">
+            <input type="submit" value="+">
         </form>
     </div>
 

@@ -48,6 +48,7 @@ Route::get('/edittemplate', function () {
         'position' => $_GET['position'],
         'productId' => $_GET['productid'],
         'template' => TemplateController::getTemplate($_GET['templateid']),
+        'Users' =>User::all()
     ]);
 });
 
@@ -61,6 +62,13 @@ Route::get('/movetemplate', function () {
     TemplateController::moveTemplate($_GET);
     return redirect('/board/' . $_GET['productid']);
 });
+Route::get('/copytemplate', function () {
+    if ($_GET['time'] - time() > 1) return view('/'); //защитимся от перехода в браузере назад
+    TemplateController::copyTemplate($_GET);
+    return redirect('/board/' . $_GET['productid']);
+});
+
+
 
 Route::get('/moveline', function () {
     if ($_GET['time'] - time() > 1) return view('/'); //защитимся от перехода в браузере назад

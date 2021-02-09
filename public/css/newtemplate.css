@@ -100,3 +100,25 @@ input[type=submit] {
   font-size: 16px;
   margin-top: 0px;
 }
+
+.master-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+.master-buttons .all-masters-buttons {
+  width: 350px;
+}
+.master-buttons .all-masters-buttons button {
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  border: 1px solid grey;
+  background: #aac4aa;
+  margin: 2px 5px;
+  cursor: pointer;
+  outline: none;
+}
+.master-buttons .all-masters-buttons .half-opacity {
+  opacity: 0.5;
+  background: initial;
+}
