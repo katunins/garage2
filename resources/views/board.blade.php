@@ -1,260 +1,261 @@
-<link rel="stylesheet" href="css/calendar.css">
-<link rel="stylesheet" href="css/general.css">
+{{-- $templates --}}
+{{-- $lineCount --}}
+{{-- $productId --}}
+{{-- $positionCount --}}
 
-{{-- $Users, $Date, $Tasks --}}
+<link rel="stylesheet" href="/css/board.css">
+<link rel="stylesheet" href="/css/general.css">
 
-<div class="head-block">
+<h1>
+    <a class="to-main-page" href="/">←</a>
+    {{ $productTitle }}
+</h1>
+<div class="lineBlock">
 
-    <a class="to-main-page" href="/"></a>
-    <div class="date-block">
-        @if ($calendarDays == 1)<div class="date-title">
-
-            {{ $rusDate }}
-    </div>@endif
-    <input type="hidden" name="date" value="">
-    <div class="buttons">
-        <form action="/calendar" method="get">
-            <input type="submit" value="- @if ($calendarDays == 1) День @else Неделя @endif">
-            @php
-                if ($calendarDays == 1) $Date->subDay(); else $Date->subWeek();
-            @endphp
-            <input type="hidden" name="date" value="{{ $Date->toDateString() }}">
-            {{-- что бы не потерять другие настройки GET --}}
-            @foreach ($_GET as $key=>$value)
-                @if ($key !='date') <input type="hidden" name="{{ $key }}" value="{{ $value }}"> @endif
-                @endforeach
-        </form>
-        <form action="/calendar" method="get">
-            <input type="submit" value="Сегодня">
-            <input type="hidden" name="date" value="{{ $today->toDateString() }}">
-            {{-- что бы не потерять другие настройки GET --}}
-            @foreach ($_GET as $key=>$value)
-                @if ($key !='date') <input type="hidden" name="{{ $key }}" value="{{ $value }}"> @endif
-                @endforeach
-        </form>
-        <form action="/calendar" method="get">
-            <input type="submit" value="+ @if ($calendarDays == 1) День @else Неделя @endif">
-            @php
-                // поправим Date на неделю или день назад. Она изменилась в шапке при создании кнопки
-                if ($calendarDays == 1) $Date->addDays(2); else $Date->addWeeks(2);
-            @endphp
-            <input type="hidden" name="date" value="{{ $Date->toDateString() }}">
-            {{-- что бы не потерять другие настройки GET --}}
-            @foreach ($_GET as $key=>$value)
-                @if ($key !='date') <input type="hidden" name="{{ $key }}" value="{{ $value }}"> @endif
-                @endforeach
-        </form>
-        @php
-            if ($calendarDays == 7) $Date->subWeek(); else $Date->subDay();
-        @endphp
-    </div>
-    <div class="list-option">
-        <br>
-        <form action="/calendar" method="get">
-            <input type="hidden" name="calendarstyle" value={{ $calendarStyle==1?0:1 }}>
-            <input id="calendar-style" type="checkbox"
-                {{ $calendarStyle==1?'checked':'' }}
-                onclick="this.parentNode.submit()">
-            <label for="calendar-style">Отображение списком</label>
-        </form>
-        <form action="/calendar" method="get">
-            <input type="hidden" name="calendardays" value={{ $calendarDays==1?7:1 }}>
-            <input id="calendar-days" type="checkbox"
-                {{ $calendarDays==7?'checked':'' }}
-                onclick="this.parentNode.submit()">
-            <label for="calendar-days">Календарь за неделю</label>
-        </form>
-    </div>
-</div>
-<div class="filter-block">
-
-    <form action="/calendar" method="get">
-        <label for="filterdealname">Фильтр сделки</label>
-        <input type="text" name="filterdealname" value="{{ $filterDealName }}" size="10">
-        {{-- что бы не потерять другие настройки GET --}}
-        @foreach ($_GET as $key=>$value)
-            @if ($key !='filterdealname') <input type="hidden" name="{{ $key }}" value="{{ $value }}"> @endif
-            @endforeach
-    </form>
-
-    <form action="/calendar" method="get">
-        <label for="gridinhour">Масштаб</label>
-        <input type="text" name="gridinhour" value="{{ $gridInHour }}" size="3">
-        {{-- что бы не потерять другие настройки GET --}}
-        @foreach ($_GET as $key=>$value)
-            @if ($key !='gridinhour') <input type="hidden" name="{{ $key }}" value="{{ $value }}"> @endif
-            @endforeach
-    </form>
-
-
-</div>
-
-
-<div class="">
-    <div class="status-filter-title">Фильтр по стадиям</div>
-    <div class="status-filter">
-        @foreach ([
-            'temp'=>'Временные',
-            'wait'=>'Новые',
-            'repair'=>'В ремонте',
-            'finished'=>'Завершены',
-            ] as $key=>$item)
-            <form action="/calendar" method="get">
-                <input type="hidden" name="status-{{ $key }}"
-                    value={{ !$statusFilter['status-'.$key] }}>
-                <input class="status-filter-buttons task-status-{{ $key }}" type="submit"
-                    value="{{ $statusFilter['status-'.$key]?'✓':'   ' }} {{ $item }}">
+    @for ($line = 1; $line <= $lineCount; $line++) <div class="line-number">
+        <p>
+            Линия {{ $line }}
+        </p>
+        <div>
+            <form action="/moveline" method="get">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="lineshift" value="-1">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input class="mini-arrows @if ($line==1) hide @endif" type="submit" value="↑">
             </form>
-        @endforeach
-    </div>
-</div>
-</div>
-@for ($day = 0; $day < $calendarDays; $day++)
-    @php
-        // Отфильтруем задачи на один день из недели, для случая если это календарь недели
-        $weekCalendarDay = clone $Date;
-        $weekCalendarDay->addDay($day);
-        $weekCalendarDay->setTime(0,0,1);
-
-        $weekEndTimeFilter = clone $weekCalendarDay;
-        $weekEndTimeFilter->setTime(23,59,59);
-
-        if ($calendarDays == 7)
-        {
-        echo '<br>
-        <div class="date-title">'.\App\Http\Controllers\CalendarController::getRusDate($weekCalendarDay).'</div>';
-        }
-    @endphp
-
-    <div class="calendar-block" @if ($calendarStyle==0) style="grid-template-columns: 60px repeat({{ $Users->count() }}, 240px); 
-    grid-template-rows: 1fr repeat({{ $gridRowCount }}, {{ $scale }}px);" @endif>
-
-        @if ($calendarStyle==0)
-            {{-- заголовок --}}
-            @foreach ($Users as $key => $item)
-                @php
-                    // пометим колонку определенным юзером
-                    $userColumn[$item->id] = ($key+2).'/'.($key+3);
-
-                @endphp
-                <div class="linehead" style="grid-row: 1/2; grid-column: {{ $userColumn[$item->id] }};">
-                    {{ $item->name }}
-                </div>
-            @endforeach
-        @endif
-        {{-- Задачи --}}
-
-        @foreach ($Tasks->whereBetween('start', [$weekCalendarDay, $weekEndTimeFilter]) as $item)
-
-            @php
-
-                // подготовим тектс для модального окна
-                $modalMessage = '';
-                foreach ($item->getAttributes() as $param => $value) {
-                if ($param == 'master') $value = $Users->find($value)->name;
-
-                $skip = false;
-                foreach (['templateid', 'status', 'deal', 'created_at', 'updated_at', 'startGrid', 'endGrid'] as $el) {
-                if ($param == $el) $skip = true;
-                }
-
-                if (!$skip) $modalMessage .='<b>'.$param.'</b>'.' '.$value.'<br>';
-                }
-
-                if ($calendarStyle!=0) $tasksToDelete[]=$item->id;
-            @endphp
-
-            <div class="task task-status-{{ $item->status }}" @if ($calendarStyle==0)
-                style="grid-row: {{ $item->startGrid }}/{{ $item->endGrid }}; grid-column: {{ $userColumn[$item->master] }}"
-            @else style="width: 600px; height: 40px;" @endif
-            onclick="modal('open', '{{ $item->deal }} - {{ $item->generalinfo }}','{{ $modalMessage }}', {name:
-            `ok`,
-            function: ()=>{modal(`close`)}})">
-
-            <div class="title"><span class="dealname">{{ $item->deal }}</span>{{ $item->name }}
-                @if ($calendarStyle!=0)
-                    {{ $Users->find($item->master)->name }}@endif</div>
-            <div class="taskname">{{ $item->generalinfo }}</div>
-    </div>
-
-@endforeach
-
-@if ($calendarStyle==0)
-    {{-- Сетка --}}
-    {{-- начальная 1/2 линия --}}
-    @php
-        $rowStart = 2;
-        $rowEnd =$gridInHour*$beforeAfter+2;
-    @endphp
-    @for ($column = 1; $column < $Users->count()+2; $column++)
-        <div class="hour-line"
-            style="grid-row: {{ $rowStart }}/{{ $rowEnd }}; grid-column: {{ $column }}/{{ $column+1 }}">
-            @if ($column == 1)
-                <div class="time-tag">
-                    {{ floor($workTimeStart-$beforeAfter) }} : 30
-                </div>
-            @endif
+            <form action="/moveline" method="get">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="lineshift" value="1">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input class="mini-arrows @if ($line==$lineCount) hide @endif" type="submit" value="↓">
+            </form>
         </div>
-    @endfor
-    {{-- часовые ячейки --}}
-    @for ($row = 0; $row <= $workTimeEnd-$workTimeStart; $row ++) @php $rowStart=$gridInHour*$beforeAfter+2 +
-        $row*$gridInHour; $rowEnd=$gridInHour*$beforeAfter+2 + ($row+1)*$gridInHour; @endphp @for ($column=1;
-        $column < $Users->count()+2; $column++)
+</div>
 
-            <div class="hour-line"
-                style="grid-row: {{ $rowStart }}/{{ $rowEnd }}; grid-column: {{ $column }}/{{ $column+1 }}">
-                @if ($column == 1)
-                    <div class="time-tag">
-                        {{ $workTimeStart+$row }} : 00
-                    </div>
-                @endif
-            </div>
-    @endfor
 
-@endfor
+<div class="line" line={{ $line }}>
+    @php
+        //$lastIsEmpty = true; //предыдущий Template пустой, в нем стоит плюс
+        // определим позицию элемента Plus
+        $lastElemInLine = $templates->where('line', $line)->max('position');
+        $plusPosition = $lastElemInLine? $lastElemInLine+1:1;
+    @endphp
 
-{{-- конечная 1/2 линия --}}
+    @for ($position=1; $position <=$positionCount+1; $position++) @php $template=$templates->where('line',
+        $line)->where('position', $position)->first();
+    @endphp
+
+
 @php
-    $rowStart = $gridInHour*$beforeAfter+2 + ($row)*$gridInHour;
-    $rowEnd = $rowStart+$gridInHour/2;
+        if ($template && $template->taskidbefore) {
+        //     $prevTemplate = $templates->where('id', $template->taskidbefore)->first();
+        // $emptyCount = $prevTemplate?$prevTemplate->position+1-$position:0;
+            
+        // посчитаем смещение + относительно отсальных смещений в других линиях
+         $emptyCount = 0;
+        $prevEmpty = 0;
+        $safeLoopCount = 0; //защита от зацикливания
+        $beforeTask = $templates->find($template->taskidbefore);
+            do {
+                // защита
+                $safeLoopCount++;
+                
+                $emptyCount +=$beforeTask->position;
+                if ($beforeTask->position > 1) {
+
+                    $prevLineFirstElem = $templates->where('line',$beforeTask->line)->where('position',1)->first();
+
+                // dump ($prevLineFirstElem->id);
+                        if ($prevLineFirstElem->taskidbefore) $beforeTask = $templates->find($prevLineFirstElem->taskidbefore); else break;
+                    }
+
+                
+            } while ($safeLoopCount < 20);
+            
+            if ($emptyCount >0) {
+                for ($x = 0; $x < $emptyCount; $x++) {
+                    echo '<div class="template"></div>';
+                }
+            }
+        }
+            
+
 @endphp
-@for ($column = 1; $column < $Users->count()+2; $column++)
-    <div class="hour-line"
-        style="grid-row: {{ $rowStart }}/{{ $rowEnd }}; grid-column: {{ $column }}/{{ $column+1 }}">
-        @if ($column == 1)
-            <div class="time-tag">
-                {{ round($workTimeEnd) }} : 30
-            </div>
-        @endif
-    </div>
+
+        {{-- @if ($emptyCount >0)
+@for ($x = 0; $x < $emptyCount; $x++) <div class="template">
+</div>
 @endfor
 @endif
+@endif --}}
+@php
+if ($template) $colorMaster = (int)explode('/', $template->masters)[0]*14;
+@endphp
+<div class="template" @if($template) style="box-shadow:inset 0px -61px 0px 0px hsl({{ $colorMaster }}, 50%, 80%);"
+    @endif >
 
-</div>
 
-</div>
 
-@endfor
+    @if ($template)
 
-@if ($calendarStyle!=0 && isset($tasksToDelete) !==false)
-    <form class="erase-all-button" action="/deletealltasks" method="GET">
-        <input type="checkbox" name="confirm">
-        <input type="hidden" name="taskstodelete" value={{ json_encode($tasksToDelete) }}>
-        <input type="hidden" name="time" value={{ time() }}>
-        <input type="submit" value="Удалить все выбранные задачи за этот день?">
-    </form>
-@endif
+        <p class="title">{{ $template->taskname }}</p>
+        <hr>
+        <p class="description">Мастер: <span>{{ $template->masters }}</span></p>
+        <p class="description">Информация: <span>{{ $template->params }}</span></p>
+        <br>
+        <p class="description">Базовое / расчетное время: <span>{{ $template->producttime }} /
+                {{ $template->paramtime }} мин.</span>
+        </p>
+        {{-- <p class="description">Расчетное время: <span>{{ $template->paramtime }}
+        мин.</span></p> --}}
+        <p class="description">ID предыдущей задачи: <span>{{ $template->taskidbefore }}</span></p>
+        <p class="description">Буфер: <span>{{ $template->buffer }} мин.</span></p>
+        <br>
+        <p class="description">Запретный период:
+            <span>{{ $template->period1 }}, {{ $template->period2 }}.</span>
+        </p>
+        <p class="description">Условия выполнения:
+            <span> {{ $template->condition1 }} <br> {{ $template->condition2 }};
+                {{ $template->condition3 }}</span>
+        </p>
+        <br>
+        <div class="buttons arrows-buttons">
+            {{-- ←, →, ↑, ↓ --}}
 
-<div class="footer-block"></div>
-<div id="modal" class="hide">
-    <div class="modal-container">
-        <div class="modal-title hide"></div>
-        <div class="modal-text hide"></div>
-        <div class="modal-buttons hide">
-            <button class="modal-button1 hide"></button>
-            <button class="modal-button2 hide"></button>
+            <form action="/movetemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="lineshift" value="0">
+                <input type="hidden" name="positionshift" value="-1">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                <input @if ($position==1) class="inactive" @endif type="submit" value="←">
+            </form>
+            <form action="/movetemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="lineshift" value="0">
+                <input type="hidden" name="positionshift" value="1">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                <input @if ($position==$templates->where('line', $line)->max('position')) class="inactive" @endif
+                type="submit" value="→">
+            </form>
+            <form action="/movetemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="lineshift" value="-1">
+                <input type="hidden" name="positionshift" value="0">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                <input @if ($line==1) class="inactive" @endif type="submit" value="↑">
+            </form>
+            <form action="/movetemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="lineshift" value="1">
+                <input type="hidden" name="positionshift" value="0">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                {{-- <input @if ($line == $lineCount) class="inactive" @endif type="submit" value="↓"> --}}
+                {{-- <input type="submit" value="↓"> --}}
+                <input @if ($templates->where('line', $line)->max('position') == 1 && $templates->where('line',
+                $line+1)->count() == 0) class="inactive" @endif type="submit" value="↓">
+            </form>
         </div>
-        <button class="modal-close-button" onclick="modal('close')">✕</button>
-    </div>
+        <div class="buttons edit-buttons">
+            <p>id: {{ $template->id }}</p>
+            <form class="remove" action="/deletetemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                <input type="submit" value="x">
+            </form>
+            <form class="edit" action="/edittemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                <input type="submit" value="✎">
+            </form>
+            <form class="edit" action="/copytemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                <input type="submit" value="+">
+            </form>
+        </div>
+
+    @else
+        {{-- @if ($lastIsEmpty === true) --}}
+        @if ($position == $plusPosition)
+            <form class="plus" action="/newtemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="submit" value="+">
+            </form>
+        @endif
+        {{-- @endif --}}
+    @endif
 </div>
-<script src="js/general.js"></script>
+
+@endfor
+</div>
+@endfor
+
+</div>
+<button class="newLine" onclick="newLine()">Добавить линию</button>
+<script>
+    // рендерит новую линию элементов с плюсом
+    function newLine() {
+        let lines = document.querySelectorAll('.line')
+        let lastLine = Number(lines[lines.length - 1].getAttribute('line'))
+
+        let templateCount = lines[0].querySelectorAll('.template').length //кол-во пустых блоков в строке
+        let plusElem = document.createElement('form')
+        plusElem.className = 'plus'
+        plusElem.action = '/newtemplate'
+        plusElem.method = 'get'
+        let html = ''
+        // html += '<input type="hidden" name="_token" value="' + document.querySelector('input[name="_token"]').value +
+        //     '">'
+        html += '<input type="hidden" name="line" value="' + Number(lastLine + 1) + '">'
+        html += '<input type="hidden" name="position" value="1">'
+        html += '<input type="hidden" name="productid" value="' + document.querySelector('input[name="productid"]')
+            .value + '">'
+        html += '<input type="submit" value="+">'
+        plusElem.innerHTML = html
+
+        let newLine = document.createElement('div')
+
+        newLine.className = 'line'
+        newLine.setAttribute('line', lastLine + 1)
+
+        document.querySelector('.lineBlock').appendChild(newLine)
+        for (let index = 1; index < templateCount + 1; index++) {
+            let newTemplate = document.createElement('div')
+            newTemplate.className = 'template'
+            newTemplate.setAttribute('position', index)
+            newTemplate.setAttribute('line', lastLine + 1)
+            newLine.appendChild(newTemplate)
+
+            if (index == 1) {
+                newTemplate.appendChild(plusElem)
+            }
+        }
+    }
+
+</script>
