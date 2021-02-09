@@ -5,6 +5,9 @@
   width: 380px;
   justify-content: flex-end;
 }
+.head-block .date-block form {
+  margin: 0;
+}
 .head-block .date-block .date-title {
   font-size: 25px;
 }

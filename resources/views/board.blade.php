@@ -37,146 +37,178 @@
 
 <div class="line" line={{ $line }}>
     @php
-    //$lastIsEmpty = true; //предыдущий Template пустой, в нем стоит плюс
-    // определим позицию элемента Plus
-    $lastElemInLine = $templates->where('line', $line)->max('position');
-    $plusPosition = $lastElemInLine? $lastElemInLine+1:1;
+        //$lastIsEmpty = true; //предыдущий Template пустой, в нем стоит плюс
+        // определим позицию элемента Plus
+        $lastElemInLine = $templates->where('line', $line)->max('position');
+        $plusPosition = $lastElemInLine? $lastElemInLine+1:1;
     @endphp
 
     @for ($position=1; $position <=$positionCount+1; $position++) @php $template=$templates->where('line',
         $line)->where('position', $position)->first();
-        @endphp
+    @endphp
 
-        @if ($template && $template->taskidbefore)
-        @php
-        $prevTemplate = $templates->where('id', $template->taskidbefore)->first();
-        $emptyCount = $prevTemplate?$prevTemplate->position+1-$position:0;
-        @endphp
-        @if ($emptyCount >0)
-        @for ($x = 0; $x < $emptyCount; $x++) <div class="template">
+
+@php
+        if ($template && $template->taskidbefore) {
+        //     $prevTemplate = $templates->where('id', $template->taskidbefore)->first();
+        // $emptyCount = $prevTemplate?$prevTemplate->position+1-$position:0;
+            
+        // посчитаем смещение + относительно отсальных смещений в других линиях
+         $emptyCount = 0;
+        $prevEmpty = 0;
+        $safeLoopCount = 0; //защита от зацикливания
+        $beforeTask = $templates->find($template->taskidbefore);
+            do {
+                // защита
+                $safeLoopCount++;
+                
+                $emptyCount +=$beforeTask->position;
+                if ($beforeTask->position > 1) {
+
+                    $prevLineFirstElem = $templates->where('line',$beforeTask->line)->where('position',1)->first();
+
+                // dump ($prevLineFirstElem->id);
+                        if ($prevLineFirstElem->taskidbefore) $beforeTask = $templates->find($prevLineFirstElem->taskidbefore); else break;
+                    }
+
+                
+            } while ($safeLoopCount < 20);
+            
+            if ($emptyCount >0) {
+                for ($x = 0; $x < $emptyCount; $x++) {
+                    echo '<div class="template"></div>';
+                }
+            }
+        }
+            
+
+@endphp
+
+        {{-- @if ($emptyCount >0)
+@for ($x = 0; $x < $emptyCount; $x++) <div class="template">
 </div>
 @endfor
 @endif
-@endif
+@endif --}}
 @php
 if ($template) $colorMaster = (int)explode('/', $template->masters)[0]*14;
 @endphp
 <div class="template" @if($template) style="box-shadow:inset 0px -61px 0px 0px hsl({{ $colorMaster }}, 50%, 80%);"
-    @endif>
+    @endif >
 
 
 
     @if ($template)
 
-    <p class="title">{{ $template->taskname }}</p>
-    <hr>
-    <p class="description">Мастер: <span>{{ $template->masters }}</span></p>
-    <p class="description">Информация: <span>{{ $template->params }}</span></p>
-    <br>
-    <p class="description">Базовое / расчетное время: <span>{{ $template->producttime }} /
-            {{ $template->paramtime }} мин.</span>
-    </p>
-    {{-- <p class="description">Расчетное время: <span>{{ $template->paramtime }}
-    мин.</span></p> --}}
-    <p class="description">ID предыдущей задачи: <span>{{ $template->taskidbefore }}</span></p>
-    <p class="description">Буфер: <span>{{ $template->buffer }} мин.</span></p>
-    <br>
-    <p class="description">Запретный период:
-        <span>{{ $template->period1 }}, {{ $template->period2 }}.</span>
-    </p>
-    <p class="description">Условия выполнения:
-        <span> {{ $template->condition1 }} <br> {{ $template->condition2 }};
-            {{ $template->condition3 }}</span>
-    </p>
-    <br>
-    <div class="buttons arrows-buttons">
-        {{-- ←, →, ↑, ↓ --}}
+        <p class="title">{{ $template->taskname }}</p>
+        <hr>
+        <p class="description">Мастер: <span>{{ $template->masters }}</span></p>
+        <p class="description">Информация: <span>{{ $template->params }}</span></p>
+        <br>
+        <p class="description">Базовое / расчетное время: <span>{{ $template->producttime }} /
+                {{ $template->paramtime }} мин.</span>
+        </p>
+        {{-- <p class="description">Расчетное время: <span>{{ $template->paramtime }}
+        мин.</span></p> --}}
+        <p class="description">ID предыдущей задачи: <span>{{ $template->taskidbefore }}</span></p>
+        <p class="description">Буфер: <span>{{ $template->buffer }} мин.</span></p>
+        <br>
+        <p class="description">Запретный период:
+            <span>{{ $template->period1 }}, {{ $template->period2 }}.</span>
+        </p>
+        <p class="description">Условия выполнения:
+            <span> {{ $template->condition1 }} <br> {{ $template->condition2 }};
+                {{ $template->condition3 }}</span>
+        </p>
+        <br>
+        <div class="buttons arrows-buttons">
+            {{-- ←, →, ↑, ↓ --}}
 
-        <form action="/movetemplate" method="get">
-            <input type="hidden" name="time" value="{{ time() }}">
-            <input type="hidden" name="line" value="{{ $line }}">
-            <input type="hidden" name="position" value="{{ $position }}">
-            <input type="hidden" name="lineshift" value="0">
-            <input type="hidden" name="positionshift" value="-1">
-            <input type="hidden" name="productid" value="{{ $productId }}">
-            <input type="hidden" name="templateid" value="{{ $template->id }}">
-            <input @if ($position==1) class="inactive" @endif type="submit" value="←">
-        </form>
-        <form action="/movetemplate" method="get">
-            <input type="hidden" name="time" value="{{ time() }}">
-            <input type="hidden" name="line" value="{{ $line }}">
-            <input type="hidden" name="position" value="{{ $position }}">
-            <input type="hidden" name="lineshift" value="0">
-            <input type="hidden" name="positionshift" value="1">
-            <input type="hidden" name="productid" value="{{ $productId }}">
-            <input type="hidden" name="templateid" value="{{ $template->id }}">
-            <input @if ($position==$templates->where('line', $line)->max('position')) class="inactive" @endif
-            type="submit" value="→">
-        </form>
-        <form action="/movetemplate" method="get">
-            <input type="hidden" name="time" value="{{ time() }}">
-            <input type="hidden" name="line" value="{{ $line }}">
-            <input type="hidden" name="position" value="{{ $position }}">
-            <input type="hidden" name="lineshift" value="-1">
-            <input type="hidden" name="positionshift" value="0">
-            <input type="hidden" name="productid" value="{{ $productId }}">
-            <input type="hidden" name="templateid" value="{{ $template->id }}">
-            <input @if ($line==1) class="inactive" @endif type="submit" value="↑">
-        </form>
-        <form action="/movetemplate" method="get">
-            <input type="hidden" name="time" value="{{ time() }}">
-            <input type="hidden" name="line" value="{{ $line }}">
-            <input type="hidden" name="position" value="{{ $position }}">
-            <input type="hidden" name="lineshift" value="1">
-            <input type="hidden" name="positionshift" value="0">
-            <input type="hidden" name="productid" value="{{ $productId }}">
-            <input type="hidden" name="templateid" value="{{ $template->id }}">
-            {{-- <input @if ($line == $lineCount) class="inactive" @endif type="submit" value="↓"> --}}
-            {{-- <input type="submit" value="↓"> --}}
-            <input @if ($templates->where('line', $line)->max('position') == 1 && $templates->where('line',
-            $line+1)->count() == 0) class="inactive" @endif type="submit" value="↓">
-        </form>
-    </div>
-    <div class="buttons edit-buttons">
-        <p>id: {{ $template->id }}</p>
-        <form class="remove" action="/deletetemplate" method="get">
-            <input type="hidden" name="time" value="{{ time() }}">
-            <input type="hidden" name="line" value="{{ $line }}">
-            <input type="hidden" name="position" value="{{ $position }}">
-            <input type="hidden" name="productid" value="{{ $productId }}">
-            <input type="hidden" name="templateid" value="{{ $template->id }}">
-            <input type="submit" value="x">
-        </form>
-        <form class="edit" action="/edittemplate" method="get">
-            <input type="hidden" name="time" value="{{ time() }}">
-            <input type="hidden" name="line" value="{{ $line }}">
-            <input type="hidden" name="position" value="{{ $position }}">
-            <input type="hidden" name="productid" value="{{ $productId }}">
-            <input type="hidden" name="templateid" value="{{ $template->id }}">
-            <input type="submit" value="✎">
-        </form>
-        <form class="edit" action="/copytemplate" method="get">
-            <input type="hidden" name="time" value="{{ time() }}">
-            <input type="hidden" name="line" value="{{ $line }}">
-            <input type="hidden" name="position" value="{{ $position }}">
-            <input type="hidden" name="productid" value="{{ $productId }}">
-            <input type="hidden" name="templateid" value="{{ $template->id }}">
-            <input type="submit" value="+">
-        </form>
-    </div>
+            <form action="/movetemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="lineshift" value="0">
+                <input type="hidden" name="positionshift" value="-1">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                <input @if ($position==1) class="inactive" @endif type="submit" value="←">
+            </form>
+            <form action="/movetemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="lineshift" value="0">
+                <input type="hidden" name="positionshift" value="1">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                <input @if ($position==$templates->where('line', $line)->max('position')) class="inactive" @endif
+                type="submit" value="→">
+            </form>
+            <form action="/movetemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="lineshift" value="-1">
+                <input type="hidden" name="positionshift" value="0">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                <input @if ($line==1) class="inactive" @endif type="submit" value="↑">
+            </form>
+            <form action="/movetemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="lineshift" value="1">
+                <input type="hidden" name="positionshift" value="0">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                {{-- <input @if ($line == $lineCount) class="inactive" @endif type="submit" value="↓"> --}}
+                {{-- <input type="submit" value="↓"> --}}
+                <input @if ($templates->where('line', $line)->max('position') == 1 && $templates->where('line',
+                $line+1)->count() == 0) class="inactive" @endif type="submit" value="↓">
+            </form>
+        </div>
+        <div class="buttons edit-buttons">
+            <p>id: {{ $template->id }}</p>
+            <form class="remove" action="/deletetemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                <input type="submit" value="x">
+            </form>
+            <form class="edit" action="/edittemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                <input type="submit" value="✎">
+            </form>
+            <form class="edit" action="/copytemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="hidden" name="templateid" value="{{ $template->id }}">
+                <input type="submit" value="+">
+            </form>
+        </div>
 
     @else
-    {{-- @if ($lastIsEmpty === true) --}}
-    @if ($position == $plusPosition)
-    <form class="plus" action="/newtemplate" method="get">
-        <input type="hidden" name="time" value="{{ time() }}">
-        <input type="hidden" name="line" value="{{ $line }}">
-        <input type="hidden" name="position" value="{{ $position }}">
-        <input type="hidden" name="productid" value="{{ $productId }}">
-        <input type="submit" value="+">
-    </form>
-    @endif
-    {{-- @endif --}}
+        {{-- @if ($lastIsEmpty === true) --}}
+        @if ($position == $plusPosition)
+            <form class="plus" action="/newtemplate" method="get">
+                <input type="hidden" name="time" value="{{ time() }}">
+                <input type="hidden" name="line" value="{{ $line }}">
+                <input type="hidden" name="position" value="{{ $position }}">
+                <input type="hidden" name="productid" value="{{ $productId }}">
+                <input type="submit" value="+">
+            </form>
+        @endif
+        {{-- @endif --}}
     @endif
 </div>
 

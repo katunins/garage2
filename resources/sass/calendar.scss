@@ -4,6 +4,9 @@
 .head-block {
     display: flex;
     .date-block {
+        form {
+            margin: 0;
+        }
         width: 380px;
         justify-content: flex-end;
         .date-title {

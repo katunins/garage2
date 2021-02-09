@@ -45,6 +45,13 @@
                     onclick="this.parentNode.submit()">
                 <label for="calendar-style">Отображение списком</label>
             </form>
+            <form action="/calendar" method="get">
+                <input type="hidden" name="calendarstyle" value={{ $calendarStyle==1?0:1 }}>
+                <input id="calendar-style" type="checkbox"
+                    {{ $calendarStyle==1?'checked':'' }}
+                    onclick="this.parentNode.submit()">
+                <label for="calendar-style">Календарь за неделю</label>
+            </form>
         </div>
     </div>
     <div class="filter-block">
@@ -90,7 +97,7 @@
         </div>
     </div>
 </div>
-
+@foreach (['1'] as $i)
 <div class="calendar-block" @if ($calendarStyle==0) style="grid-template-columns: 60px repeat({{ $Users->count() }}, 240px); 
     grid-template-rows: 1fr repeat({{ $gridRowCount }}, {{ $scale }}px);" @endif>
 
@@ -194,7 +201,9 @@
 
 </div>
 
-</div>
+</div>  
+@endforeach
+
 @if ($calendarStyle!=0 && isset($tasksToDelete) !==false)
     <form class="erase-all-button" action="/deletealltasks" method="GET">
         <input type="checkbox" name="confirm">
