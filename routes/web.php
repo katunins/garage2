@@ -103,7 +103,7 @@ Route::get('/deal2tasks', function () {
             return redirect()->back()->withErrors(['deal' => 'Возможно нет такой сделки']);
 });
 Route::get('/deletealltasks', function () {
-    if ($_GET['time'] - time() > 1 || isset($_GET['confirm']) === false) return redirect()->back(); //защитимся от перехода в браузере назад
+    if ($_GET['time'] - time() > 1 /*|| isset($_GET['confirm']) === false*/) return redirect()->back(); //защитимся от перехода в браузере назад
     Tasks::whereIn('id', json_decode($_GET['taskstodelete']))->delete();
     return redirect('/calendar');
 });

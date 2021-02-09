@@ -143,7 +143,7 @@ class CalendarController extends Controller
         // $startCalendarTime, $endCalendarTime - время начала и конца линии календаря
         $gridStart = 2; //с этой ячейки начинается календарь
         $oneRow = $gridInHour / 60; //строк в одной минуте
-        $minHeight = 26; //минимальная количество строк Grid в задаче в календаре из расчета на 30 px
+        $minHeight = 30; //минимальная количество строк Grid в задаче в календаре из расчета на 30 px
 
         // dd ($statusFilter);
         $activeStatus = $statusFilter;
