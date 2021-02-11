@@ -114,7 +114,11 @@
                     <input name="conditions[{{ $i }}][equal]" list="equals" placeholder="?" size="30"
                         value="{{ old('conditions')[$i]['equal'] ?? $template->conditions[$i]['equal'] ?? '' }}">
                     <button type="button"
-                        onclick="this.parentNode.querySelectorAll('input').forEach(el=>el.value=''); setHelpValues('{{ $i }}');">×</button>
+                        onclick="
+                        this.parentNode.querySelectorAll('input').forEach(el=>el.value=''); 
+                        setHelpValues('help-value-{{ $i }}');
+                        document.getElementById('help-value-{{ $i }}').innerHTML='';
+                        ">×</button>
                     <input class="max-size param-input" name="conditions[{{ $i }}][value]"
                         value="{{ old('conditions')[$i]['value'] ?? $template->conditions[$i]['value'] ?? '' }}"
                         onclick="setHelpValues('help-value-{{ $i }}')">
@@ -229,6 +233,7 @@
 
         // let paraminput = event.target.parentNode.querySelector('.param-input')
         // paraminput.value = ''
+        // console.log (elemId, document.getElementById(elemId))
         document.getElementById(elemId).innerHTML = html
     }
 
