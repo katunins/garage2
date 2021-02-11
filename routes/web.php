@@ -40,6 +40,7 @@ Route::get('/newtemplate', function () {
         'line' => $_GET['line'],
         'position' => $_GET['position'],
         'productId' => $_GET['productid'],
+        'allParams' => TemplateController::getAllProductParams($_GET['productid']),
         'Users' =>User::all()
     ]);
 });
@@ -49,6 +50,7 @@ Route::get('/edittemplate', function () {
         'position' => $_GET['position'],
         'productId' => $_GET['productid'],
         'template' => TemplateController::getTemplate($_GET['templateid']),
+        'allParams' => TemplateController::getAllProductParams($_GET['productid']),
         'Users' =>User::all()
     ]);
 });
@@ -95,7 +97,7 @@ Route::get('master/{id}', function ($id) {
 });
 
 Route::get('/deal2tasks', function () {
-
+    
     $dealArr = DealsController::getDeal($_GET['id']);
     if ($dealArr !== false)
         if (TemplateController::tasksFromDeal($dealArr)) return redirect('/calendar');
@@ -109,7 +111,3 @@ Route::get('/deletealltasks', function () {
 });
 
 Route::get('/calendar', [CalendarController::class, 'initCalendar']);
-
-
-// Функционал
-// менять мастера

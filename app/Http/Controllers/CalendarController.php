@@ -27,7 +27,6 @@ class CalendarController extends Controller
     // загружает календарь
     public function initCalendar()
     {
-        // $Date = isset($_GET['date']) !== false ? Carbon::createFromFormat('Y-m-d', $_GET['date']) : new Carbon;
         if (isset($_GET['date']) !== false) {
             $Date = Carbon::parse($_GET['date']);
             session()->put('calendarDate', $Date->toDateString());

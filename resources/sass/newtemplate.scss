@@ -33,6 +33,47 @@ label {
     background-color: #efefef;
 }
 
+.param-input-help {
+    display: flex;
+
+    input {
+        cursor: pointer;
+    }
+
+    div {
+        text-align: right;
+
+        button {
+            position: relative;
+            top: -32px;
+            right: 11px;
+            // border: none;
+            border: 1px solid grey;
+            background: transparent;
+            border-radius: 10px;
+        }
+
+
+    }
+
+}
+
+.help {
+    button {
+        margin: 2px 4px;
+        font-size: 12px;
+        border-radius: 10px;
+        border: 1px solid grey;
+        padding: 2px 9px;
+        outline: none;
+    }
+
+    .active-help-button {
+        background-color: rgb(162, 236, 233);
+    }
+}
+
+
 p.help {
     // margin: 10px auto 0 auto;
     width: 580px;

@@ -10,8 +10,12 @@ const LOG = false; //true - идет вывод echo;
 use App\Models\Products;
 use App\Models\Tasks;
 use App\Models\Templates;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+
+use function PHPUnit\Framework\isNull;
 
 class TemplateController extends Controller
 {
@@ -48,6 +52,7 @@ class TemplateController extends Controller
             'lineCount' => $lineCount,
             'positionCount' => $positionCount,
             'productId' => $productId,
+            'Users' => User::where('type', 'master')->get(),
             'productTitle' => Products::where('korobookid', $productId)->first()->title,
         ]);
     }
@@ -141,12 +146,12 @@ class TemplateController extends Controller
             if (LOG) dump('errors', self::$scriptErrors);
 
             // переведем все задачи в статус Wait
-            Tasks::where('deal', $dealName)->where('status', 'temp')->update(['status'=>'wait']);
+            Tasks::where('deal', $dealName)->where('status', 'temp')->update(['status' => 'wait']);
             // dd('finish tasksFromDeal()');
         }
         if (self::$scriptErrors == []) return true;
         else {
-            dd (self::$scriptErrors);
+            dd(self::$scriptErrors);
         }
     }
 
@@ -267,7 +272,7 @@ class TemplateController extends Controller
 
                         // найдем ближайшее свободное время у возможных мастеров
                         $template = Templates::find($item->templateid);
-                        foreach (explode('/', $template->masters) as $masterId) {
+                        foreach ($template->masters as $masterId) {
                             $resultTime = self::getFreePlan($masterId, $item->time, $trueStart, [
                                 $template->period1,
                                 $template->period2,
@@ -335,43 +340,74 @@ class TemplateController extends Controller
             foreach ($templates->where('line', $line)->sortBy('position') as $templateItem) {
 
                 // Проверим условия шаблона. Работают по принципу OR
+                // $conditionResult = 0; // 0 - не сработало / 1 - сработало
+                // $conditionCount = 0; // количество не пустых условий
+                // for ($i = 1; $i <= 3; $i++) {
+                //     if ($templateItem->{'condition' . $i}) {
+                //         $conditionCount++;
+                //         $conditionArr = self::parseCondition($templateItem->{'condition' . $i});
+
+                //         if (isset($productParams[$conditionArr['param']])) {
+                //             $productValue = $productParams[$conditionArr['param']];
+                //             foreach ($conditionArr['values'] as $value) {
+                //                 switch ($conditionArr['sign']) {
+                //                     case '=':
+                //                         $conditionResult += strpos($productValue, $value) !== false ? 1 : 0;
+                //                         break;
+                //                     case '!=':
+                //                         $conditionResult += strpos($productValue, $value) === false ? 1 : 0;
+                //                         break;
+                //                     case '==':
+                //                         $conditionResult += strcasecmp($productValue, $value) == 0 ? 1 : 0;
+                //                         break;
+                //                     case '!==':
+                //                         $conditionResult += strcasecmp($productValue, $value) != 0 ? 1 : 0;
+                //                         break;
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
+
+                // Проверим условия шаблона. Работают по принципу OR
                 $conditionResult = 0; // 0 - не сработало / 1 - сработало
                 $conditionCount = 0; // количество не пустых условий
-                for ($i = 1; $i <= 3; $i++) {
-                    if ($templateItem->{'condition' . $i}) {
-                        $conditionCount++;
-                        $conditionArr = self::parseCondition($templateItem->{'condition' . $i});
 
-                        if (isset($productParams[$conditionArr['param']])) {
-                            $productValue = $productParams[$conditionArr['param']];
-                            foreach ($conditionArr['values'] as $value) {
-                                switch ($conditionArr['sign']) {
+                if ($templateItem->conditions) {
+                    $conditionCount++;
+                    foreach ($templateItem->conditions as $conditionItem) {
+
+                        if (isset($productParams[$conditionItem['condition']])) {
+                            $productValue = $productParams[$conditionItem['condition']];
+                            foreach (explode('/', $conditionItem['value']) as $value) {
+                                
+                                switch ($conditionItem['equal']) {
                                     case '=':
                                         $conditionResult += strpos($productValue, $value) !== false ? 1 : 0;
                                         break;
                                     case '!=':
                                         $conditionResult += strpos($productValue, $value) === false ? 1 : 0;
                                         break;
-                                    case '==':
-                                        $conditionResult += strcasecmp($productValue, $value) == 0 ? 1 : 0;
-                                        break;
-                                    case '!==':
-                                        $conditionResult += strcasecmp($productValue, $value) != 0 ? 1 : 0;
-                                        break;
+                                        case '==':
+                                            $conditionResult += strcasecmp($productValue, $value) == 0 ? 1 : 0;
+                                            break;
+                                        case '!==':
+                                            $conditionResult += strcasecmp($productValue, $value) != 0 ? 1 : 0;
+                                            break;
                                 }
                             }
                         }
                     }
                 }
 
-                if ($conditionCount == 0 || $conditionResult > 0) {
+                if ($conditionCount==0 || ($conditionCount>0 && $conditionResult > 0)) {
                     // тут шаблон прошел условия, поэтому создадим задачу
                     // если есть минипараметры, которые нужно отобразить в сделке
 
                     $taskInfo = NULL;
-                    if ($templateItem->params) {
+                    if ($templateItem->miniparams) {
 
-                        foreach (explode('/', $templateItem->params) as $itemInfo) {
+                        foreach ($templateItem->miniparams as $itemInfo) {
                             if (isset($productParams[$itemInfo])) {
                                 $taskInfo[] = $itemInfo . ' : ' . $productParams[$itemInfo];
                             }
@@ -405,20 +441,20 @@ class TemplateController extends Controller
     }
 
     // парсит строку условий - делит ее на массив
-    static function parseCondition($condition)
-    {
-        foreach (['!==', '!=', '==', '='] as $sign) {
-            $conditionExplode = explode($sign, $condition);
-            if (count($conditionExplode) > 1) {
-                return [
-                    'param' => $conditionExplode[0],
-                    'sign' => $sign,
-                    'values' => explode('/', $conditionExplode[1])
-                ];
-            }
-        }
-        return false;
-    }
+    // static function parseCondition($condition)
+    // {
+    //     foreach (['!==', '!=', '==', '='] as $sign) {
+    //         $conditionExplode = explode($sign, $condition);
+    //         if (count($conditionExplode) > 1) {
+    //             return [
+    //                 'param' => $conditionExplode[0],
+    //                 'sign' => $sign,
+    //                 'values' => explode('/', $conditionExplode[1])
+    //             ];
+    //         }
+    //     }
+    //     return false;
+    // }
 
     // преобразует предварительно подобранные шаблоны задач в список задач со временем
     static function planGenerator($tasksArr, $dealItem)
@@ -473,8 +509,6 @@ class TemplateController extends Controller
                 }
 
                 // найдем свободное время у мастера
-                $mastersArr = explode('/', $template->masters);
-
                 // сделаем специально познее вермя старта, что бы потом выбрать самого свободного мастера
                 $start = new Carbon; //
                 $start->addYear();
@@ -482,11 +516,8 @@ class TemplateController extends Controller
                 // выберем ближайшего свободного мастера
                 $resultMasterId = 0;
 
-                foreach ($mastersArr as $masterId) {
-                    $resultTime = self::getFreePlan($masterId, $task['time'], $startFrom, [
-                        $template->period1,
-                        $template->period2,
-                    ]);
+                foreach ($template->masters as $masterId) {
+                    $resultTime = self::getFreePlan($masterId, $task['time'], $startFrom, $template->periods);
 
                     if ($resultTime < $start) {
                         $start = clone $resultTime;
@@ -509,9 +540,9 @@ class TemplateController extends Controller
                 $taskBefore->end = $end->format('Y-m-d H:i:s');
                 $taskBefore->buffer = $template->buffer + STANDART_BUFFER; //стандартный буфер задержки после задачи
                 $taskBefore->generalinfo = $dealItem['productname'] . ' ' . $dealItem['Формат'] ?? '';
-                if ($template->params) {
+                if ($template->miniparams) {
                     $info = '';
-                    foreach (explode('/', $template->params) as $param) {
+                    foreach ($template->miniparams as $param) {
                         if (isset($dealItem[$param]) !== false) $info .= $param . ': ' . $dealItem[$param] . '; ';
                         // else self::$scriptErrors[] = 'Не найден параметр, проверьте "' . $param . '"';
                     }
@@ -525,6 +556,8 @@ class TemplateController extends Controller
             }
         }
     }
+
+
 
 
 
@@ -546,7 +579,7 @@ class TemplateController extends Controller
         do {
             $test++;
 
-            if ($test > 1500) {
+            if ($test > 10000) {
                 self::$scriptErrors[] = 'getFreePlan() цикл поиска свободного времени превысил допустимое значение. Мастер - ' . $masterId . ', startFrom - ' . $startFrom->toDateTimeString() . ', Длительность ' . $time . ' мин.';
                 // echo '<h1>test-stop!!!</h1>';
                 break;
@@ -726,34 +759,32 @@ class TemplateController extends Controller
         }
     }
 
-        // копирует шаблон и вставляет в соседнюю позицию
-        static function copyTemplate($data)
+    // копирует шаблон и вставляет в соседнюю позицию
+    static function copyTemplate($data)
 
-        {
-            // "line" => "1"
-            // "position" => "1"
-            // "lineshift" => "1"
-            // "positionshift" => "0"
-            // "productid" => "1"
-            // "templateid" => "11"
+    {
+        // "line" => "1"
+        // "position" => "1"
+        // "lineshift" => "1"
+        // "positionshift" => "0"
+        // "productid" => "1"
+        // "templateid" => "11"
 
-            // сместим позиции следующих шаблонов в линии на +1
-            $nextTemplates = Templates::where([
-                'productid'=> $data['productid'],
-                'line'=> $data['line']
-            ])->where('position', '>', $data['position'])->get();
-            foreach ($nextTemplates as $item) {
-                $item->position++;
-                $item->save();
-            }
-
-            $currentTemplate = Templates::find($data['templateid']);
-            $newTemplate= $currentTemplate->replicate();
-            $newTemplate->position++;
-            $newTemplate->save();
-    
-            
+        // сместим позиции следующих шаблонов в линии на +1
+        $nextTemplates = Templates::where([
+            'productid' => $data['productid'],
+            'line' => $data['line']
+        ])->where('position', '>', $data['position'])->get();
+        foreach ($nextTemplates as $item) {
+            $item->position++;
+            $item->save();
         }
+
+        $currentTemplate = Templates::find($data['templateid']);
+        $newTemplate = $currentTemplate->replicate();
+        $newTemplate->position++;
+        $newTemplate->save();
+    }
 
 
     // перемещает линию вверх или вниз
@@ -799,14 +830,15 @@ class TemplateController extends Controller
 
     public function saveTemplate(Request $request)
     {
+        // dd ($request->all());
+
         $request->validate([
             'taskname' => 'required',
-            'masters' => 'required',
+            'masters.0' => 'required',
             'producttime' => 'required_without:paramtime',
-            // 'paramtime'=>'required_without:producttime',
         ], [
             'taskname.required' => 'Заполните название задачи',
-            'masters.required' => 'Укажите мастеров',
+            'masters.0.required' => 'Хотя бы один мастер должен быть указан',
             'producttime.required_without' => 'Должен быть заполнен хотя бы один параметр времени',
             // 'paramtime.required_without'=>'Должен быть заполнен хотя бы один параметр времени'
         ]);
@@ -820,26 +852,56 @@ class TemplateController extends Controller
         }
 
 
+
+
         $template['productid'] = $request['productid'];
         $template['line'] = $request['line'];
         $template['position'] = $request['position'];
         $template->taskidbefore = $request->taskidbefore;
 
         $template->taskname = $request->taskname;
-        $template->masters = $request->masters;
-        $template->params = $request->params;
+
+        // уберем пустые ячейки в массиве
+        foreach ($request->masters as $item) {
+            if ($item != null) $trueMasters[] = $item;
+        }
+        $template->masters = $trueMasters;
+
+        // уберем пустые ячейки в массиве
+        foreach ($request->miniparams as $item) {
+            if ($item) $trueMiniparams[] = $item;
+        }
+        // $request->miniparams = array_filter($request->miniparams, function($item){return $item !=null;});
+        $template->miniparams = $trueMiniparams ?? null;
+
         $template->buffer = $request->buffer;
         $template->producttime = $request->producttime;
         $template->paramtime = $request->paramtime;
 
-        $template->period1 = $request->period1;
-        $template->period2 = $request->period2;
+        // уберем пустые ячейки в массиве
+        foreach ($request->periods as $item) {
+            if ($item) $truePeriods[] = $item;
+        }
+        $template->periods = $truePeriods ?? null;
 
-        $template->condition1 = $request->condition1;
-        $template->condition2 = $request->condition2;
-        $template->condition3 = $request->condition3;
+        // уберем пустые ячейки в массиве
+        foreach ($request->conditions as $item) {
+            if ($item['condition'] && $item['equal'] && $item['value']) {
+                $trueConditions[] = $item;
+            }
+        }
+        $template->conditions = $trueConditions ?? null;
 
         $template->save();
         return redirect('/board/' . $request['productid']);
+    }
+
+    // получим все возможные варианты параметров продукта в виде массива
+    static function getAllProductParams($productId)
+    {
+        $response = Http::asForm()->post('https://korobook.ru/ajax/ajaxtaskgarage.php', [
+            'productid' => $productId
+        ]);
+        return ($response->json());
     }
 }

@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="/css/general.css">
 
 <h1>
-    <a class="to-main-page" href="/">←</a>
+    <a class="to-main-page" href="/"></a>
     {{ $productTitle }}
 </h1>
 <div class="lineBlock">
@@ -58,6 +58,7 @@
         $prevEmpty = 0;
         $safeLoopCount = 0; //защита от зацикливания
         $beforeTask = $templates->find($template->taskidbefore);
+        if ($beforeTask){
             do {
                 // защита
                 $safeLoopCount++;
@@ -73,6 +74,7 @@
 
                 
             } while ($safeLoopCount < 20);
+        }
             
             if ($emptyCount >0) {
                 for ($x = 0; $x < $emptyCount; $x++) {
@@ -91,7 +93,7 @@
 @endif
 @endif --}}
 @php
-if ($template) $colorMaster = (int)explode('/', $template->masters)[0]*14;
+if ($template) $colorMaster = (int)$template->masters[0]*14;
 @endphp
 <div class="template" @if($template) style="box-shadow:inset 0px -61px 0px 0px hsl({{ $colorMaster }}, 50%, 80%);"
     @endif >
@@ -102,8 +104,13 @@ if ($template) $colorMaster = (int)explode('/', $template->masters)[0]*14;
 
         <p class="title">{{ $template->taskname }}</p>
         <hr>
-        <p class="description">Мастер: <span>{{ $template->masters }}</span></p>
-        <p class="description">Информация: <span>{{ $template->params }}</span></p>
+        <p class="description">Мастера:
+            @foreach ($template->masters as $item)
+            
+            {{ $Users->find($item)->name }},
+            @endforeach
+        </p>
+        <p class="description">Мини-параметры: <span>{{ $template->miniparams? implode(', ', $template->miniparams):'' }}</span></p>
         <br>
         <p class="description">Базовое / расчетное время: <span>{{ $template->producttime }} /
                 {{ $template->paramtime }} мин.</span>
@@ -114,11 +121,17 @@ if ($template) $colorMaster = (int)explode('/', $template->masters)[0]*14;
         <p class="description">Буфер: <span>{{ $template->buffer }} мин.</span></p>
         <br>
         <p class="description">Запретный период:
-            <span>{{ $template->period1 }}, {{ $template->period2 }}.</span>
+            @foreach ($template->periods ?? [] as $item)
+                <span>{{ $item }}</span>,
+            @endforeach
         </p>
         <p class="description">Условия выполнения:
-            <span> {{ $template->condition1 }} <br> {{ $template->condition2 }};
-                {{ $template->condition3 }}</span>
+            @foreach ($template->conditions ?? [] as $item)
+                <span>{{ $item['condition'].' '.$item['equal'].' '.$item['value'] }}</span>
+                <br>
+            @endforeach
+            {{-- <span> {{ $template->condition1 }} <br> {{ $template->condition2 }};
+                {{ $template->condition3 }}</span> --}}
         </p>
         <br>
         <div class="buttons arrows-buttons">

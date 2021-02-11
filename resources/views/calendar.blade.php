@@ -188,7 +188,7 @@
             </div>
 
     </div>
-    <input class="task-checkbox" type="checkbox" onchange="changeIDtodelete({{ $item->id }})">
+    <input class="task-checkbox" type="checkbox" value="{{ $item->id }}" onchange="changeIDtodelete()">
 
 @endforeach
 
@@ -255,7 +255,13 @@
         <input id="json-to-delete" type="hidden" name="taskstodelete">
         {{-- value={{ json_encode($tasksToDelete) }} --}}
         <input type="hidden" name="time" value={{ time() }}>
-        <input type="submit" value="Удалить все выбранные задачи?">
+        <input type="submit" value="Удалить все выбранные задачи?" 
+        {{-- onclick="
+        let idArr = [];
+        document.querySelectorAll('.task-checkbox:checked').forEach(el => idArr.push(taskId));
+        document.getAttribute('json-to-delete').value = JSON.stringify(idArr)
+        this.parentNode.submit() --}}
+        ">
     </form>
 @endif
 
@@ -296,10 +302,13 @@
     function changeIDtodelete(taskId) {
         let status = event.target.checked
         let idArr = []
-        document.querySelectorAll('.task-checkbox:checked').forEach(el=>idArr.push(taskId))
+        document.querySelectorAll('.task-checkbox:checked').forEach(el => idArr.push(el.value))
         document.getElementById('json-to-delete').value = JSON.stringify(idArr)
         let eraseAllButton = document.querySelector('.erase-all-button')
-        if (idArr.length>0 && eraseAllButton.classList.contains('hide')) eraseAllButton.classList.remove('hide'); else eraseAllButton.classList.add('hide');
+        if (idArr.length > 0) {
+            if (eraseAllButton.classList.contains('hide')) eraseAllButton.classList.remove('hide');
+
+        } else eraseAllButton.classList.add('hide');
     }
 
 </script>

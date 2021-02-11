@@ -9,5 +9,10 @@ class Templates extends Model
 {
     use HasFactory;
 
-
+    protected $casts = [
+        'miniparams' => 'array',
+        'conditions' => 'array',
+        'periods' => 'array',
+        'masters' => 'array',
+    ];
 }

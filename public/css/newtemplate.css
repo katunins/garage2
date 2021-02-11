@@ -40,6 +40,36 @@ label {
   background-color: #efefef;
 }
 
+.param-input-help {
+  display: flex;
+}
+.param-input-help input {
+  cursor: pointer;
+}
+.param-input-help div {
+  text-align: right;
+}
+.param-input-help div button {
+  position: relative;
+  top: -32px;
+  right: 11px;
+  border: 1px solid grey;
+  background: transparent;
+  border-radius: 10px;
+}
+
+.help button {
+  margin: 2px 4px;
+  font-size: 12px;
+  border-radius: 10px;
+  border: 1px solid grey;
+  padding: 2px 9px;
+  outline: none;
+}
+.help .active-help-button {
+  background-color: #a2ece9;
+}
+
 p.help {
   width: 580px;
 }

@@ -20,16 +20,13 @@ class CreateTemplatesTable extends Migration
             $table->integer('position'); // позиция в линии
             $table->integer('taskidbefore')->nullable(); //задача, после которой ставим эту задачу
             $table->string('taskname'); // название задачи
-            $table->string('masters'); //ID мастера '1/2/3'
-            $table->string('params')->nullable(); //[Формат, Тип печати]
+            $table->json('masters'); //ID мастера '1/2/3'
+            $table->json('miniparams')->nullable(); //[Формат, Тип печати]
             $table->integer('buffer')->nullable(); //min
             $table->integer('producttime')->nullable(); //min - базовое время выполнения одной задачи
             $table->float('paramtime')->nullable(); //мин - расчетное время на расчетную еденицу (1кв. см к примеру)
-            $table->string('period1')->nullable(); //доступные период 9:00-12:00
-            $table->string('period2')->nullable(); 
-            $table->string('condition1')->nullable(); // условие Формат=20х20/30х30
-            $table->string('condition2')->nullable(); 
-            $table->string('condition3')->nullable(); 
+            $table->json('periods')->nullable(); //доступные период 9:00-12:00
+            $table->json('conditions')->nullable(); // условие Формат=20х20/30х30
             $table->timestamps();
         });
     }
