@@ -60,7 +60,7 @@
 
                 <div class="template" style="{{ $style ?? '' }}">
 
-                    <p>Реальная позиция {{ $template->realPosition }}</p>
+                    {{-- <p>Реальная позиция {{ $template->realPosition }}</p> --}}
                     <p class="title">{{ $template->taskname }}</p>
                     <hr>
                     <p class="description">Мастера:
