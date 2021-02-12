@@ -46,6 +46,54 @@ class TemplateController extends Controller
             $positionCount = $templates->max('position');
         }
 
+        foreach ($templates as $item) {
+            $item->realPosition = $item->position;
+        }
+
+        $safe = 0;
+
+        do {
+            foreach ($templates->groupBy('line') as $lineItem) {
+                foreach ($lineItem->sortByDesc('position') as $currentTemplate) {
+                    $shift = 0;
+                    $line = $currentTemplate->line;
+                    $position = $currentTemplate->position;
+                    $safeCount = 0;
+                    do {
+
+                        $safeCount++;
+                        $beforeTemplate = $templates->where('line', $line)->where('position', $position)->first();
+
+                        if ($beforeTemplate->taskidbefore) {
+                            $befBefTemp = $templates->find($beforeTemplate->taskidbefore);
+                            $line = $befBefTemp->line;
+                            $different = $befBefTemp->realPosition - $beforeTemplate->realPosition;
+                            // $different = $befBefTemp->position-$beforeTemplate->position;
+                            if ($different >= 0) {
+                                $currentTemplate->realPosition += $different + 1;
+                                $position = $befBefTemp->position;
+                            }
+                            // dd ($beforeTemplate->position - $befBefTemp->position);
+                        } else {
+                            // $shift++;
+                            $position--;
+                        }
+                    } while ($position > 1 && $safeCount > 100);
+                }
+            }
+            $safe++;
+            foreach ($templates as $currentTemplate) {
+                // проверим, вдруг у соседа слева - realPosition одинаковый
+                $befBefTemp = $templates->where('line', $currentTemplate->line)->where('position', $currentTemplate->position - 1)->first();
+                if ($befBefTemp && $befBefTemp->realPosition == $currentTemplate->realPosition) {
+                    // dump ($currentTemplate->id);
+                    $currentTemplate->realPosition++;
+                }
+            }
+        } while ($safe < 10);
+
+
+        // dd($templates);
 
         return view('board', [
             'templates' => $templates,
