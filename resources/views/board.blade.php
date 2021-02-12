@@ -172,7 +172,7 @@
                 <form class="plus" action="/newtemplate" method="get">
                     <input type="hidden" name="time" value="{{ time() }}">
                     <input type="hidden" name="line" value="{{ $line }}">
-                    <input type="hidden" name="position" value="{{ $position }}">
+                    <input type="hidden" name="position" value="{{ $position+1 }}">
                     <input type="hidden" name="productid" value="{{ $productId }}">
                     <input type="submit" value="+">
                 </form>
