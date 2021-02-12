@@ -21,6 +21,8 @@
                 @enderror
                 <label for="id">ID сделки в Битрикс24</label>
                 <input type="text" id="id" name="id">
+                <input type="checkbox" name="log" id="log">
+                <label for="log">Логирование</label>
                 <p><input type="submit" name="" value="Создать"></p>
             </form>
         </div>

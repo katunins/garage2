@@ -112,7 +112,7 @@
 
 
                     <input name="conditions[{{ $i }}][equal]" list="equals" placeholder="?" size="30"
-                        value="{{ old('conditions')[$i]['equal'] ?? $template->conditions[$i]['equal'] ?? '' }}">
+                        value="{{ old('conditions')[$i]['equal'] ?? $template->conditions[$i]['equal'] ?? '==' }}">
                     <button type="button"
                         onclick="
                         this.parentNode.querySelectorAll('input').forEach(el=>el.value=''); 

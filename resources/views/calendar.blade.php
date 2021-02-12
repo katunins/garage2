@@ -152,7 +152,7 @@
         @endif
         {{-- Задачи --}}
 
-        @foreach ($Tasks->whereBetween('start', [$weekCalendarDay, $weekEndTimeFilter]) as $item)
+        @foreach ($Tasks->whereBetween('start', [$weekCalendarDay, $weekEndTimeFilter])->sortBy('start') as $item)
 
             @php
 
@@ -160,6 +160,10 @@
                 $modalMessage = '';
                 foreach ($item->getAttributes() as $param => $value) {
                 if ($param == 'master') $value = $Users->find($value)->name;
+                
+                if ($param == 'taskidbefore') {
+                    $value = $Tasks->find($value)->name ?? '';
+                }
 
                 $skip = false;
                 foreach (['templateid', 'status', 'deal', 'created_at', 'updated_at', 'startGrid', 'endGrid'] as $el) {
@@ -251,17 +255,12 @@
 
 @if ($calendarStyle!=0 )
     {{-- && isset($tasksToDelete) !==false --}}
-    <form class="erase-all-button hide" action="/deletealltasks" method="GET">
+    <form class="" action="/deletealltasks" method="GET">
         <input id="json-to-delete" type="hidden" name="taskstodelete">
         {{-- value={{ json_encode($tasksToDelete) }} --}}
         <input type="hidden" name="time" value={{ time() }}>
-        <input type="submit" value="Удалить все выбранные задачи?" 
-        {{-- onclick="
-        let idArr = [];
-        document.querySelectorAll('.task-checkbox:checked').forEach(el => idArr.push(taskId));
-        document.getAttribute('json-to-delete').value = JSON.stringify(idArr)
-        this.parentNode.submit() --}}
-        ">
+        <input type="button" value="Выбрать все задачи на экране" onclick="selectAllTasks()">
+        <input type="submit" class="erase-all-button hide" value="Удалить все выбранные задачи?">
     </form>
 @endif
 
@@ -309,6 +308,13 @@
             if (eraseAllButton.classList.contains('hide')) eraseAllButton.classList.remove('hide');
 
         } else eraseAllButton.classList.add('hide');
+    }
+
+    function selectAllTasks() {
+        document.querySelectorAll('.task-checkbox').forEach(el => {
+            el.checked = !el.checked
+            changeIDtodelete(el.value)
+        })
     }
 
 </script>

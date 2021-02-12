@@ -28,6 +28,7 @@ class CalendarController extends Controller
     public function initCalendar()
     {
         if (isset($_GET['date']) !== false) {
+            
             $Date = Carbon::parse($_GET['date']);
             session()->put('calendarDate', $Date->toDateString());
         } else {
@@ -38,6 +39,7 @@ class CalendarController extends Controller
                 session()->put('calendarDate', $Date->toDateString());
             }
         }
+
         foreach ([
             'temp' => 'Временный',
             'wait' => 'Ожидает выполнения',

@@ -41,7 +41,7 @@ Route::get('/newtemplate', function () {
         'position' => $_GET['position'],
         'productId' => $_GET['productid'],
         'allParams' => TemplateController::getAllProductParams($_GET['productid']),
-        'Users' =>User::all()
+        'Users' => User::all()
     ]);
 });
 Route::get('/edittemplate', function () {
@@ -51,7 +51,7 @@ Route::get('/edittemplate', function () {
         'productId' => $_GET['productid'],
         'template' => TemplateController::getTemplate($_GET['templateid']),
         'allParams' => TemplateController::getAllProductParams($_GET['productid']),
-        'Users' =>User::all()
+        'Users' => User::all()
     ]);
 });
 
@@ -97,12 +97,12 @@ Route::get('master/{id}', function ($id) {
 });
 
 Route::get('/deal2tasks', function () {
-    
     $dealArr = DealsController::getDeal($_GET['id']);
-    if ($dealArr !== false)
-        if (TemplateController::tasksFromDeal($dealArr)) return redirect('/calendar');
-        else
-            return redirect()->back()->withErrors(['deal' => 'Возможно нет такой сделки']);
+    if ($dealArr !== false) {
+        TemplateController::tasksFromDeal($dealArr);
+        return redirect('/calendar');
+    } else
+        return redirect('/')->withErrors(['deal' => 'Возможно нет такой сделки']);
 });
 Route::get('/deletealltasks', function () {
     if ($_GET['time'] - time() > 1 /*|| isset($_GET['confirm']) === false*/) return redirect()->back(); //защитимся от перехода в браузере назад

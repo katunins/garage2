@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 const LUNCH_BREACK = '12:00-13:00'; //перевыр на обед
 const STANDART_BUFFER = 10; //стандартный буфер в минутах
 const TIME_AFTER_SCRIPT = 12; //время задержки после запуска скрипта в часах
-const LOG = false; //true - идет вывод echo;
+
+// const isset($_GET['log']) =  true; //true - идет вывод echo;
 
 use App\Models\Products;
 use App\Models\Tasks;
@@ -14,8 +15,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
-
-use function PHPUnit\Framework\isNull;
 
 class TemplateController extends Controller
 {
@@ -159,7 +158,7 @@ class TemplateController extends Controller
     static function tasksFromDeal($dealArr)
     {
         self::$scriptErrors = [];
-
+            
         // Загрузим выходные
         $ch = curl_init('https://isdayoff.ru/api/getdata?year=' . date('Y') . '&delimeter=/');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -181,9 +180,10 @@ class TemplateController extends Controller
 
             $productDataArr = array_merge($dealItem, $dealArr['params']);
             $productDataArr['dealname'] = $dealName;
-
+            
             $tasks = self::taskGenegator($productDataArr);
             self::planGenerator($tasks, $dealItem);
+            
 
             // если есть задачи, зависящие от других и еще не передвинутые на нужное стартовое время - передвинем их
             if (count(self::$needExtraSort) > 0) self::extraSort($dealName);
@@ -191,14 +191,20 @@ class TemplateController extends Controller
             // запустим дополнительную - проверку последовательностей
             self::rebuildTrueTime($dealName);
 
-            if (LOG) {
+            if (isset($_GET['log'])) {
                 dump('errors', self::$scriptErrors);
+                echo '<div><a target="_blank" href="';
+                echo'/calendar?filterdealname='.explode('#', $dealArr['params']['deal'])[1];
+                echo '&calendardays=7';
+                echo '&calendarstyle=1';
+                echo'&date='.explode(' ', Tasks::where('deal', $dealName)->where('status', 'temp')->orderBy('start')->first()->start)[0];
+                echo'">Перейти в календарь к задачам</a></div>';
                 die();
+            } else {
+                // переведем все задачи в статус Wait
+                Tasks::where('deal', $dealName)->where('status', 'temp')->update(['status' => 'wait']);
+                return true;
             }
-
-            // переведем все задачи в статус Wait
-            Tasks::where('deal', $dealName)->where('status', 'temp')->update(['status' => 'wait']);
-            // dd('finish tasksFromDeal()');
         }
         if (self::$scriptErrors == []) return true;
         else {
@@ -216,130 +222,111 @@ class TemplateController extends Controller
             self::$scriptErrors[] = 'extraSort() При дополнительной сортировке зависящих задач возникла ошибка';
             return false;
         }
-        if (LOG) echo 'extraSort()<br>';
+        if (isset($_GET['log'])) echo 'extraSort()<br>';
         // возьмем все задачи с taskidbefore = NULL
         foreach ($tasks->whereNull('taskidbefore') as $item) {
 
+            $beforeTask = null;
+            $safeCount = 0;
+            $currentTemplate = Templates::find($item->templateid);
+            $itemTemplate = $currentTemplate;
 
-
-            // $item - задача без привязки к предыдущей
-            $itemTemplate = Templates::find($item->templateid);
-
-            // найдем координаты предыдущего шаблон
-            if ($itemTemplate->taskidbefore) {
-                if (LOG) echo 'Шаблон задачи ' . $item->id . ' шаблон привязан к другому шаблону <br>';
-                // если была связка с шаблоном из другой линии
-                $beforeTempLineCursor = Templates::find($itemTemplate->taskidbefore)->line; //стартовая линия шаблона для поиска
-                $beforeTempPositionCursor = Templates::find($itemTemplate->taskidbefore)->position; //стартовая позиция шаблона для поиска
-            } else {
-                if ($itemTemplate->position > 1) {
-                    if (LOG) echo 'Шаблон задачи ' . $item->id . ' не имеет привязки, возьмем предыдущий шаблон в линии <br>';
-                    // получим предыдущую задачу в линии
-                    $beforeTempLineCursor = $itemTemplate->line; //стартовая линия шаблона для поиска
-                    $beforeTempPositionCursor = $itemTemplate->position - 1; //стартовая позиция шаблона для поиска
-                } else {
-                    // нет предыдущего шаблона - задача 1я в линии
-                    if (LOG) echo 'Шаблон задачи' . $item->id . ' первый в линии и он не привязан к другой линии<br>';
-
-                    continue;
+            if (isset($_GET['log'])) echo 'Задача <b>' . $item->name . '</b> - ' . $item->id . ' не привязана к предыдущей. Найдем задачу по карте шаблонов<br>';
+            while (self::getBeboreTemplate($itemTemplate, true) && $safeCount < 100) {
+                if ($beforeTemplate = self::getBeboreTemplate($itemTemplate, true)) {
+                    $safeCount++;
+                    if (isset($_GET['log'])) echo '+';
+                    if ($beforeTask = $tasks->where('templateid', $beforeTemplate->id)->first()) {
+                        if (isset($_GET['log'])) echo ' Нашли задачу ' . $beforeTask->id . '('.$beforeTask->name.')'.' по шаблону ' . $beforeTemplate->id . '<br>';
+                        $item->taskidbefore = $beforeTask->id;
+                        $item->save();
+                        break;
+                    }
+                    $itemTemplate = $beforeTemplate;
                 }
             }
 
+            // if (isset($_GET['log'])) echo '<br>';
 
-
-
-            // if ($itemTemplate->position > 1) {
-            //     if (LOG) echo 'Шаблон задачи ' . $item->id . ' возьмем предыдущий шаблон в линии <br>';
-            //     // получим предыдущую задачу в линии
-            //     $beforeTempLineCursor = $itemTemplate->line; //стартовая линия шаблона для поиска
-            //     $beforeTempPositionCursor = $itemTemplate->position - 1; //стартовая позиция шаблона для поиска
-
-            // } 
-
-            // запустим цикл, который обратно будет получать все шаблоны и искать по ним поставленные задачи
-            $safeCount = 0;
-            $beforeTask = null;
-            do {
-                $safeCount++; //защита от зацикливания
-                $beforeTemplate = Templates::where('productid', $itemTemplate->productid)
-                    ->where('line', $beforeTempLineCursor)
-                    ->where('position', $beforeTempPositionCursor)
-                    ->first();
-                if (LOG) echo 'Ищем с координатами ' . $beforeTempLineCursor . ' x ' . $beforeTempPositionCursor . ' - ';
-                if ($beforeTemplate) {
-                    // проверим - есть ли задача, поставленная по этому шаблону
-                    if ($tasks->where('templateid', $beforeTemplate->id)->count() > 0) {
-                        $beforeTask = $tasks->where('templateid', $beforeTemplate->id)->first();
-                        if (LOG) echo 'задача нашлась !<br>';
-                        break;
-                    } else {
-                        if (LOG) echo 'нет шаблона, ';
-                        // задача по этому шаблону не найдена - передвигаем курсор на предыдущую
-                        if ($beforeTemplate->taskidbefore) {
-                            if (LOG) echo 'но есть предыдущий связанный шаблон ' . $beforeTemplate->taskidbefore . ' !<br>';
-                            $beforeTempLineCursor = Templates::find($beforeTemplate->taskidbefore)->line; //стартовая линия шаблона для поиска
-                            $beforeTempPositionCursor = Templates::find($beforeTemplate->taskidbefore)->position; //стартовая позиция шаблона для поиска
-                        } else {
-                            if (LOG) echo 'уменьшаем Position<br>';
-                            $beforeTempPositionCursor--;
+            if ($item->taskidbefore == null) {
+                if ($currentTemplate->taskidbefore && $currentTemplate->position > 1) {
+                    if (isset($_GET['log'])) echo 'Задача была привязана к шаблону из другой линии. Ни одна задача из этой ветки шаблонов не поставлена. Найдем предущую задачу по шаблону из родительской линии<br>';
+                    $itemTemplate = $currentTemplate;
+                    while (self::getBeboreTemplate($itemTemplate) && $safeCount < 100) {
+                        if ($beforeTemplate = self::getBeboreTemplate($itemTemplate)) {
+                            $safeCount++;
+                            if (isset($_GET['log'])) echo '+';
+                            if ($beforeTask = $tasks->where('templateid', $beforeTemplate->id)->first()) {
+                                if (isset($_GET['log'])) echo ' Нашли задачу ' . $beforeTask->id . ' по шаблону ' . $beforeTemplate->id . '<br>';
+                                $item->taskidbefore = $beforeTask->id;
+                                $item->save();
+                                break;
+                            }
+                            $itemTemplate = $beforeTemplate;
                         }
                     }
-                } else {
-                    self::$scriptErrors[] = 'extraSort() искал предыдущий шаблон и не нашел его!. Позиция шаблона ' . $beforeTempLineCursor . ' x ' . $beforeTempPositionCursor;
-                    return false;
-                }
-            } while ($safeCount < 100 && $beforeTempPositionCursor > 0);
 
-            // Пометим taskidbefore в задаче $item
-            if ($beforeTask) {
-                $item->taskidbefore = $beforeTask->id;
-                $item->save();
+                    if (isset($_GET['log'])) echo '<br>';
+                } else {
+                    if (isset($_GET['log'])) echo ' Привязанной задачи нет!<br>';
+                }
             }
 
+            // на всякйи случай проверим время старта найденной задачи и время предыдущей задачи в родительской линии
+            if ($item->taskidbefore) {
+                // && $parentBeforeTemplate = self::getBeboreTemplate(Templates::find($item->templateid))
 
-            // if ($itemTemplate->taskidbefore) {
-            //     // шаблон связан с предыдущим шаблоном. Найдем задачу, созданную предыдущим шаблоном
-            //     $beforeTask = $tasks->where('templateid', $itemTemplate->taskidbefore);
+                $beforeTask = null;
+                $safeCount = 0;
+                $itemTemplate = Templates::find($item->templateid);
+                $beforeParentTask = NULL; //предыдущая задача в родительской линии
 
-            //     // обработка ошибок
-            //     if ($beforeTask->count() > 1) {
-            //         self::$scriptErrors[] = 'extraSort() В созданных задачах по следке ' . $item->deal . ' есть задачи, созданные по одному и тому же шаблону ' . $itemTemplate->taskidbefore;
-            //         return false;
-            //     }
+                while (self::getBeboreTemplate($itemTemplate) && $safeCount < 100) {
+                    if ($beforeTemplate = self::getBeboreTemplate($itemTemplate)) {
+                        if ($beforeTask = $tasks->where('templateid', $beforeTemplate->id)->first()) {
+                            $beforeParentTask = $beforeTask;
+                            break;
+                        }
+                        $itemTemplate = $beforeTemplate;
+                    }
+                }
 
-            //     // предыдущая привязанная задача по шалону могла не создаться, если в ней было условие, поэтому найдем первую из созданных по предыщущим шаблонам в линии
-            //     if ($beforeTask->count() == 0) {
-            //         $templatesInLine = Templates::where('productid', $itemTemplate->productid)
-            //             ->where('line', $itemTemplate->line)
-            //             ->where('position', '<', $itemTemplate->position)
-            //             ->get()->sortByDesc('positions'); // все шаблоны в линии
+                if ($beforeParentTask) {
+                    // dump (Tasks::find($item->taskidbefore)->end,Tasks::find($item->taskidbefore)->end );
+                    // dump (Tasks::find($item->taskidbefore)->end, Tasks::find($beforeParentTask->taskidbefore)->end);
+                    $timeBeforeTask = Carbon::parse($tasks->find($item->taskidbefore)->end);
+                    $timeBeforeParentTask = Carbon::parse($beforeParentTask->end);
 
-            //         $beforeTask = null;
-            //         foreach ($templatesInLine as $tmp) {
-            //             $beforeTask = $tasks->where('templateid', $tmp->id);
-            //             if ($beforeTask->count() > 0) break;
-            //         }
-            //         // обработка ошибок
-            //         if ($beforeTask == null) {
-            //             self::$scriptErrors[] = 'extraSort() В созданных задачах по следке ' . $item->deal . ' есть задачи, предыдущей задачи по шаблону ' . $itemTemplate->taskidbefore . ', но таких задач не существует';
-            //             return false;
-            //         }
-            //     }
-
-            //     // $beforeTask->first() - найденная предыдущая задача для задачи $item
-
-            // Пометим taskidbefore в задаче $item
-            // $item->taskidbefore = $beforeTask->first()->id;
-            // $item->save();
-            // }
+                    if ($timeBeforeParentTask->greaterThan($timeBeforeTask)) {
+                        if (isset($_GET['log'])) echo 'Предыдущая задача, найденная в ветках из других линий оказась в календаре раньше, чем предыдущая задача в родительской линии <b>' . $beforeParentTask->name . '</b>. Сделаем связку с родителькой задачей<br>';
+                        $item->taskidbefore = $beforeParentTask->id;
+                        $item->save();
+                    }
+                }
+            }
         }
+    }
+
+    // Возвращяет предыдущий шаблон. TRUE с переходом на другие линии, FALSE - только в данной линии
+    static function getBeboreTemplate($currentTemplate, $shiftNextLine = false)
+    {
+
+        // найдем координаты предыдущего шаблона
+        if ($currentTemplate->taskidbefore && $shiftNextLine == true) {
+            $beforeTemplate = Templates::find($currentTemplate->taskidbefore);
+            return Templates::where('productid', $currentTemplate->productid)->where('line', $beforeTemplate->line)->where('position', $beforeTemplate->position)->first();
+        } elseif ($currentTemplate->position > 1) {
+            // получим предыдущую задачу в линии
+            return Templates::where('productid', $currentTemplate->productid)->where('line', $currentTemplate->line)->where('position', $currentTemplate->position - 1)->first();
+        }
+        return null;
     }
 
     // проверяет и исправляет правильную последовательность в задачах во времени
     static function rebuildTrueTime($dealName)
     {
         $tasks = Tasks::where('deal', $dealName)->where('status', 'temp')->get();
-        if (LOG) echo 'rebuildTrueTime()<br>';
+        if (isset($_GET['log'])) echo 'rebuildTrueTime()<br>';
         // обработка ошибок
         if ($tasks->count() == 0) {
             self::$scriptErrors[] = 'rebuildTrueTime() Нет задач по такой сделке';
@@ -373,8 +360,8 @@ class TemplateController extends Controller
                         if (!$itemStart->greaterThanOrEqualTo($beforeLinkEnd)) {
                             if ($beforeLinkEnd > $trueStart) $trueStart = clone $beforeLinkEnd;
                             $needRebuild = true;
-                            if (LOG) echo ' времени окончания предыдущей задачи > время старта данной задачи  ' . $beforeTask->id . '<br>';
-                            if (LOG) echo $beforeLinkEnd->toDateTimeString() . ' ? ' . $itemStart->toDateTimeString() . '<br>';
+                            if (isset($_GET['log'])) echo ' времени окончания предыдущей задачи > время старта данной задачи  ' . $beforeTask->id . '<br>';
+                            if (isset($_GET['log'])) echo $beforeLinkEnd->toDateTimeString() . ' ? ' . $itemStart->toDateTimeString() . '<br>';
                         }
                     }
 
@@ -398,7 +385,7 @@ class TemplateController extends Controller
                         $beforeEnd->addMinutes(STANDART_BUFFER);
                         if ($beforeEnd > $trueStart) $trueStart = $beforeEnd;
                         $needRebuild = true;
-                        if (LOG) echo 'Есть задачи до этого в интервале стандартного буфера' . $beforeTask->id . '<br>';
+                        if (isset($_GET['log'])) echo 'Есть задачи до этого в интервале стандартного буфера' . $beforeTask->id . '<br>';
                     }
 
 
@@ -407,7 +394,7 @@ class TemplateController extends Controller
                     // 
                     if ($needRebuild == true) {
 
-                        if (LOG) echo 'делаем Rebuild задачи ' . $item->id . '<br>';
+                        if (isset($_GET['log'])) echo 'делаем Rebuild задачи ' . $item->id . '<br>';
 
                         // сделаем специально познее вермя старта, что бы потом выбрать самого свободного мастера
                         $start = new Carbon; //
@@ -478,7 +465,7 @@ class TemplateController extends Controller
         $productData = Products::where('title', $productParams['productname'])->get();
         if ($productData->count() > 0) {
             $productId = $productData->first()->korobookid;
-        };
+        }
         $taskArr = [];
 
         $templates = Templates::where('productid', $productId)->get();
@@ -730,11 +717,11 @@ class TemplateController extends Controller
                 // echo '<h1>test-stop!!!</h1>';
                 break;
             }
-            if (LOG == true) echo 'Мастер ' . $masterId . ' / Поиск  ' . self::$startTime->format('Y-m-d H:i:s') . ' / ' . $time . ' мин.';
+            if (isset($_GET['log']) == true) echo 'Мастер ' . $masterId . ' / Поиск  ' . self::$startTime->format('Y-m-d H:i:s') . ' / ' . $time . ' мин.';
             $result = self::tryToPlan($time, $periods, $masterId);
             // echo 'После '.self::$startTime->format('Y-m-d H:i:s').'<br>';
         } while ($result == false);
-        if (LOG == true) echo ' OK<br><br>';
+        if (isset($_GET['log']) == true) echo ' OK<br><br>';
         return self::$startTime;
     }
 
@@ -758,7 +745,7 @@ class TemplateController extends Controller
 
         // Проерим startTime на: выходные (масивв номер дня года - результат)
         if (self::$isHoliday[self::$startTime->format('z')] != 0 && self::$isHoliday[self::$startTime->format('z')] != 4) {
-            if (LOG == true) echo ' - Выходной<br>';
+            if (isset($_GET['log']) == true) echo ' - Выходной<br>';
             self::$startTime->setTime(9, 0, 0);
             self::$startTime->addDay();
             return false;
@@ -766,14 +753,14 @@ class TemplateController extends Controller
 
         // Проверим startTime если раньше начала рабочего дня или endTime позже времени окончания, то вернем 9:00 следующего дня
         if (self::$startTime < $workDayStart || $endTime < $workDayStart) {
-            if (LOG == true) echo ' - Слишком рано<br>';
+            if (isset($_GET['log']) == true) echo ' - Слишком рано<br>';
             self::$startTime->setTime(9, 0, 0);
             return false;
         }
 
         // если время позже рабочего времени, то + 1 день
         if (self::$startTime > $workDayEnd || $endTime > $workDayEnd) {
-            if (LOG == true) echo ' - Слишком поздно<br>';
+            if (isset($_GET['log']) == true) echo ' - Слишком поздно<br>';
             self::$startTime->setTime(9, 0, 0);
             self::$startTime->addDay();
             return false;
@@ -797,7 +784,7 @@ class TemplateController extends Controller
                 // если данное время попадает в период запрещенных вернем 
                 if (self::$startTime->between($periodStart, $periodEnd, false) || $endTime->between($periodStart, $periodEnd, false)) {
                     self::$startTime = clone $periodEnd;
-                    if (LOG == true) echo ' - Запретный период<br>';
+                    if (isset($_GET['log']) == true) echo ' - Запретный период<br>';
                     return false;
                 }
             }
@@ -824,7 +811,7 @@ class TemplateController extends Controller
 
             // if ($taskHere->count() > 2) dump ($taskHere);
             self::$startTime = Carbon::createFromFormat('Y-m-d H:i:s', $taskHere->last()->end);
-            if (LOG == true) {
+            if (isset($_GET['log']) == true) {
 
                 echo ' - в это вреия есть задачи: ' . $taskHere->count() . '<br>';
                 dump($taskHere);
