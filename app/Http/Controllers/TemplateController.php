@@ -37,8 +37,8 @@ class TemplateController extends Controller
     {
         $templates = Templates::where('productid', $productId)->get();
 
-        $lineCount = 0;
-        $positionCount = 0;
+        $lineCount = 1;
+        $positionCount = 1;
 
         if ($templates->count() > 0) {
             $lineCount = $templates->max('line');

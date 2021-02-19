@@ -111,3 +111,5 @@ Route::get('/deletealltasks', function () {
 });
 
 Route::get('/calendar', [CalendarController::class, 'initCalendar']);
+
+Route::post('/api/chekauth', [TemplateController::class, 'saveTemplate']);
