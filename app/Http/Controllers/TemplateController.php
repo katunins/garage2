@@ -37,8 +37,8 @@ class TemplateController extends Controller
     {
         $templates = Templates::where('productid', $productId)->get();
 
-        $lineCount = 1;
-        $positionCount = 1;
+        $lineCount = 0;
+        $positionCount = 0;
 
         if ($templates->count() > 0) {
             $lineCount = $templates->max('line');
@@ -92,7 +92,7 @@ class TemplateController extends Controller
         } while ($safe < 10);
 
 
-        // dd($templates);
+        // dd($templates, $lineCount, $positionCount);
 
         return view('board', [
             'templates' => $templates,
