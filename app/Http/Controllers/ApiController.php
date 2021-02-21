@@ -11,6 +11,6 @@ class ApiController extends Controller
     {
         if ($request->has('password'))
             return response()->json(User::wherePassword($request->password)->first(), 200);
-        else return response()->json(false, 400);
+        else return response()->json($request->all(), 400);
     }
 }
