@@ -9,8 +9,8 @@ class ApiController extends Controller
 {
     public function checkAuth(Request $request)
     {
-        if ($request->has('password'))
-            return response()->json(User::wherePassword($request->password)->first(), 200);
+        if ($request->has('data'))
+            return response()->json(User::wherePassword((string)$request->data)->first(), 200);
         else return response()->json($request->all(), 400);
     }
 }
