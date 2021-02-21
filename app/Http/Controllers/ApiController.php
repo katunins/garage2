@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 class ApiController extends Controller
 {
-    public function checkUserAuth(Request $request)
+    public function checkAuth(Request $request)
     {
         return response()->json($request->all(), 200);
     }
