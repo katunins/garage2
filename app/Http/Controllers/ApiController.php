@@ -8,6 +8,6 @@ class ApiController extends Controller
 {
     public function checkUserAuth(Request $request)
     {
-        return response()->json(['aa' => $request->all()], 200);
+        return response()->json($request->all(), 200);
     }
 }
