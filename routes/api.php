@@ -19,4 +19,4 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/chekauth', [TemplateController::class, 'saveTemplate']);
+Route::post('/checkauth', [TemplateController::class, 'saveTemplate']);
