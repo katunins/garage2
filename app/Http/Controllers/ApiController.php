@@ -8,7 +8,7 @@ class ApiController extends Controller
 {
     public function checkUserAuth(Request $request)
     {
-        echo json_decode($request->all());
+        echo json_encode($request->all());
         // return response()->json(['aa' => $request->all()], 200);
     }
 }
