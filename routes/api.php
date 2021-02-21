@@ -20,3 +20,6 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 Route::post('/chekauth', [TemplateController::class, 'saveTemplate']);
+Route::post('/text', function (){
+    echo json_decode($request->all());
+});
