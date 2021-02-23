@@ -331,10 +331,10 @@ class TemplateController extends Controller
         }
 
         // проверим последовательность. 
-        $errorCount = 0; //защитный счетчик
+        $safeCount = 0; //защитный счетчик
         do {
             $falseTasks = 0; //количество задач, у которых не правильно выставлено время
-            $errorCount++;
+            $safeCount++;
 
             foreach ($tasks->groupBy('line') as $lineItem) {
 
@@ -425,7 +425,7 @@ class TemplateController extends Controller
                     }
                 }
             }
-            if ($errorCount > 30) {
+            if ($safeCount > 1000) {
                 self::$scriptErrors[] = 'rebuildTrueTime() В дополнительной сортировке количество циклов превысело максимальное значение. Цикл остановлен. Проверьте порядок у задач';
                 break;
             }
