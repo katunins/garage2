@@ -60,15 +60,18 @@ class DealsController extends Controller
 
     static function getDeal($id)
     {
-        // +"COMMENTS": "<br><b>Фотокниги</b><br><br><b>Формат </b>:  20х20 см  <br><b>Материал обложки </b>:  Toronto Toronto Белый  <br><b>Персонализация </b>:  Без персонализации  <b ▶"
-        // +"ADDITIONAL_INFO": "a:12:{s:15:"DELIVERYSERVICE";s:8:"СДЭК";s:32:"МЕТОД ДОСТАВКИ ИД";s:1:"4";s:13:"PAYMENTSYSTEM";s:25:"Оплата картой";s:28:"МЕТОД ОПЛАТЫ ИД";s:1:"6";s:9:"ORDERPAID ▶"
         $arDeal = self::bitrixAPI(["ID" => $id], 'crm.deal.get');
         if (isset($arDeal->error)) return false;
-        $addInfo = unserialize($arDeal->result->ADDITIONAL_INFO);
         $dealTitle =  $arDeal->result->TITLE;
         $comment = $arDeal->result->COMMENTS;
         $dealArr = self::commentParser($comment);
-        $dealArr ['params']['deal'] = $dealTitle;
+        $dealArr['params']['deal'] = $dealTitle;
+        $dealArr['params']['addinfo'] = unserialize($arDeal->result->ADDITIONAL_INFO);
+        $dealArr['params']['dealid'] = $id;
+        $dealArr['params']['managernote'] = $arDeal->result->UF_CRM_1476173890;
+        $manager = self::bitrixAPI(['ID' => $arDeal->result->ASSIGNED_BY_ID], 'user.get');
+        if (!isset($manager->error))
+            $dealArr['params']['manager'] = $manager->result[0]->NAME . ' ' . $manager->result[0]->LAST_NAME;
         return $dealArr;
     }
 

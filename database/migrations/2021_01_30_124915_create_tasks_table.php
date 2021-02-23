@@ -29,6 +29,11 @@ class CreateTasksTable extends Migration
             $table->integer('position'); //позиция в линии
             $table->string('generalinfo');
             $table->text('info')->nullable();
+
+            $table->integer('dealid');
+            $table->string('manager');
+            $table->boolean('managernote')->default(false);
+
             $table->string('deal');
             $table->timestamps();
         });

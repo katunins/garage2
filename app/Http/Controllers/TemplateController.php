@@ -158,7 +158,7 @@ class TemplateController extends Controller
     static function tasksFromDeal($dealArr)
     {
         self::$scriptErrors = [];
-            
+
         // Загрузим выходные
         $ch = curl_init('https://isdayoff.ru/api/getdata?year=' . date('Y') . '&delimeter=/');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -180,10 +180,10 @@ class TemplateController extends Controller
 
             $productDataArr = array_merge($dealItem, $dealArr['params']);
             $productDataArr['dealname'] = $dealName;
-            
+
             $tasks = self::taskGenegator($productDataArr);
-            self::planGenerator($tasks, $dealItem);
-            
+            self::planGenerator($tasks, $dealItem, $productDataArr);
+
 
             // если есть задачи, зависящие от других и еще не передвинутые на нужное стартовое время - передвинем их
             if (count(self::$needExtraSort) > 0) self::extraSort($dealName);
@@ -191,21 +191,18 @@ class TemplateController extends Controller
             // запустим дополнительную - проверку последовательностей
             self::rebuildTrueTime($dealName);
 
-            if (isset($_GET['log'])) {
-                dump('errors', self::$scriptErrors);
-                echo '<div><a target="_blank" href="';
-                echo'/calendar?filterdealname='.explode('#', $dealArr['params']['deal'])[1];
-                echo '&calendardays=7';
-                echo '&calendarstyle=1';
-                echo'&date='.explode(' ', Tasks::where('deal', $dealName)->where('status', 'temp')->orderBy('start')->first()->start)[0];
-                echo'">Перейти в календарь к задачам</a></div>';
-                die();
-            } else {
-                // переведем все задачи в статус Wait
-                Tasks::where('deal', $dealName)->where('status', 'temp')->update(['status' => 'wait']);
-                return true;
-            }
+            if (isset($_GET['log'])) echo '<br><hr><br>';
+            else Tasks::where('deal', $dealName)->where('status', 'temp')->update(['status' => 'wait']);
         }
+        if (isset($_GET['log'])) {
+            dump('errors', self::$scriptErrors);
+            echo '<div><a target="_blank" href="';
+            echo '/calendar?filterdealname=' . explode('#', $dealArr['params']['deal'])[1];
+            echo '&calendardays=7';
+            echo '&calendarstyle=1';
+            echo '&date=' . explode(' ', Tasks::where('deal', $dealName)->where('status', 'temp')->orderBy('start')->first()->start)[0];
+        }
+
         if (self::$scriptErrors == []) return true;
         else {
             dd(self::$scriptErrors);
@@ -237,7 +234,7 @@ class TemplateController extends Controller
                     $safeCount++;
                     if (isset($_GET['log'])) echo '+';
                     if ($beforeTask = $tasks->where('templateid', $beforeTemplate->id)->first()) {
-                        if (isset($_GET['log'])) echo ' Нашли задачу ' . $beforeTask->id . '('.$beforeTask->name.')'.' по шаблону ' . $beforeTemplate->id . '<br>';
+                        if (isset($_GET['log'])) echo ' Нашли задачу ' . $beforeTask->id . '(' . $beforeTask->name . ')' . ' по шаблону ' . $beforeTemplate->id . '<br>';
                         $item->taskidbefore = $beforeTask->id;
                         $item->save();
                         break;
@@ -473,36 +470,6 @@ class TemplateController extends Controller
             foreach ($templates->where('line', $line)->sortBy('position') as $templateItem) {
 
                 // Проверим условия шаблона. Работают по принципу OR
-                // $conditionResult = 0; // 0 - не сработало / 1 - сработало
-                // $conditionCount = 0; // количество не пустых условий
-                // for ($i = 1; $i <= 3; $i++) {
-                //     if ($templateItem->{'condition' . $i}) {
-                //         $conditionCount++;
-                //         $conditionArr = self::parseCondition($templateItem->{'condition' . $i});
-
-                //         if (isset($productParams[$conditionArr['param']])) {
-                //             $productValue = $productParams[$conditionArr['param']];
-                //             foreach ($conditionArr['values'] as $value) {
-                //                 switch ($conditionArr['sign']) {
-                //                     case '=':
-                //                         $conditionResult += strpos($productValue, $value) !== false ? 1 : 0;
-                //                         break;
-                //                     case '!=':
-                //                         $conditionResult += strpos($productValue, $value) === false ? 1 : 0;
-                //                         break;
-                //                     case '==':
-                //                         $conditionResult += strcasecmp($productValue, $value) == 0 ? 1 : 0;
-                //                         break;
-                //                     case '!==':
-                //                         $conditionResult += strcasecmp($productValue, $value) != 0 ? 1 : 0;
-                //                         break;
-                //                 }
-                //             }
-                //         }
-                //     }
-                // }
-
-                // Проверим условия шаблона. Работают по принципу OR
                 $conditionResult = 0; // 0 - не сработало / 1 - сработало
                 $conditionCount = 0; // количество не пустых условий
 
@@ -590,7 +557,7 @@ class TemplateController extends Controller
     // }
 
     // преобразует предварительно подобранные шаблоны задач в список задач со временем
-    static function planGenerator($tasksArr, $dealItem)
+    static function planGenerator($tasksArr, $dealItem, $productDataArr)
     {
 
         //         "templateid" => 6
@@ -682,6 +649,13 @@ class TemplateController extends Controller
                     $taskBefore->info = $info;
                 }
                 $taskBefore->deal = $task['dealname'];
+
+                // generalInfo
+                $taskBefore->dealid = $productDataArr['dealid'];
+                $taskBefore->manager = $productDataArr['manager'];
+                if ($productDataArr['managernote'] != "") $taskBefore->managernote = true;
+                // generalInfo
+
                 $taskBefore->save();
 
                 if ($extraSort == true) self::$needExtraSort[] = $taskBefore->id; //добавим ID задачи в 
