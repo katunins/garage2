@@ -157,6 +157,7 @@ class TemplateController extends Controller
     // проходит по каждому продукту в сделке
     static function tasksFromDeal($dealArr)
     {
+        if (isset($_GET['log']) == true) echo 'tasksFromDeal()' . 'Start' . '<br>';
         self::$scriptErrors = [];
 
         // Загрузим выходные
@@ -171,43 +172,94 @@ class TemplateController extends Controller
 
         foreach ($dealArr['products'] as $key => $dealItem) {
 
-            // self::extraSort('20 #8293');
-
             self::$scriptErrors = [];
-            self::$needExtraSort = [];
+            // self::$needExtraSort = [];
 
             $dealName = count($dealArr['products']) > 1 ? $dealArr['params']['deal'] . '/' . $key : $dealArr['params']['deal'];
+            if (isset($_GET['log']) == true) echo '- ' . 'Продукт ' . $dealName . '<br>';
 
             $productDataArr = array_merge($dealItem, $dealArr['params']);
             $productDataArr['dealname'] = $dealName;
 
-            $tasks = self::taskGenegator($productDataArr);
-            self::planGenerator($tasks, $dealItem, $productDataArr);
-
-
-            // если есть задачи, зависящие от других и еще не передвинутые на нужное стартовое время - передвинем их
-            if (count(self::$needExtraSort) > 0) self::extraSort($dealName);
-
-            // запустим дополнительную - проверку последовательностей
-            self::rebuildTrueTime($dealName);
+            $tasks = self::taskGenegator($productDataArr); //сформированные по фильтрам задачи из шаблонов
+            $tasks = self::linkAllTasks($tasks); //тут уже связанные друг с другом задачи
+            self::planGeneratorNew($tasks, $dealItem, $productDataArr);
 
             if (isset($_GET['log'])) echo '<br><hr><br>';
             else Tasks::where('deal', $dealName)->where('status', 'temp')->update(['status' => 'wait']);
         }
+
         if (isset($_GET['log'])) {
-            dump('errors', self::$scriptErrors);
             echo '<div><a target="_blank" href="';
             echo '/calendar?filterdealname=' . explode('#', $dealArr['params']['deal'])[1];
             echo '&calendardays=7';
             echo '&calendarstyle=1';
             echo '&date=' . explode(' ', Tasks::where('deal', $dealName)->where('status', 'temp')->orderBy('start')->first()->start)[0];
             echo '">Перейти в календарь</a></div>';
-        }
-
-        if (self::$scriptErrors == []) return true;
-        else {
             dd(self::$scriptErrors);
         }
+        if (self::$scriptErrors == []) return true;
+    }
+
+    // получает массив выбранных по условию задач
+    // Cтавит всем задачам taskIdBefore в двух вариантах 
+    // 'otherline' => null,
+    // 'parentline' => null
+    // 0 => array:3 [▼
+    //     "temporaryid" => 0
+    //     "templateid" => 1
+    static function linkAllTasks($tasks)
+    {
+        if (isset($_GET['log']) == true) echo 'linkAllTasks()' . '<br>';
+
+        foreach ($tasks as $key => $itemTask) {
+
+            $tasks[$key]['taskbefore'] = [
+                'otherline' => null,
+                'parentline' => null
+            ];
+
+            $currentTemplate = Templates::find($itemTask['templateid']);
+
+            // Если шаблон первый в линии и у него taskidbefore пустой, то taskidbefore = null
+            if ($currentTemplate->position == 1 && $currentTemplate->taskidbefore === null) continue;
+
+
+            // Запустим обратный поиск по карте шаблонов
+            // Ннайдем предыдущий шаблон, по которому создана задача в $tasks
+            // в двух вариантах: По родительской линии и соседним линиям
+
+            foreach (['parentline' => false, 'otherline' => true] as $taskBeforeType => $shiftNextLine) {
+                $safeCount = 0;
+                $taskBefore[$taskBeforeType] = null;
+                $loopTemplate = clone $currentTemplate;
+
+                do {
+                    if ($safeCount > 100) {
+                        if (isset($_GET['log']) == true) echo 'linkAllTasks()' . 'Превышен safeCount в цикле - ' . $taskBeforeType . '<br>';
+                        return false;
+                    }
+                    $beforeTemplate = self::getBeboreTemplate($loopTemplate, $shiftNextLine);
+                    if ($beforeTemplate) {
+                        // найдем задачу с этим шаблоном
+                        $resultArr = array_filter($tasks, function ($item) use ($beforeTemplate) {
+                            return $item['templateid'] === $beforeTemplate->id;
+                        });
+                        if (count($resultArr) > 0) {
+                            $taskBefore[$taskBeforeType] = array_shift($resultArr)['temporaryid'];
+                            break;
+                        } else {
+                            $loopTemplate = clone $beforeTemplate;
+                        }
+                    } else {
+                        // предыдущего шаблона не нашлось. Это значит - currentTemplate первый
+                        break;
+                    }
+                } while ($taskBefore[$taskBeforeType] === null);
+            }
+            $tasks[$key]['taskbefore'] = $taskBefore;
+        }
+        return $tasks;
     }
 
     // дополнительно передвинем зависящие задачи от предыдущих 
@@ -320,139 +372,6 @@ class TemplateController extends Controller
         return null;
     }
 
-    // проверяет и исправляет правильную последовательность в задачах во времени
-    static function rebuildTrueTime($dealName)
-    {
-        $tasks = Tasks::where('deal', $dealName)->where('status', 'temp')->get();
-        if (isset($_GET['log'])) echo 'rebuildTrueTime()<br>';
-        // обработка ошибок
-        if ($tasks->count() == 0) {
-            self::$scriptErrors[] = 'rebuildTrueTime() Нет задач по такой сделке';
-            return false;
-        }
-
-        // проверим последовательность. 
-        $safeCount = 0; //защитный счетчик
-        do {
-            $falseTasks = 0; //количество задач, у которых не правильно выставлено время
-            $safeCount++;
-
-            foreach ($tasks->groupBy('line') as $lineItem) {
-
-                foreach ($lineItem->sortBy('position') as $item) {
-
-                    $needRebuild = false; //
-                    $itemStart = Carbon::createFromFormat('Y-m-d H:i:s', $item->start); //время начала данной задачи
-                    $itemEnd = Carbon::createFromFormat('Y-m-d H:i:s', $item->end); //время начала данной задачи
-                    $trueStart = clone $itemStart;
-
-                    // Проверка 1 - возьмем задачи, у которых есть привязка к предыдущей
-                    if ($item->taskidbefore) {
-
-                        $beforeTask = $tasks->find($item->taskidbefore);
-                        $beforeLinkEnd = Carbon::createFromFormat('Y-m-d H:i:s', $beforeTask->end); //время окончания предыдущей задачи
-                        if ($beforeTask->buffer) $beforeLinkEnd->addMinutes($beforeTask->buffer);
-                        $beforeLinkEnd->addMinutes(STANDART_BUFFER);
-
-                        // Если время старта данной задачи < времени окончания предыдущей
-                        // if (!$itemStart->greaterThan($beforeLinkEnd)) {
-                        if (!$itemStart->greaterThanOrEqualTo($beforeLinkEnd)) {
-                            if ($beforeLinkEnd > $trueStart) $trueStart = clone $beforeLinkEnd;
-                            $needRebuild = true;
-                            if (isset($_GET['log'])) echo ' времени окончания предыдущей задачи > время старта данной задачи  ' . $beforeTask->id . '<br>';
-                            if (isset($_GET['log'])) echo $beforeLinkEnd->toDateTimeString() . ' ? ' . $itemStart->toDateTimeString() . '<br>';
-                        }
-                    }
-
-                    // проверим нет ли задачи до этого в интервале стандартного буфера
-                    $SafeTimeBefore = clone $itemStart; //защитное время до со стандартным периодом
-                    $SafeTimeBefore->subMinutes(STANDART_BUFFER);
-                    $tasksBeforeInSafePeriod = Tasks::where('master', $item->master)
-                        ->whereBetween('end', [$SafeTimeBefore, $itemStart])
-                        ->get();
-
-                    if ($tasksBeforeInSafePeriod->count() > 0) {
-                        $beforeTask = $tasksBeforeInSafePeriod->last();
-                        $beforeEnd = Carbon::createFromFormat('Y-m-d H:i:s', $beforeTask->end); //время окончания предыдущей задачи
-                        $beforeEnd->addMinutes(STANDART_BUFFER);
-                        if ($beforeEnd > $trueStart) $trueStart = clone $beforeEnd;
-                        // if ($beforeEnd->greaterThanOrEqualTo($trueStart)) $trueStart = $beforeEnd;
-                        $needRebuild = true;
-                        if (isset($_GET['log'])) echo 'Ошибка задачи '.$item->id.'. Перед ней близко стоит задача ' . $beforeTask->id . '<br>';
-                    }
-
-
-
-                    // проверим нет ли задачи после, которая находится в интервале стандартного буфера
-                    $SafeTimeAfter = clone $itemEnd; //защитное время до со стандартным периодом
-                    $SafeTimeAfter->addMinutes(STANDART_BUFFER);
-                    $tasksAfterInSafePeriod = Tasks::where('master', $item->master)
-                        ->whereBetween('start', [$itemEnd, $SafeTimeAfter])
-                        ->get();
-
-                    if ($tasksAfterInSafePeriod->count() > 0) {
-                        $afterTask = $tasksAfterInSafePeriod->first();
-                        $afterEnd = Carbon::createFromFormat('Y-m-d H:i:s', $afterTask->end); //время окончания предыдущей задачи
-                        $afterEnd->addMinutes(STANDART_BUFFER);
-                        if ($afterEnd > $trueStart) $trueStart = clone $afterEnd;
-                        // if ($beforeEnd->greaterThanOrEqualTo($trueStart)) $trueStart = $beforeEnd;
-                        $needRebuild = true;
-                        if (isset($_GET['log'])) echo 'Ошибка задачи '.$item->id.'. После нее близко стоит задача ' . $afterTask->id . '<br>';
-                    }
-
-
-                    // нужно совместить два верхних условия в одно общее
-
-                    // 
-                    if ($needRebuild == true) {
-
-                        $trueStart->addSecond();
-
-                        if (isset($_GET['log'])) echo 'делаем Rebuild задачи ' . $item->id . '<br>';
-
-                        // сделаем специально познее вермя старта, что бы потом выбрать самого свободного мастера
-                        $start = new Carbon; //
-                        $start->addYear();
-
-                        // выберем ближайшего свободного мастера
-                        $resultMasterId = 0;
-
-                        // найдем ближайшее свободное время у возможных мастеров
-                        $template = Templates::find($item->templateid);
-                        foreach ($template->masters as $masterId) {
-                            $resultTime = self::getFreePlan($masterId, $item->time, $trueStart, [
-                                $template->period1,
-                                $template->period2,
-                            ]);
-
-                            if ($resultTime < $start) {
-                                $start = clone $resultTime;
-                                $end = clone $start;
-                                $end->addMinutes($item->time);
-                                $resultMasterId = $masterId;
-                            }
-                        }
-
-                        $item->master = $resultMasterId;
-                        $item->start = $start->toDateTimeString();
-                        $item->end = $end->toDateTimeString();
-                        $item->save();
-
-                        if (isset($_GET['log'])) echo 'Поставили задачу мастеру  '.$resultMasterId.' в ' .$start->toDateTimeString(). '<br>';
-
-                        $falseTasks++;
-                    }
-                }
-            }
-            if ($safeCount > 50) {
-                self::$scriptErrors[] = 'rebuildTrueTime() В дополнительной сортировке количество циклов превысело максимальное значение. Цикл остановлен. Проверьте порядок у задач';
-                break;
-            }
-        } while ($falseTasks > 0);
-        return true;
-    }
-
-
 
     // Подбирет шаблоны под параметры заказа и расчитывает длительность задачи
     static function taskGenegator($productParams)
@@ -478,11 +397,13 @@ class TemplateController extends Controller
         // "Телефон" => "+7(903) 110-52-07"
 
         // получим id продукта
+        if (isset($_GET['log']) == true) echo 'taskGenerator()' . '<br>';
         $productData = Products::where('title', $productParams['productname'])->get();
         if ($productData->count() > 0) {
             $productId = $productData->first()->korobookid;
         }
         $taskArr = [];
+        $temporaryid = 0;
 
         $templates = Templates::where('productid', $productId)->get();
         for ($line = 1; $line <= $templates->max('line'); $line++) {
@@ -546,146 +467,258 @@ class TemplateController extends Controller
                         $area = (int) $widthHeight[0] * (int) $widthHeight[1] * (int)$productParams['Количество разворотов'] / 100;
                         $taskTime += $area * $templateItem->paramtime;
                     }
+                    // $taskArr[$line][] = [
+                    //     'temporaryid' => $temporaryid,
+                    //     'taskidbefore' => [
+                    //         'currentline' => null,
+                    //         'anotherLine' => null,
+                    //     ],
+                    //     'templateid' => $templateItem->id,
+                    // 'time' => $taskTime,
+                    // 'info' => $taskInfo,
+                    // 'dealname' => $productParams['dealname']
+                    // ];
 
-                    $taskArr[$line][] = [
+                    $taskArr[] = [
+                        'temporaryid' => $temporaryid,
+                        'realtaskid' => null,
                         'templateid' => $templateItem->id,
                         'time' => $taskTime,
                         'info' => $taskInfo,
                         'dealname' => $productParams['dealname']
                     ];
+
+                    $temporaryid++;
                 }
             }
         }
         return $taskArr;
     }
 
-    // парсит строку условий - делит ее на массив
-    // static function parseCondition($condition)
-    // {
-    //     foreach (['!==', '!=', '==', '='] as $sign) {
-    //         $conditionExplode = explode($sign, $condition);
-    //         if (count($conditionExplode) > 1) {
-    //             return [
-    //                 'param' => $conditionExplode[0],
-    //                 'sign' => $sign,
-    //                 'values' => explode('/', $conditionExplode[1])
-    //             ];
-    //         }
-    //     }
-    //     return false;
-    // }
-
-    // преобразует предварительно подобранные шаблоны задач в список задач со временем
-    static function planGenerator($tasksArr, $dealItem, $productDataArr)
+    static function planGeneratorNew($tasksArr, $dealItem, $productDataArr)
     {
 
-        //         "templateid" => 6
-        //         "time" => 3
-        //         "info" => null
-        //         "deal" => "20 #8293
+        if (isset($_GET['log']) == true) echo 'planGeneratorNew()<br>';
 
-        foreach ($tasksArr as $line) {
-            $taskBefore = NULL;
+        // "temporaryid" => 0
+        // "templateid" => 1 
+        // "realtaskid" => null //тут запишем реальный id задачи в базе
+        // "time" => 13.0
+        // "info" => array:2 [▶]
+        // "dealname" => "20 #8424/1"
+        // "taskbefore" => array:2 [▼
+        // "otherline" => null
+        // "parentline" => null
+        // ]
 
-            foreach ($line as $task) {
+        $firstTasksArr = array_filter($tasksArr, function ($item) {
+            return is_null($item['taskbefore']['parentline']) && is_null($item['taskbefore']['otherline']);
+        });
 
-                $template = Templates::find($task['templateid']);
-                $lastTaskId = NULL;
-                $extraSort = false;
+        $startFrom = new Carbon; //время с которого можно ставить задачи
+        $startFrom->addHours(TIME_AFTER_SCRIPT);
 
-                if ($template->taskidbefore) {
+        // Поставим статровые задачи
+        if (isset($_GET['log']) == true) echo 'Поставим первые задачи в линиях' . '<br>';
+        foreach ($firstTasksArr as $key => $task) {
+            $template = Templates::find($task["templateid"]);
+            $taskIdBefore = null;
 
-                    // предварительная задача из другой линии
-                    $beforeTask = Tasks::where('deal', $task['dealname'])
-                        ->where('status', 'temp')
-                        ->where('templateid', $template->taskidbefore)
-                        ->get();
-                    if ($beforeTask->count() > 0) {
-                        // такая уже задача создана
-                        $startFrom = Carbon::parse($beforeTask->last()->end);
-                        $startFrom->addMinutes($beforeTask->last()->buffer + STANDART_BUFFER);
-                        $lastTaskId = $beforeTask->last()->id;
-                        if ($beforeTask->count() > 1) {
-                            // найдено предварительных задач больше 1.
-                            $scriptErrors[] = 'Template ID ' . $template->id . 'устанавливается после ID' . $template->taskidbefore . '. В графике уже заплпанировано ' . $beforeTask->count() . 'таких временных задач!';
-                        }
-                    } else {
-                        // такая задача пока не создана, поэтому поставим пометку на передвижение задач после выполнения всех скриптов
-                        $startFrom = new Carbon; //время с которого можно ставить задачи
-                        // $startFrom->addDays(30);
-                        $extraSort = true; //в конце цикла добавим эту задачу в массив не отсортированных по времени старта задач
-                    }
-                } elseif ($taskBefore) {
-                    // есть предыдущая задача в линии
-                    $startFrom = Carbon::parse($taskBefore->end);
-                    $startFrom->addMinutes($taskBefore->buffer + STANDART_BUFFER);
-                    $lastTaskId = $taskBefore->id;
-                } else {
-                    // это первая задача в линии
-                    $startFrom = new Carbon; //время с которого можно ставить задачи
-                    // $startFrom = Carbon::parse('2021-02-04 17:16:12'); //для теста
-                    $startFrom->addHours(TIME_AFTER_SCRIPT);
-                }
-
-                // найдем свободное время у мастера
-                // сделаем специально познее вермя старта, что бы потом выбрать самого свободного мастера
-                $start = new Carbon; //
-                $start->addYear();
-
-                // выберем ближайшего свободного мастера
-                $resultMasterId = 0;
-
-                foreach ($template->masters as $masterId) {
-                    $resultTime = self::getFreePlan($masterId, $task['time'], $startFrom, $template->periods);
-
-                    if ($resultTime < $start) {
-                        $start = clone $resultTime;
-                        $end = clone $start;
-                        $end->addMinutes((int)$task['time']);
-                        $resultMasterId = $masterId;
-                    }
-                }
-
-                $taskBefore = new Tasks;
-                $taskBefore->name = $template->taskname;
-                $taskBefore->templateid = $template->id;
-                $taskBefore->master = $resultMasterId;
-                $taskBefore->time = $task['time'];
-                $taskBefore->line = $template->line;
-                $taskBefore->position = $template->position;
-                $taskBefore->status = 'temp';
-                if ($lastTaskId) $taskBefore->taskidbefore = $lastTaskId; //предварительная задача
-                $taskBefore->start = $start->format('Y-m-d H:i:s');
-                $taskBefore->end = $end->format('Y-m-d H:i:s');
-                $taskBefore->buffer = $template->buffer; // + STANDART_BUFFER; //стандартный буфер задержки после задачи
-                $taskBefore->generalinfo = $dealItem['productname'] . ' ' . $dealItem['Формат'] ?? '';
-                if ($template->miniparams) {
-                    $info = '';
-                    foreach ($template->miniparams as $param) {
-                        if (isset($dealItem[$param]) !== false) $info .= $param . ': ' . $dealItem[$param] . '; ';
-                        // else self::$scriptErrors[] = 'Не найден параметр, проверьте "' . $param . '"';
-                    }
-                    $taskBefore->info = $info;
-                }
-                $taskBefore->deal = $task['dealname'];
-
-                // generalInfo
-                $taskBefore->dealid = $productDataArr['dealid'];
-                $taskBefore->manager = $productDataArr['manager'];
-                if ($productDataArr['managernote'] != "") $taskBefore->managernote = true;
-                // generalInfo
-
-                $taskBefore->save();
-
-                if ($extraSort == true) self::$needExtraSort[] = $taskBefore->id; //добавим ID задачи в 
-
-            }
+            $newTask = self::setNewTask(
+                $template,
+                $task,
+                $startFrom,
+                $dealItem,
+                $productDataArr,
+                $taskIdBefore
+            );
+            $newTask->save();
+            $tasksArr[$key]['realtaskid'] = $newTask->id;
         }
+        if (isset($_GET['log']) == true) {
+            dump(array_filter($tasksArr, function ($item) {
+                return is_null($item['realtaskid']);
+            }));
+        }
+
+
+        $generalSafeCount = 0;
+        do {
+            # code...
+            $generalSafeCount++;
+
+            if ($generalSafeCount > 40) {
+                if (isset($_GET['log']) == true) echo 'Счетчик цикла safeGeneralCount превысил допустимое значение' . '<br>';
+                break;
+            }
+
+            if (isset($_GET['log']) == true) echo 'Поставим задачи, у которых taskbefore один актуальный и не null' . '<br>';
+            $safeCount = 0;
+            do {
+                $safeCount++;
+                if ($safeCount > 50) {
+                    if (isset($_GET['log']) == true) echo 'Цикл остановлен safeCount<br>';
+                    break;
+                }
+
+                $beforeTasksArr = array_filter($tasksArr, function ($item) {
+                    return !is_null($item['realtaskid']);
+                });
+
+                $newTaskCount = 0;
+                foreach ($beforeTasksArr as $beforeTask) {
+                    $filterArr = array_filter($tasksArr, function ($arr) use ($beforeTask) {
+                        if (!is_null($arr['realtaskid'])) return false;
+                        return ($arr['taskbefore']['parentline'] === $beforeTask['temporaryid'] && is_null($arr['taskbefore']['otherline']))
+                            || ($arr['taskbefore']['otherline'] === $beforeTask['temporaryid'] && is_null($arr['taskbefore']['parentline']))
+                            || ($arr['taskbefore']['otherline'] === $beforeTask['temporaryid'] && $arr['taskbefore']['parentline'] === $beforeTask['temporaryid']);
+                    });
+                    if (count($filterArr) > 0) {
+                        $newTaskCount++;
+                        foreach ($filterArr as $key => $task) {
+
+                            $realBeforeTask = Tasks::find($beforeTask['realtaskid']);
+                            $startFrom = Carbon::parse($realBeforeTask->end); //время с которого можно ставить задачи
+                            $startFrom->addMinutes($realBeforeTask->buffer > TIME_AFTER_SCRIPT ? $realBeforeTask->buffer : TIME_AFTER_SCRIPT);
+
+                            $template = Templates::find($task["templateid"]);
+                            $taskIdBefore = $beforeTask['realtaskid'];
+
+                            $newTask = self::setNewTask(
+                                $template,
+                                $task,
+                                $startFrom,
+                                $dealItem,
+                                $productDataArr,
+                                $taskIdBefore
+                            );
+                            $newTask->save();
+                            $tasksArr[$key]['realtaskid'] = $newTask->id;
+                        }
+                    }
+                }
+            } while ($newTaskCount > 0);
+            if (isset($_GET['log']) == true) {
+                dump(array_filter($tasksArr, function ($item) {
+                    return is_null($item['realtaskid']);
+                }));
+            }
+
+
+
+            if (isset($_GET['log']) == true) echo 'Поставим задачи, у которых taskbefore 2 шт' . '<br>';
+
+            $doubleBeforeTasksArr = array_filter($tasksArr, function ($item) use ($tasksArr) {
+                $beforeID1 = $item['taskbefore']['parentline'];
+                $beforeID2 = $item['taskbefore']['otherline'];
+                if (is_null($beforeID1) || is_null($beforeID2)) return false;
+                return !is_null($tasksArr[$beforeID1]['realtaskid'])
+                    && !is_null($tasksArr[$beforeID2]['realtaskid'])
+                    && is_null($item['realtaskid']);
+            });
+
+            foreach ($doubleBeforeTasksArr as $key => $task) {
+
+                $realBeforeTask_1 = Tasks::find($tasksArr[$task['taskbefore']['parentline']]['realtaskid']);
+                $realBeforeTask_1_end = Carbon::parse($realBeforeTask_1->end);
+                $realBeforeTask_1_end->addMinutes($realBeforeTask_1->buffer > TIME_AFTER_SCRIPT ? $realBeforeTask_1->buffer : TIME_AFTER_SCRIPT);
+
+
+                $realBeforeTask_2 = Tasks::find($tasksArr[$task['taskbefore']['otherline']]['realtaskid']);
+                $realBeforeTask_2_end = Carbon::parse($realBeforeTask_2->end);
+                $realBeforeTask_2_end->addMinutes($realBeforeTask_2->buffer > TIME_AFTER_SCRIPT ? $realBeforeTask_2->buffer : TIME_AFTER_SCRIPT);
+
+                $template = Templates::find($task["templateid"]);
+                if ($realBeforeTask_1_end > $realBeforeTask_2_end) {
+                    $startFrom = clone $realBeforeTask_1_end;
+                    $taskIdBefore = $realBeforeTask_1->id;
+                } else {
+                    $startFrom = clone $realBeforeTask_2_end;
+                    $taskIdBefore = $realBeforeTask_2->id;
+                }
+
+                $newTask = self::setNewTask(
+                    $template,
+                    $task,
+                    $startFrom,
+                    $dealItem,
+                    $productDataArr,
+                    $taskIdBefore
+                );
+                $newTask->save();
+                $tasksArr[$key]['realtaskid'] = $newTask->id;
+            }
+            if (isset($_GET['log']) == true) {
+                dump(array_filter($tasksArr, function ($item) {
+                    return is_null($item['realtaskid']);
+                }));
+            }
+        } while (count(array_filter($tasksArr, function ($item) {
+            return is_null($item['realtaskid']);
+        })) > 0);
     }
 
+    // найдем свободное время у мастера
+    // Создадим задачу в базе
+    // вернем ID задачи в базе
+    static function setNewTask($template, $task, $startFrom, $dealItem, $productDataArr, $taskIdBefore)
+    {
+
+        if (isset($_GET['log']) == true) echo 'setNewTask() -' . $template->taskname . '<br>';
+        // сделаем специально познее вермя старта, что бы потом выбрать самого свободного мастера
+        $start = new Carbon; //
+        $start->addYear();
+
+        // выберем ближайшего свободного мастера
+        $resultMasterId = 0;
+
+        foreach ($template->masters as $masterId) {
+            $resultTime = self::getFreePlan($masterId, $task['time'], $startFrom, $template->periods);
+
+            if ($resultTime < $start) {
+                $start = clone $resultTime;
+                $end = clone $start;
+                $end->addMinutes((int)$task['time']);
+                $resultMasterId = $masterId;
+            }
+        }
+
+        $newTask = new Tasks;
+        $newTask->name = $template->taskname;
+        $newTask->templateid = $template->id;
+        $newTask->master = $resultMasterId;
+        $newTask->time = $task['time'];
+        $newTask->line = $template->line;
+        $newTask->position = $template->position;
+        $newTask->status = 'temp';
+        if ($taskIdBefore) $newTask->taskidbefore = $taskIdBefore; //предварительная задача
+        $newTask->start = $start->format('Y-m-d H:i:s');
+        $newTask->end = $end->format('Y-m-d H:i:s');
+        $newTask->buffer = $template->buffer; // + STANDART_BUFFER; //стандартный буфер задержки после задачи
 
 
+        $newTask->generalinfo = $dealItem['productname'];
+        if (isset($dealItem['Формат'])) $newTask->generalinfo .= ' ' . $dealItem['Формат'];
+        
+        if ($template->miniparams) {
+            $info = '';
+            foreach ($template->miniparams as $param) {
+                if (isset($dealItem[$param]) !== false) $info .= $param . ': ' . $dealItem[$param] . '; ';
+                // else self::$scriptErrors[] = 'Не найден параметр, проверьте "' . $param . '"';
+            }
+            $newTask->info = $info;
+        }
+        $newTask->deal = $task['dealname'];
 
+        // generalInfo
+        $newTask->dealid = $productDataArr['dealid'];
+        $newTask->manager = $productDataArr['manager'];
+        if ($productDataArr['managernote'] != "") $newTask->managernote = true;
+        // generalInfo
+
+        // $newTask->save();
+        return $newTask;
+    }
 
     // возвращает первое свободное время в графике мастера
     static function getFreePlan($masterId, $time, $startFrom, $periods)
@@ -700,19 +733,18 @@ class TemplateController extends Controller
         // Если нет, то возвращает время окончания препятствия
         // self::$startTime = Carbon::create(2021, 02, 04, 13, 0);
 
-        $test = 0; //защита от зависания
+        $safeCount = 0; //защита от зависания
         $result = false;
         do {
-            $test++;
+            $safeCount++;
 
-            if ($test > 10000) {
-                self::$scriptErrors[] = 'getFreePlan() цикл поиска свободного времени превысил допустимое значение. Мастер - ' . $masterId . ', startFrom - ' . $startFrom->toDateTimeString() . ', Длительность ' . $time . ' мин.';
-                // echo '<h1>test-stop!!!</h1>';
+            if ($safeCount > 100) {
+                // self::$scriptErrors[] = 'getFreePlan() цикл поиска свободного времени превысил допустимое значение. Мастер - ' . $masterId . ', startFrom - ' . $startFrom->toDateTimeString() . ', Длительность ' . $time . ' мин.';
+                if (isset($_GET['log']) == true) echo 'getFreePlan() цикл поиска свободного времени превысил допустимое значение. Мастер - ' . $masterId . '<br>';
                 break;
             }
             if (isset($_GET['log']) == true) echo 'Мастер ' . $masterId . ' / Поиск  ' . self::$startTime->format('Y-m-d H:i:s') . ' / ' . $time . ' мин.';
             $result = self::tryToPlan($time, $periods, $masterId);
-            // echo 'После '.self::$startTime->format('Y-m-d H:i:s').'<br>';
         } while ($result == false);
         if (isset($_GET['log']) == true) echo ' OK<br><br>';
         return self::$startTime;
@@ -728,6 +760,7 @@ class TemplateController extends Controller
         $endTime = clone self::$startTime;
         $endTime->addMinutes(round($time)); //время окончания задачи
         // dump (self::$startTime->toDateTimeString(), $endTime->toDateTimeString());
+
         $periods[] = LUNCH_BREACK; //Перерыв на обед
 
         // рабочее время
@@ -759,7 +792,6 @@ class TemplateController extends Controller
             return false;
         }
 
-
         // Проверим данное время на попадание в запрещенные периоды:
         foreach ($periods as $item) {
             if ($item) {
@@ -783,17 +815,27 @@ class TemplateController extends Controller
             }
         }
 
-
         // Проверим данное время на совпадение с запланированными задачами:
-
         // временно добавим 1 секунду, что бы не было времени 9:01
         self::$startTime->addSecond();
         $endTime->subSecond();
 
-        $taskHere = Tasks::whereBetween('start', [self::$startTime, $endTime])
-            ->orWhereBetween('end', [self::$startTime, $endTime])
+        // времена для проверки со стандартными буфером
+        $trueEndTime = clone $endTime;
+        $trueEndTime->addMinutes(STANDART_BUFFER);
+
+        $trueStartTime = clone self::$startTime;
+        $trueStartTime->subMinutes(STANDART_BUFFER);
+
+        $taskHere = Tasks::whereBetween('start', [self::$startTime, $trueEndTime])
+            ->orWhereBetween('end', [$trueStartTime, $endTime])
             ->orWhere([['start', '<=', self::$startTime], ['end', '>=', $endTime]])->get()->sortBy('end')
             ->where('master', $masterId);
+
+        // $taskHere = Tasks::whereBetween('start', [self::$startTime, $endTime])
+        //     ->orWhereBetween('end', [self::$startTime, $endTime])
+        //     ->orWhere([['start', '<=', self::$startTime], ['end', '>=', $endTime]])->get()->sortBy('end')
+        //     ->where('master', $masterId);
 
 
         if ($taskHere->count() > 0) {
@@ -804,10 +846,11 @@ class TemplateController extends Controller
 
             // if ($taskHere->count() > 2) dump ($taskHere);
             self::$startTime = Carbon::createFromFormat('Y-m-d H:i:s', $taskHere->last()->end);
+            self::$startTime->addMinutes(STANDART_BUFFER);
             if (isset($_GET['log']) == true) {
 
                 echo ' - в это вреия есть задачи: ' . $taskHere->count() . '<br>';
-                dump($taskHere);
+                // dump($taskHere);
             }
             return false;
         };
