@@ -201,6 +201,7 @@ class TemplateController extends Controller
             echo '&calendardays=7';
             echo '&calendarstyle=1';
             echo '&date=' . explode(' ', Tasks::where('deal', $dealName)->where('status', 'temp')->orderBy('start')->first()->start)[0];
+            echo '">Перейти в календарь</a></div>';
         }
 
         if (self::$scriptErrors == []) return true;
@@ -342,6 +343,7 @@ class TemplateController extends Controller
 
                     $needRebuild = false; //
                     $itemStart = Carbon::createFromFormat('Y-m-d H:i:s', $item->start); //время начала данной задачи
+                    $itemEnd = Carbon::createFromFormat('Y-m-d H:i:s', $item->end); //время начала данной задачи
                     $trueStart = clone $itemStart;
 
                     // Проверка 1 - возьмем задачи, у которых есть привязка к предыдущей
@@ -362,27 +364,40 @@ class TemplateController extends Controller
                         }
                     }
 
-                    // Проверка 2 - если привязки нет, то проверим нет ли задачи до этого в интервале стандартного буфера
-
+                    // проверим нет ли задачи до этого в интервале стандартного буфера
                     $SafeTimeBefore = clone $itemStart; //защитное время до со стандартным периодом
                     $SafeTimeBefore->subMinutes(STANDART_BUFFER);
-                    $tasksInSafePeriod = Tasks::where('master', $item->master)
+                    $tasksBeforeInSafePeriod = Tasks::where('master', $item->master)
                         ->whereBetween('end', [$SafeTimeBefore, $itemStart])
                         ->get();
 
-                    // if ($item->id == 14) {
-                    //     dump('$SafeTimeBefore'.$SafeTimeBefore->toDateTimeString());
-                    //     dump($tasksInSafePeriod);
-                    // }
-
-
-                    if ($tasksInSafePeriod->count() > 0) {
-                        $beforeTask = $tasksInSafePeriod->last();
+                    if ($tasksBeforeInSafePeriod->count() > 0) {
+                        $beforeTask = $tasksBeforeInSafePeriod->last();
                         $beforeEnd = Carbon::createFromFormat('Y-m-d H:i:s', $beforeTask->end); //время окончания предыдущей задачи
                         $beforeEnd->addMinutes(STANDART_BUFFER);
-                        if ($beforeEnd > $trueStart) $trueStart = $beforeEnd;
+                        if ($beforeEnd > $trueStart) $trueStart = clone $beforeEnd;
+                        // if ($beforeEnd->greaterThanOrEqualTo($trueStart)) $trueStart = $beforeEnd;
                         $needRebuild = true;
-                        if (isset($_GET['log'])) echo 'Есть задачи до этого в интервале стандартного буфера' . $beforeTask->id . '<br>';
+                        if (isset($_GET['log'])) echo 'Ошибка задачи '.$item->id.'. Перед ней близко стоит задача ' . $beforeTask->id . '<br>';
+                    }
+
+
+
+                    // проверим нет ли задачи после, которая находится в интервале стандартного буфера
+                    $SafeTimeAfter = clone $itemEnd; //защитное время до со стандартным периодом
+                    $SafeTimeAfter->addMinutes(STANDART_BUFFER);
+                    $tasksAfterInSafePeriod = Tasks::where('master', $item->master)
+                        ->whereBetween('start', [$itemEnd, $SafeTimeAfter])
+                        ->get();
+
+                    if ($tasksAfterInSafePeriod->count() > 0) {
+                        $afterTask = $tasksAfterInSafePeriod->first();
+                        $afterEnd = Carbon::createFromFormat('Y-m-d H:i:s', $afterTask->end); //время окончания предыдущей задачи
+                        $afterEnd->addMinutes(STANDART_BUFFER);
+                        if ($afterEnd > $trueStart) $trueStart = clone $afterEnd;
+                        // if ($beforeEnd->greaterThanOrEqualTo($trueStart)) $trueStart = $beforeEnd;
+                        $needRebuild = true;
+                        if (isset($_GET['log'])) echo 'Ошибка задачи '.$item->id.'. После нее близко стоит задача ' . $afterTask->id . '<br>';
                     }
 
 
@@ -390,6 +405,8 @@ class TemplateController extends Controller
 
                     // 
                     if ($needRebuild == true) {
+
+                        $trueStart->addSecond();
 
                         if (isset($_GET['log'])) echo 'делаем Rebuild задачи ' . $item->id . '<br>';
 
@@ -421,11 +438,13 @@ class TemplateController extends Controller
                         $item->end = $end->toDateTimeString();
                         $item->save();
 
+                        if (isset($_GET['log'])) echo 'Поставили задачу мастеру  '.$resultMasterId.' в ' .$start->toDateTimeString(). '<br>';
+
                         $falseTasks++;
                     }
                 }
             }
-            if ($safeCount > 1000) {
+            if ($safeCount > 50) {
                 self::$scriptErrors[] = 'rebuildTrueTime() В дополнительной сортировке количество циклов превысело максимальное значение. Цикл остановлен. Проверьте порядок у задач';
                 break;
             }
