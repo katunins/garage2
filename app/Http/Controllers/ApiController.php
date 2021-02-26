@@ -34,10 +34,8 @@ class ApiController extends Controller
         if ($request->has('data')) {
             $taskData = Tasks::find($request->data);
             if ($taskData) {
-                return response()->json([
-                    'taskData' => $taskData,
-                    'dealData' => DealsController::getDeal($taskData->dealid)
-                ], 200);
+                $response = DealsController::getDeal($taskData->dealid);
+                return response()->json($response, 200);
             } else return response()->json([], 200);
         } else return response()->json($request->all(), 400);
     }
