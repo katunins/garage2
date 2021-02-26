@@ -22,3 +22,4 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::post('/checkauth', [ApiController::class, 'checkAuth']);
 Route::post('/getcalendar', [ApiController::class, 'getCalendar']);
 Route::post('/getdetail', [ApiController::class, 'getDetailTask']);
+Route::post('/taskaction', [ApiController::class, 'taskAction']);
