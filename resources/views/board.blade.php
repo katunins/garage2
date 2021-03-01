@@ -179,7 +179,7 @@ $allEmptyCounts ++;
             <div style="height: 20px"></div>
         </form>
 
-        <form id="clone" action="/clonetemplate" method="get">
+        <form class="clone" action="/clonetemplate" method="get">
             <input type="text" name="cloneid" size="5" value="">
             <input type="hidden" name="line" value="{{ $line }}">
             <input type="hidden" name="position" value="{{ $position+1 }}">
@@ -201,7 +201,7 @@ $allEmptyCounts ++;
 <button class="newLine" onclick="newLine()">Добавить линию</button>
 <script>
     // рендерит новую линию элементов с плюсом
-    function newLine() {
+    function newLine(){
         let productId = document.getElementById('product-id').value
         let lines = document.querySelectorAll('.line')
         let lastLine
@@ -213,19 +213,35 @@ $allEmptyCounts ++;
             lastLine =  0
             templateCount = 10
         }
-        
-        let plusElem = document.createElement('form')
-        plusElem.className = 'plus'
+
+        let divElem = document.createElement('div')
+        divElem.className = 'plus'
+
+        let plusElem = document.createElement('form')        
         plusElem.action = '/newtemplate'
         plusElem.method = 'get'
         let html = ''
-        // html += '<input type="hidden" name="_token" value="' + document.querySelector('input[name="_token"]').value +
-        //     '">'
         html += '<input type="hidden" name="line" value="' + Number(lastLine + 1) + '">'
         html += '<input type="hidden" name="position" value="1">'
         html += '<input type="hidden" name="productid" value="' + productId + '">'
         html += '<input type="submit" value="+">'
         plusElem.innerHTML = html
+
+
+
+        let cloneElem = document.createElement('form')        
+        cloneElem.action = '/clonetemplate'
+        cloneElem.method = 'get'
+        let cloneHtml = ''
+        cloneHtml += '<input type="hidden" name="line" value="' + Number(lastLine + 1) + '">'
+        cloneHtml += '<input type="hidden" name="position" value="1">'
+        cloneHtml += ' <input type="text" name="cloneid" size="5" value="">'
+        cloneHtml += '<input type="hidden" name="productid" value="' + productId + '">'
+        cloneHtml += '<input type="submit" value="+">'
+        cloneElem.innerHTML = cloneHtml
+
+
+
 
         let newLine = document.createElement('div')
 
@@ -241,7 +257,10 @@ $allEmptyCounts ++;
             newLine.appendChild(newTemplate)
 
             if (index == 1) {
-                newTemplate.appendChild(plusElem)
+                divElem.appendChild(plusElem)
+                divElem.appendChild(cloneElem)
+                newTemplate.appendChild(divElem)
+                
             }
         }
     }
