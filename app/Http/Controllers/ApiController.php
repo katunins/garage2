@@ -48,4 +48,11 @@ class ApiController extends Controller
             return response()->json($request->data, 200);
         } else return response()->json($request->all(), 400);
     }
+
+    public function feedback(Request $request)
+    {
+        if ($request->has('data')) {
+            return response()->json($request->data, 200);
+        } else return response()->json($request->all(), 400);
+    }
 }

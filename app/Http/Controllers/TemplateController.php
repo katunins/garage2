@@ -699,7 +699,7 @@ class TemplateController extends Controller
 
         $newTask->generalinfo = $dealItem['productname'];
         if (isset($dealItem['Формат'])) $newTask->generalinfo .= ' ' . $dealItem['Формат'];
-        
+
         if ($template->miniparams) {
             $info = '';
             foreach ($template->miniparams as $param) {
@@ -957,6 +957,26 @@ class TemplateController extends Controller
         $newTemplate = $currentTemplate->replicate();
         $newTemplate->position++;
         $newTemplate->save();
+    }
+
+    // клонирует шаблон из дугого ID
+    static function cloneTemplate($data)
+    {
+        // "cloneid" => "44"
+        //   "line" => "1"
+        //   "position" => "6"
+        //   "productid" => "128"
+        $cloneTemplate = Templates::find($data['cloneid']);
+        if ($cloneTemplate) {
+            $newTemplate = $cloneTemplate->replicate();
+            $newTemplate->line = $_GET['line'];
+            $newTemplate->position = $_GET['position']+1;
+            $newTemplate->productid = $_GET['productid'];
+            $newTemplate->taskidbefore = null;
+            $newTemplate->save();
+            // dd ($newTemplate);
+        }
+        return redirect('/board/' . $_GET['productid']);
     }
 
 

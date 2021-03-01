@@ -169,13 +169,28 @@ $allEmptyCounts ++;
 </div>
 @endforeach
 <div class="template">
-    <form class="plus" action="/newtemplate" method="get">
-        <input type="hidden" name="time" value="{{ time() }}">
-        <input type="hidden" name="line" value="{{ $line }}">
-        <input type="hidden" name="position" value="{{ $position+1 }}">
-        <input type="hidden" name="productid" value="{{ $productId }}">
-        <input type="submit" value="+">
-    </form>
+    <div class="plus">
+        <form action="/newtemplate" method="get">
+            <input type="hidden" name="line" value="{{ $line }}">
+            <input type="hidden" name="time" value="{{ time() }}">
+            <input type="hidden" name="position" value="{{ $position+1 }}">
+            <input type="hidden" name="productid" value="{{ $productId }}">
+            <input class="plus-big-button" type="submit" value="+">
+            <div style="height: 20px"></div>
+        </form>
+
+        <form id="clone" action="/clonetemplate" method="get">
+            <input type="text" name="cloneid" size="5" value="">
+            <input type="hidden" name="line" value="{{ $line }}">
+            <input type="hidden" name="position" value="{{ $position+1 }}">
+            <input type="hidden" name="productid" value="{{ $productId }}">
+
+            <input type="submit" value="+">
+            <br>
+            <label for="copy">Копия из id</label>
+        </form>
+    </div>
+
 </div>
 </div>
 @endfor

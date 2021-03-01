@@ -35,6 +35,10 @@ Route::get('/board/{productID}', function ($productID) {
     return (TemplateController::getBoard($productID));
 });
 
+Route::get('/clonetemplate', function () {
+    return (TemplateController::cloneTemplate($_GET));
+});
+
 Route::get('/newtemplate', function () {
     return view('newtemplate', [
         'line' => $_GET['line'],

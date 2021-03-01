@@ -126,19 +126,23 @@
 }
 
 .task-status-temp {
-  background-color: #eb34cc;
+  background-color: #77CFEB;
 }
 
 .task-status-wait {
-  background-color: #a6cc69;
+  background-color: #AAEB77;
 }
 
 .task-status-repair {
-  background-color: #f3ea81;
+  background-color: #EBD877;
 }
 
 .task-status-finished {
-  background-color: #e46d6d;
+  background-color: #BFBFBF;
+}
+
+.task-status-dedline {
+  background-color: #EB7777;
 }
 
 .footer-block {
