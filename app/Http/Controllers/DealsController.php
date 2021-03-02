@@ -64,7 +64,9 @@ class DealsController extends Controller
         if (isset($arDeal->error)) return false;
         $dealTitle =  $arDeal->result->TITLE;
         $comment = $arDeal->result->COMMENTS;
+
         $dealArr = self::commentParser($comment);
+        
         $dealArr['params']['deal'] = $dealTitle;
         $dealArr['params']['addinfo'] = unserialize($arDeal->result->ADDITIONAL_INFO);
         $dealArr['params']['dealid'] = $id;

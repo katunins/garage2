@@ -416,11 +416,12 @@ class TemplateController extends Controller
                 if ($templateItem->conditions) {
                     $conditionCount++;
                     foreach ($templateItem->conditions as $conditionItem) {
-
+                        if ($conditionItem == 'Самовывоз') dd ('ok');
                         if (isset($productParams[$conditionItem['condition']])) {
                             $productValue = $productParams[$conditionItem['condition']];
-                            foreach (explode('/', $conditionItem['value']) as $value) {
 
+                            foreach (explode('/', $conditionItem['value']) as $value) {
+                                if ($conditionItem === 'Самовывоз') dd($productParams[$conditionItem['condition']]);
                                 switch ($conditionItem['equal']) {
                                     case '=':
                                         $conditionResult += strpos($productValue, $value) !== false ? 1 : 0;
@@ -699,6 +700,9 @@ class TemplateController extends Controller
 
         $newTask->generalinfo = $dealItem['productname'];
         if (isset($dealItem['Формат'])) $newTask->generalinfo .= ' ' . $dealItem['Формат'];
+        foreach (['Количество паспарту', 'Количество разворотов', 'Количество фотокарточек'] as $item) {
+            if (isset($dealItem[$item])) $newTask->generalinfo .= ', ' . $dealItem[$item] . ' ' . explode(' ', $item)[1];
+        }
 
         if ($template->miniparams) {
             $info = '';
@@ -715,7 +719,6 @@ class TemplateController extends Controller
         $newTask->manager = $productDataArr['manager'];
         if ($productDataArr['managernote'] != "") $newTask->managernote = true;
         // generalInfo
-
         // $newTask->save();
         return $newTask;
     }
@@ -970,7 +973,7 @@ class TemplateController extends Controller
         if ($cloneTemplate) {
             $newTemplate = $cloneTemplate->replicate();
             $newTemplate->line = $_GET['line'];
-            $newTemplate->position = $_GET['position']+1;
+            $newTemplate->position = $_GET['position'] + 1;
             $newTemplate->productid = $_GET['productid'];
             $newTemplate->taskidbefore = null;
             $newTemplate->save();
@@ -1023,7 +1026,7 @@ class TemplateController extends Controller
 
     public function saveTemplate(Request $request)
     {
-        // dd ($request->all());
+        // dd($request->all());
 
         $request->validate([
             'taskname' => 'required',
@@ -1079,7 +1082,8 @@ class TemplateController extends Controller
 
         // уберем пустые ячейки в массиве
         foreach ($request->conditions as $item) {
-            if ($item['condition'] && $item['equal'] && $item['value']) {
+            // if ($item['condition'] && $item['equal'] && $item['value']) {
+            if ($item['condition'] && $item['equal']) {
                 $trueConditions[] = $item;
             }
         }
