@@ -24,7 +24,10 @@ Route::get('/', function () {
 });
 
 Route::get('/templates', function () {
-    return view('templates')->with('products', Products::all());
+    // тут подтянем продукты из инфоблока
+    // $products = Products::all();
+    $products = TemplateController::getAllProducts();
+    return view('templates')->with('products', $products);
 });
 
 Route::get('/masters', function () {

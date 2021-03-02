@@ -90,17 +90,15 @@ class TemplateController extends Controller
                 }
             }
         } while ($safe < 10);
-
-
-        // dd($templates, $lineCount, $positionCount);
-
         return view('board', [
             'templates' => $templates,
             'lineCount' => $lineCount,
             'positionCount' => $positionCount,
             'productId' => $productId,
             'Users' => User::where('type', 'master')->get(),
-            'productTitle' => Products::where('korobookid', $productId)->first()->title,
+            'productTitle' => self::getAllProducts()[$productId],
+            'standartTemplates' => self::getStandartTemplates(),
+            // 'productTitle' => Products::where('korobookid', $productId)->first()->title,
         ]);
     }
 
@@ -134,6 +132,8 @@ class TemplateController extends Controller
                 dump($x);
             } while ($x < $lastPosition);
         }
+
+
         return $currentTemplate->delete();
     }
 
@@ -202,14 +202,15 @@ class TemplateController extends Controller
     }
 
     // получает массив выбранных по условию задач
-    // Cтавит всем задачам taskIdBefore в двух вариантах 
-    // 'otherline' => null,
-    // 'parentline' => null
-    // 0 => array:3 [▼
-    //     "temporaryid" => 0
-    //     "templateid" => 1
+
     static function linkAllTasks($tasks)
     {
+        // Cтавит всем задачам taskIdBefore в двух вариантах 
+        // 'otherline' => null,
+        // 'parentline' => null
+        // 0 => array:3 [▼
+        //     "temporaryid" => 0
+        //     "templateid" => 1
         if (isset($_GET['log']) == true) echo 'linkAllTasks()' . '<br>';
 
         foreach ($tasks as $key => $itemTask) {
@@ -398,9 +399,12 @@ class TemplateController extends Controller
 
         // получим id продукта
         if (isset($_GET['log']) == true) echo 'taskGenerator()' . '<br>';
+
+        $productId = array_search($productParams['productname'], self::getAllProducts());
+
         $productData = Products::where('title', $productParams['productname'])->get();
-        if ($productData->count() > 0) {
-            $productId = $productData->first()->korobookid;
+        if (!$productId) {
+            dd('нет такого продукта');
         }
         $taskArr = [];
         $temporaryid = 0;
@@ -416,13 +420,25 @@ class TemplateController extends Controller
                 if ($templateItem->conditions) {
                     $conditionCount++;
                     foreach ($templateItem->conditions as $conditionItem) {
-                        if ($conditionItem == 'Самовывоз') dd ('ok');
-                        if (isset($productParams[$conditionItem['condition']])) {
-                            $productValue = $productParams[$conditionItem['condition']];
+                        // "equal" => "=="
+                        // "value" => "С калькой без печати/С печатью на кальке"
+                        // "condition" => "Первая страница книги"
 
+
+                        // тут проверяем equal ? или !?
+                        // если есть такие знаки, то проверка по ним
+
+
+                        if (isset($productParams[$conditionItem['condition']])) {
+
+                            $productValue = $productParams[$conditionItem['condition']];
                             foreach (explode('/', $conditionItem['value']) as $value) {
-                                if ($conditionItem === 'Самовывоз') dd($productParams[$conditionItem['condition']]);
                                 switch ($conditionItem['equal']) {
+                                    case '?':
+                                        $conditionResult++;
+                                        break;
+                                    case '!?':
+                                        break;
                                     case '=':
                                         $conditionResult += strpos($productValue, $value) !== false ? 1 : 0;
                                         break;
@@ -1006,27 +1022,27 @@ class TemplateController extends Controller
         };
     }
 
-    // "_token" => "2zQgKq9AI1IZ9gnMUxW4S9ftzJlSIPfBLhLY25yT"
-    // "productid" => "1"
-    // "line" => "2"
-    // "position" => "2"
-    // "taskname" => "Обрубка картона"
-    // "params" => null
-    // "masters" => "2/3"
-    // "templateid" => "4"
-    // "taskidbefore" => "21"
-    // "condition1" => null
-    // "condition2" => null
-    // "condition3" => null
-    // "producttime" => "5"
-    // "paramtime" => null
-    // "buffer" => null
-    // "period1" => null
-    // "period2" => null
+
 
     public function saveTemplate(Request $request)
     {
-        // dd($request->all());
+        // "_token" => "2zQgKq9AI1IZ9gnMUxW4S9ftzJlSIPfBLhLY25yT"
+        // "productid" => "1"
+        // "line" => "2"
+        // "position" => "2"
+        // "taskname" => "Обрубка картона"
+        // "params" => null
+        // "masters" => "2/3"
+        // "templateid" => "4"
+        // "taskidbefore" => "21"
+        // "condition1" => null
+        // "condition2" => null
+        // "condition3" => null
+        // "producttime" => "5"
+        // "paramtime" => null
+        // "buffer" => null
+        // "period1" => null
+        // "period2" => null
 
         $request->validate([
             'taskname' => 'required',
@@ -1083,11 +1099,12 @@ class TemplateController extends Controller
         // уберем пустые ячейки в массиве
         foreach ($request->conditions as $item) {
             // if ($item['condition'] && $item['equal'] && $item['value']) {
-            if ($item['condition'] && $item['equal']) {
+            if (($item['condition'] && $item['equal'] && $item['value']) || ($item['condition'] && $item['equal'] === '?')) {
                 $trueConditions[] = $item;
             }
         }
         $template->conditions = $trueConditions ?? null;
+        $template->standarttemplate = $request->standarttemplate ? 1 : null;
 
         $template->save();
         return redirect('/board/' . $request['productid']);
@@ -1099,6 +1116,24 @@ class TemplateController extends Controller
         $response = Http::asForm()->post('https://korobook.ru/ajax/ajaxtaskgarage.php', [
             'productid' => $productId
         ]);
+        $generalParams = [
+            'Доставка' => ['До склада', 'До двери '],
+            'Самовывоз' => [],
+            'Объединен с' => []
+        ];
+        return (array_merge($response->json(), $generalParams));
+    }
+
+    // получим все продукты и их ID на сайте
+    static function getAllProducts()
+    {
+        $response = Http::asForm()->post('https://korobook.ru/ajax/ajaxgarage_getproducts.php');
         return ($response->json());
+    }
+
+    // вернет коллекцию "повторяющийхся" шаблонов для их клонирования
+    static function getStandartTemplates()
+    {
+        return Templates::where('standarttemplate', 1)->get();
     }
 }

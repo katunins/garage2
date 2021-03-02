@@ -20,6 +20,7 @@ class CreateTemplatesTable extends Migration
             $table->integer('position'); // позиция в линии
             $table->integer('taskidbefore')->nullable(); //задача, после которой ставим эту задачу
             $table->string('taskname'); // название задачи
+            
             $table->json('masters'); //ID мастера '1/2/3'
             $table->json('miniparams')->nullable(); //[Формат, Тип печати]
             $table->integer('buffer')->nullable(); //min
@@ -27,6 +28,8 @@ class CreateTemplatesTable extends Migration
             $table->float('paramtime')->nullable(); //мин - расчетное время на расчетную еденицу (1кв. см к примеру)
             $table->json('periods')->nullable(); //доступные период 9:00-12:00
             $table->json('conditions')->nullable(); // условие Формат=20х20/30х30
+            $table->tinyInteger('standarttemplate')->nullable(); //флаг о том, что шаблон используется для копирования (подтягивается в board - options)
+            
             $table->timestamps();
         });
     }

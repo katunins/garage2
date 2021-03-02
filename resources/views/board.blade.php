@@ -12,8 +12,10 @@
 </h1>
 <input id="product-id" type="hidden" value="{{ $productId }}">
 <div class="lineBlock">
-    @if ($templates->count() > 0)
+    {{-- @if ($templates->count() > 0) --}}
     @for ($line = 1; $line <= $lineCount; $line++) <div class="line-number">
+
+        {{-- @if ($templates->where('line', $line)->count()>0) --}}
         <p>
             Линия {{ $line }}
         </p>
@@ -37,17 +39,17 @@
 
 @php
 $allEmptyCounts = 0; //кол-во пустых ячеек в строке
+$lastLineTemplates = 0; //кол-во шаблонов в полседний линии
 @endphp
 <div class="line" line={{ $line }}>
-
     @foreach ($templates->where('line', $line)->sortBy('position') as $template)
 
     @php
+    $lastLineTemplates ++;
     $position = $template->position;
     $template=$templates->where('line',$line)->where('position', $position)->first();
     $style="box-shadow:inset 0px -61px 0px 0px hsl( ".(string)((int)$template->masters[0]*14).",
     50%,80%)";
-
     $emptyCount = $template->realPosition-$position-$allEmptyCounts;
     @endphp
 
@@ -73,8 +75,8 @@ $allEmptyCounts ++;
         <span>{{ $template->miniparams? implode(', ', $template->miniparams):'' }}</span>
     </p>
     <br>
-    <p class="description">Базовое / расчетное время: <span>{{ $template->producttime }} /
-            {{ $template->paramtime }} мин.</span>
+    <p class="description">Базовое / расчетное время: <span>{{ $template->producttime }} мин /
+            {{ $template->paramtime ?? 0 }} сек.</span>
     </p>
     <p class="description">ID предыдущей задачи: <span>{{ $template->taskidbefore }}</span></p>
     <p class="description">Буфер: <span>{{ $template->buffer }} мин.</span></p>
@@ -173,74 +175,80 @@ $allEmptyCounts ++;
         <form action="/newtemplate" method="get">
             <input type="hidden" name="line" value="{{ $line }}">
             <input type="hidden" name="time" value="{{ time() }}">
-            <input type="hidden" name="position" value="{{ $position+1 }}">
+            <input type="hidden" name="position" value="{{ ($position ?? 0 )+1 }}">
             <input type="hidden" name="productid" value="{{ $productId }}">
             <input class="plus-big-button" type="submit" value="+">
             <div style="height: 20px"></div>
         </form>
 
         <form class="clone" action="/clonetemplate" method="get">
-            <input type="text" name="cloneid" size="5" value="">
             <input type="hidden" name="line" value="{{ $line }}">
-            <input type="hidden" name="position" value="{{ $position+1 }}">
+            <input type="hidden" name="position" value="{{ ($position ?? 0 )+1 }}">
             <input type="hidden" name="productid" value="{{ $productId }}">
+            <label for="copy">Скопировать шаблон</label>
 
-            <input type="submit" value="+">
             <br>
-            <label for="copy">Копия из id</label>
+            <input type="text" name="cloneid" size="5" value="" placeholder="id: ">
+            <input type="submit" value="Скопировать">
+
+            <div style="margin-top: 5px">
+                <select style="width: 145px" onchange="selectTemplateToClone ()">
+                    <option disabled selected>Выберите шаблон</option>
+                    @foreach ($standartTemplates as $item)
+                    <option value={{$item->id}}>{{$item->taskname}}</option>
+                    @endforeach
+                </select>
+            </div>
         </form>
     </div>
 
 </div>
 </div>
+
+{{-- @endif --}}
 @endfor
 
-@endif
+{{-- @endif --}}
 </div>
-
+@if ($lastLineTemplates>0)
 <button class="newLine" onclick="newLine()">Добавить линию</button>
+@endif
 <script>
+    // подставляет выбранный шаблон для клонирования в поле ID
+    function selectTemplateToClone() {
+        let selectElem = event.target
+        let id = selectElem.querySelectorAll('option')[selectElem.selectedIndex].value
+
+        selectElem.parentNode.parentNode.querySelector('input[name="cloneid"]').value = id
+    }
+
     // рендерит новую линию элементов с плюсом
-    function newLine(){
+    function newLine() {
         let productId = document.getElementById('product-id').value
         let lines = document.querySelectorAll('.line')
         let lastLine
         let templateCount
         if (lines.length > 0) {
-            lastLine =  Number(lines[lines.length - 1].getAttribute('line'))
+            lastLine = Number(lines[lines.length - 1].getAttribute('line'))
             templateCount = lines[0].querySelectorAll('.template').length //кол-во пустых блоков в строке
         } else {
-            lastLine =  0
+            lastLine = 0
             templateCount = 10
         }
 
-        let divElem = document.createElement('div')
-        divElem.className = 'plus'
+        let plusElem = document.querySelector('.plus').cloneNode(true);
+        let arrParam = [{
+            param: 'line',
+            newValue: Number(lastLine + 1)
+        }, {
+            param: 'position',
+            newValue: 1
+        }]
+        arrParam.forEach(item => {
+            plusElem.querySelectorAll(`input[name="${item.param}"]`).forEach(elem => elem.value = item.newValue)
+        });
 
-        let plusElem = document.createElement('form')        
-        plusElem.action = '/newtemplate'
-        plusElem.method = 'get'
-        let html = ''
-        html += '<input type="hidden" name="line" value="' + Number(lastLine + 1) + '">'
-        html += '<input type="hidden" name="position" value="1">'
-        html += '<input type="hidden" name="productid" value="' + productId + '">'
-        html += '<input type="submit" value="+">'
-        plusElem.innerHTML = html
-
-
-
-        let cloneElem = document.createElement('form')        
-        cloneElem.action = '/clonetemplate'
-        cloneElem.method = 'get'
-        let cloneHtml = ''
-        cloneHtml += '<input type="hidden" name="line" value="' + Number(lastLine + 1) + '">'
-        cloneHtml += '<input type="hidden" name="position" value="1">'
-        cloneHtml += ' <input type="text" name="cloneid" size="5" value="">'
-        cloneHtml += '<input type="hidden" name="productid" value="' + productId + '">'
-        cloneHtml += '<input type="submit" value="+">'
-        cloneElem.innerHTML = cloneHtml
-
-
+        console.log()
 
 
         let newLine = document.createElement('div')
@@ -256,13 +264,11 @@ $allEmptyCounts ++;
             newTemplate.setAttribute('line', lastLine + 1)
             newLine.appendChild(newTemplate)
 
-            if (index == 1) {
-                divElem.appendChild(plusElem)
-                divElem.appendChild(cloneElem)
-                newTemplate.appendChild(divElem)
-                
-            }
+            if (index == 1) newTemplate.appendChild(plusElem);
         }
+
+        let button = document.querySelector('button.newLine')
+        button.parentNode.removeChild(button)
     }
 
 </script>
