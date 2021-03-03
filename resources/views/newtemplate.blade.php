@@ -24,6 +24,11 @@
 </p>
 
 <form action="/savetemplate" method="POST">
+    <div class="buttons">
+        <a href="{{ url()->previous() }}">Назад</a>
+        <input type="submit" value="Сохранить">
+    </div>
+    <br>
     @csrf
     <input type="hidden" name="productid" value="{{ $productId }}">
     <input type="hidden" name="line" value="{{ $line }}">
@@ -193,11 +198,7 @@
 
     <div class="buttons">
         <a href="{{ url()->previous() }}">Назад</a>
-        {{-- @if ($template)
-        <a class="remove" href="{{}}">Удалить</a>
-        @endif --}}
         <input type="submit" value="Сохранить">
-
     </div>
 
 </form>

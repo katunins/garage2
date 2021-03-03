@@ -183,6 +183,7 @@ class TemplateController extends Controller
 
             $tasks = self::taskGenegator($productDataArr); //сформированные по фильтрам задачи из шаблонов
             $tasks = self::linkAllTasks($tasks); //тут уже связанные друг с другом задачи
+
             self::planGeneratorNew($tasks, $dealItem, $productDataArr);
 
             if (isset($_GET['log'])) echo '<br><hr><br>';
@@ -463,7 +464,7 @@ class TemplateController extends Controller
 
                     $taskInfo = NULL;
                     if ($templateItem->miniparams) {
-
+                    
                         foreach ($templateItem->miniparams as $itemInfo) {
                             if (isset($productParams[$itemInfo])) {
                                 $taskInfo[] = $itemInfo . ' : ' . $productParams[$itemInfo];
@@ -484,17 +485,6 @@ class TemplateController extends Controller
                         $area = (int) $widthHeight[0] * (int) $widthHeight[1] * (int)$productParams['Количество разворотов'] / 100;
                         $taskTime += $area * $templateItem->paramtime;
                     }
-                    // $taskArr[$line][] = [
-                    //     'temporaryid' => $temporaryid,
-                    //     'taskidbefore' => [
-                    //         'currentline' => null,
-                    //         'anotherLine' => null,
-                    //     ],
-                    //     'templateid' => $templateItem->id,
-                    // 'time' => $taskTime,
-                    // 'info' => $taskInfo,
-                    // 'dealname' => $productParams['dealname']
-                    // ];
 
                     $taskArr[] = [
                         'temporaryid' => $temporaryid,
@@ -699,7 +689,6 @@ class TemplateController extends Controller
                 $resultMasterId = $masterId;
             }
         }
-
         $newTask = new Tasks;
         $newTask->name = $template->taskname;
         $newTask->templateid = $template->id;
@@ -720,14 +709,16 @@ class TemplateController extends Controller
             if (isset($dealItem[$item])) $newTask->generalinfo .= ', ' . $dealItem[$item] . ' ' . explode(' ', $item)[1];
         }
 
-        if ($template->miniparams) {
-            $info = '';
-            foreach ($template->miniparams as $param) {
-                if (isset($dealItem[$param]) !== false) $info .= $param . ': ' . $dealItem[$param] . '; ';
-                // else self::$scriptErrors[] = 'Не найден параметр, проверьте "' . $param . '"';
-            }
-            $newTask->info = $info;
-        }
+        // if ($template->miniparams) {
+        //     $info = '';
+        //     foreach ($template->miniparams as $param) {
+        //         if (isset($dealItem[$param]) !== false) $info .= $param . ': ' . $dealItem[$param] . '; ';
+        //         // else self::$scriptErrors[] = 'Не найден параметр, проверьте "' . $param . '"';
+        //     }
+        //     $newTask->info = $info;
+        // }
+        // dd ();
+        if ($task['info']) $newTask->info = implode(', ', $task['info']);
         $newTask->deal = $task['dealname'];
 
         // generalInfo
