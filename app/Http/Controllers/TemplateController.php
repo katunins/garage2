@@ -402,7 +402,7 @@ class TemplateController extends Controller
 
         $productId = array_search($productParams['productname'], self::getAllProducts());
 
-        $productData = Products::where('title', $productParams['productname'])->get();
+        // $productData = Products::where('title', $productParams['productname'])->get();
         if (!$productId) {
             dd('нет такого продукта');
         }
