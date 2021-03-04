@@ -19,6 +19,7 @@ class TemplateController extends Controller
 {
     static function repair()
     {
+        dd ('функция для разработчика');
         $templates = Templates::whereNotNull('conditions')->get();
         if (!$templates) return;
         foreach ($templates as $item) {
@@ -474,10 +475,11 @@ class TemplateController extends Controller
                                     case '!?':
                                         break;
                                     case '=':
-                                        $conditionResult += strcasecmp($productValue, $value) == 0 ? 1 : 0;
+                                        // dump ($productValue, $value, strcasecmp($productValue, $value));
+                                        $conditionResult += strpos($productValue, $value) !== false ? 1 : 0;
                                         break;
                                     case '!=':
-                                        $conditionResult += strcasecmp($productValue, $value) != 0 ? 1 : 0;
+                                        $conditionResult += strpos($productValue, $value) === false ? 1 : 0;
                                         break;
                                 }
                                 // switch ($conditionItem['equal']) {
