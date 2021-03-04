@@ -541,7 +541,7 @@ class TemplateController extends Controller
                         'temporaryid' => $temporaryid,
                         'realtaskid' => null,
                         'templateid' => $templateItem->id,
-                        'time' => round($taskTime*(int)$productParams['Количество']),
+                        'time' => ceil($taskTime*(int)$productParams['Количество']),
                         'info' => $taskInfo,
                         'dealname' => $productParams['dealname']
                     ];
