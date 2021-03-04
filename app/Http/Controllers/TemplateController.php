@@ -17,6 +17,27 @@ use Illuminate\Support\Facades\Http;
 
 class TemplateController extends Controller
 {
+    static function repair()
+    {
+        $templates = Templates::whereNotNull('conditions')->get();
+        if (!$templates) return;
+        foreach ($templates as $item) {
+            $conditions = $item->conditions;
+            foreach ($conditions as $key => $el) {
+                if ($el['equal'] === '==') {
+                    $conditions[$key]['equal'] = '=';
+                    dump($conditions[$key]['equal']);
+                }
+                if ($el['equal'] === '!==') {
+                    $conditions[$key]['equal'] = '!=';
+                    dump($conditions[$key]['equal']);
+                }
+            }
+            $item->conditions = $conditions;
+            $item->save();
+        }
+        dd($templates->first(), 'ok');
+    }
 
     static  $isHoliday; //праздники
     // 0	Рабочий день	200
@@ -159,7 +180,7 @@ class TemplateController extends Controller
         if (Templates::where('productid', $productId)->count() > 0) {
             $maxLine = Templates::where('productid', $productId)->max('line');
             for ($line = 1; $line <= $maxLine; $line++) {
-                if (Templates::where('productid', $productId)->where('line', $line)->count()>0){
+                if (Templates::where('productid', $productId)->where('line', $line)->count() > 0) {
                     self::rebuildPosition($productId, $line);
                 }
             }
