@@ -13,8 +13,7 @@
 <input id="product-id" type="hidden" value="{{ $productId }}">
 <div class="lineBlock">
     {{-- @if ($templates->count() > 0) --}}
-    <blade
-        for|%20(%24line%20%3D%201%3B%20%24line%20%3C%3D%20%24lineCount%3B%20%24line%2B%2B)%20%3Cdiv%20class%3D%26%2334%3Bline-number%26%2334%3B%3E>
+    @for ($line = 1; $line <= $lineCount; $line++) <div class="line-number">
 
         {{-- @if ($templates->where('line', $line)->count()>0) --}}
         <p>
@@ -39,40 +38,37 @@
 </div>
 
 @php
-    $allEmptyCounts = 0; //кол-во пустых ячеек в строке
-    $lastLineTemplates = 0; //кол-во шаблонов в полседний линии
+$allEmptyCounts = 0; //кол-во пустых ячеек в строке
+$lastLineTemplates = 0; //кол-во шаблонов в полседний линии
 @endphp
 <div class="line" line={{ $line }}>
-    <blade
-        foreach|%20(%24templates-%3Ewhere(%26%2339%3Bline%26%2339%3B%2C%20%24line)-%3EsortBy(%26%2339%3Bposition%26%2339%3B)%20as%20%24template)>
+    @foreach ($templates->where('line', $line)->sortBy('position') as $template)
 
-        @php
-            $lastLineTemplates ++;
-            $position = $template->position;
-            $template=$templates->where('line',$line)->where('position', $position)->first();
-            $style="box-shadow:inset 0px -61px 0px 0px hsl( ".(string)((int)$template->masters[0]*14).",
-            50%,80%)";
-            $emptyCount = $template->realPosition-$position-$allEmptyCounts;
-        @endphp
+    @php
+    $lastLineTemplates ++;
+    $position = $template->position;
+    $template=$templates->where('line',$line)->where('position', $position)->first();
+    $style="box-shadow:inset 0px -61px 0px 0px hsl( ".(string)((int)$template->masters[0]*14).",
+    50%,80%)";
+    $emptyCount = $template->realPosition-$position-$allEmptyCounts;
+    @endphp
 
-        <blade
-            for|%20(%24i%20%3D%200%3B%20%24i%20%3C%20%24emptyCount%3B%20%24i%2B%2B)%20%3Cdiv%20class%3D%26%2334%3Btemplate%26%2334%3B%3E>
+    @for ($i = 0; $i < $emptyCount; $i++) <div class="template">
 </div>
 @php
-    $allEmptyCounts ++;
+$allEmptyCounts ++;
 @endphp
 @endfor
 
 <div class="template" style="{{ $style ?? '' }}">
 
-    {{-- <p>Реальная позиция {{ $template->realPosition }}
-    </p> --}}
+    {{-- <p>Реальная позиция {{ $template->realPosition }}</p> --}}
     <p class="title">{{ $template->taskname }}</p>
     <hr>
     <p class="description">Мастера:
-        @foreach($template->masters as $item)
+        @foreach ($template->masters as $item)
 
-            {{ $Users->find($item)->name }},
+        {{ $Users->find($item)->name }},
         @endforeach
     </p>
     <p class="description">Мини-параметры:
@@ -86,14 +82,14 @@
     <p class="description">Буфер: <span>{{ $template->buffer }} мин.</span></p>
     <br>
     <p class="description">Запретный период:
-        @foreach($template->periods ?? [] as $item)
-            <span>{{ $item }}</span>,
+        @foreach ($template->periods ?? [] as $item)
+        <span>{{ $item }}</span>,
         @endforeach
     </p>
     <p class="description">Условия выполнения:
-        @foreach($template->conditions ?? [] as $item)
-            <span>{{ $item['condition'].' '.$item['equal'].' '.$item['value'] }}</span>
-            <br>
+        @foreach ($template->conditions ?? [] as $item)
+        <span>{{ $item['condition'].' '.$item['equal'].' '.$item['value'] }}</span>
+        <br>
         @endforeach
     </p>
     <br>
@@ -187,7 +183,7 @@
 
         <form class="clone" action="/clonetemplate" method="get">
             <input type="hidden" name="line" value="{{ $line }}">
-            <input type="hidden" name="position" value="{{ ($position ?? 1 ) }}">
+            <input type="hidden" name="position" value="{{ $position ?? 1 }}">
             <input type="hidden" name="productid" value="{{ $productId }}">
             <label for="copy">Скопировать шаблон</label>
 
@@ -198,8 +194,8 @@
             <div style="margin-top: 5px">
                 <select style="width: 145px" onchange="selectTemplateToClone ()">
                     <option disabled selected>Выберите шаблон</option>
-                    @foreach($standartTemplates as $item)
-                        <option value={{ $item->id }}>{{ $item->taskname }}</option>
+                    @foreach ($standartTemplates as $item)
+                    <option value={{$item->id}}>{{$item->taskname}}</option>
                     @endforeach
                 </select>
             </div>
@@ -214,8 +210,8 @@
 
 {{-- @endif --}}
 </div>
-@if($lastLineTemplates>0)
-    <button class="newLine" onclick="newLine()">Добавить линию</button>
+@if ($lastLineTemplates>0)
+<button class="newLine" onclick="newLine()">Добавить линию</button>
 @endif
 <script>
     // подставляет выбранный шаблон для клонирования в поле ID
