@@ -163,7 +163,6 @@ class TemplateController extends Controller
                     self::rebuildPosition($productId, $line);
                 }
             }
-            dd($productId.' ok');
         }
     }
 
