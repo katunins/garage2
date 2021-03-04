@@ -529,7 +529,7 @@ class TemplateController extends Controller
                         $widthHeight = explode('x', $size[0]); //английская литера x
                         if (!isset($widthHeight[1])) $widthHeight = explode('х', $size[0]); //русская литера x;
                         
-                        $sheetCount = 0;
+                        $sheetCount = 1;
                         foreach (['Количество паспарту', 'Количество разворотов', 'Количество фотокарточек'] as $countParam){
                             if (array_key_exists($countParam, $productParams)) $sheetCount = (int)$productParams[$countParam];
                         }
