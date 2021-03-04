@@ -536,7 +536,11 @@ class TemplateController extends Controller
                                     if (array_key_exists($countParam, $productParams)) $sheetCount = (int)$productParams[$countParam];
                                 }
                                 $area = (int) $widthHeight[0] * (int) $widthHeight[1] * $sheetCount / 100;
-                                $taskTime += $area * $templateItem->paramtime;
+                                $taskTime += $area * ($templateItem->paramtime/60);
+
+                                if (isset($_GET['log']) == true) {
+                                    echo $templateItem->taskname . ' расчетное время (' . $templateItem->paramtime . ' сек.). ' . 'Площадь ' . $area . ' дм2.' .'<br>';
+                                }
                             }
                         }
                     }
@@ -545,7 +549,7 @@ class TemplateController extends Controller
                         'temporaryid' => $temporaryid,
                         'realtaskid' => null,
                         'templateid' => $templateItem->id,
-                        'time' => round($taskTime * (int)$productParams['Количество']),
+                        'time' => ceil($taskTime * (int)$productParams['Количество']),
                         'info' => $taskInfo,
                         'dealname' => $productParams['dealname']
                     ];
