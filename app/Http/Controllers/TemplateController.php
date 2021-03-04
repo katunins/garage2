@@ -522,7 +522,7 @@ class TemplateController extends Controller
 
                     // расчитаем время
                     $taskTime = 0;
-                    if ($templateItem->producttime) $taskTime += $templateItem->producttime * $productParams['Количество'];
+                    if ($templateItem->producttime) $taskTime += $templateItem->producttime;// * $productParams['Количество'];
                     if ($templateItem->paramtime && array_key_exists('Формат', $productParams)) {
                         // посчитаем площадь разовротов в квадратных дециметрах (разделим на 100)
                         $size = explode(' ', $productParams['Формат']);
@@ -530,8 +530,8 @@ class TemplateController extends Controller
                         if (!isset($widthHeight[1])) $widthHeight = explode('х', $size[0]); //русская литера x;
                         
                         $sheetCount = 0;
-                        foreach (['Количество паспарту', 'Количество разворотов', 'Количество фотокарточек'] as $el){
-                            if (array_key_exists($el, $productParams)) $sheetCount = (int)$productParams[$el];
+                        foreach (['Количество паспарту', 'Количество разворотов', 'Количество фотокарточек'] as $countParam){
+                            if (array_key_exists($countParam, $productParams)) $sheetCount = (int)$productParams[$countParam];
                         }
                         $area = (int) $widthHeight[0] * (int) $widthHeight[1] * $sheetCount / 100;
                         $taskTime += $area * $templateItem->paramtime;
