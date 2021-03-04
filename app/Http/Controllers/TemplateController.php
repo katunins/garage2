@@ -983,6 +983,7 @@ class TemplateController extends Controller
             $newTemplate->position = $_GET['position'] + 1;
             $newTemplate->productid = $_GET['productid'];
             $newTemplate->taskidbefore = null;
+            $newTemplate->standarttemplate = null;
             $newTemplate->save();
             // dd ($newTemplate);
         }
