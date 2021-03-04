@@ -1090,7 +1090,7 @@ class TemplateController extends Controller
         // уберем пустые ячейки в массиве
         foreach ($request->conditions as $item) {
             // if ($item['condition'] && $item['equal'] && $item['value']) {
-            if (($item['condition'] && $item['equal'] && $item['value']) || ($item['condition'] && $item['equal'] === '?')) {
+            if (($item['condition'] && $item['equal'] && $item['value']) || ($item['condition'] && $item['equal'] === '?') || ($item['condition'] && $item['equal'] === '!?')) {
                 $trueConditions[] = $item;
             }
         }
