@@ -213,6 +213,11 @@ $allEmptyCounts ++;
 @if ($lastLineTemplates>0)
 <button class="newLine" onclick="newLine()">Добавить линию</button>
 @endif
+<div>
+    <p>
+        <a href="/rebuildtemplate/{{$productId}}">Проверить ошибки позиций и перестроить блоки</a>
+    </p>
+</div>
 <script>
     // подставляет выбранный шаблон для клонирования в поле ID
     function selectTemplateToClone() {
