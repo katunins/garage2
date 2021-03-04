@@ -118,5 +118,9 @@ Route::get('/deletealltasks', function () {
 });
 
 Route::get('/calendar', [CalendarController::class, 'initCalendar']);
+Route::get('/rebuildtemplate/{productid}', function($productid){
+    TemplateController::rebuildTemplate($productid);
+});
+
 
 

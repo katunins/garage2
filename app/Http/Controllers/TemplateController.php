@@ -8,7 +8,6 @@ const TIME_AFTER_SCRIPT = 12; //время задержки после запу�
 
 // const isset($_GET['log']) =  true; //true - идет вывод echo;
 
-use App\Models\Products;
 use App\Models\Tasks;
 use App\Models\Templates;
 use App\Models\User;
@@ -151,6 +150,20 @@ class TemplateController extends Controller
                 $item->save();
             }
             $truePosition++;
+        }
+    }
+
+    // перестраивает позиции шаблонов по порядку во всем продукте
+    static function rebuildTemplate($productId)
+    {
+        if (Templates::where('productid', $productId)->count() > 0) {
+            $maxLine = Templates::where('productid', $productId)->max('line');
+            for ($line = 1; $line <= $maxLine; $line++) {
+                if (Templates::where('productid', $productId)->where('line', $line)->count()>0){
+                    self::rebuildPosition($productId, $line);
+                }
+            }
+            dd($productId.' ok');
         }
     }
 
@@ -464,7 +477,7 @@ class TemplateController extends Controller
 
                     $taskInfo = NULL;
                     if ($templateItem->miniparams) {
-                    
+
                         foreach ($templateItem->miniparams as $itemInfo) {
                             if (isset($productParams[$itemInfo])) {
                                 $taskInfo[] = $itemInfo . ' : ' . $productParams[$itemInfo];
