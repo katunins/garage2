@@ -439,7 +439,7 @@ class TemplateController extends Controller
         $productId = array_search($productParams['productname'], self::getAllProducts());
         // $productData = Products::where('title', $productParams['productname'])->get();
         if (!$productId) {
-            dump('нет такого продукта в сайте: '.$productParams['productname']);
+            dump('нет такого продукта в сайте: ' . $productParams['productname']);
         }
         $taskArr = [];
         $temporaryid = 0;
@@ -522,26 +522,30 @@ class TemplateController extends Controller
 
                     // расчитаем время
                     $taskTime = 0;
-                    if ($templateItem->producttime) $taskTime += $templateItem->producttime;// * $productParams['Количество'];
-                    if ($templateItem->paramtime && array_key_exists('Формат', $productParams)) {
-                        // посчитаем площадь разовротов в квадратных дециметрах (разделим на 100)
-                        $size = explode(' ', $productParams['Формат']);
-                        $widthHeight = explode('x', $size[0]); //английская литера x
-                        if (!isset($widthHeight[1])) $widthHeight = explode('х', $size[0]); //русская литера x;
-                        
-                        $sheetCount = 1;
-                        foreach (['Количество паспарту', 'Количество разворотов', 'Количество фотокарточек'] as $countParam){
-                            if (array_key_exists($countParam, $productParams)) $sheetCount = (int)$productParams[$countParam];
+                    if ($templateItem->producttime) $taskTime += $templateItem->producttime; // * $productParams['Количество'];
+                    if ($templateItem->paramtime) {
+                        foreach (['Формат', 'Размер паспарту (размер фотографии)'] as $sizeName) {
+                            if (array_key_exists($sizeName, $productParams)) {
+                                // посчитаем площадь разовротов в квадратных дециметрах (разделим на 100)
+                                $size = explode(' ', $productParams[$sizeName]);
+                                $widthHeight = explode('x', $size[0]); //английская литера x
+                                if (!isset($widthHeight[1])) $widthHeight = explode('х', $size[0]); //русская литера x;
+
+                                $sheetCount = 1;
+                                foreach (['Количество паспарту', 'Количество разворотов', 'Количество фотокарточек'] as $countParam) {
+                                    if (array_key_exists($countParam, $productParams)) $sheetCount = (int)$productParams[$countParam];
+                                }
+                                $area = (int) $widthHeight[0] * (int) $widthHeight[1] * $sheetCount / 100;
+                                $taskTime += $area * $templateItem->paramtime;
+                            }
                         }
-                        $area = (int) $widthHeight[0] * (int) $widthHeight[1] * $sheetCount / 100;
-                        $taskTime += $area * $templateItem->paramtime;
                     }
 
                     $taskArr[] = [
                         'temporaryid' => $temporaryid,
                         'realtaskid' => null,
                         'templateid' => $templateItem->id,
-                        'time' => ceil($taskTime*(int)$productParams['Количество']),
+                        'time' => round($taskTime * (int)$productParams['Количество']),
                         'info' => $taskInfo,
                         'dealname' => $productParams['dealname']
                     ];
