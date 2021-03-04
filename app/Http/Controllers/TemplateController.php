@@ -453,18 +453,31 @@ class TemplateController extends Controller
                                     case '!?':
                                         break;
                                     case '=':
-                                        $conditionResult += strpos($productValue, $value) !== false ? 1 : 0;
-                                        break;
-                                    case '!=':
-                                        $conditionResult += strpos($productValue, $value) === false ? 1 : 0;
-                                        break;
-                                    case '==':
                                         $conditionResult += strcasecmp($productValue, $value) == 0 ? 1 : 0;
                                         break;
-                                    case '!==':
+                                    case '!=':
                                         $conditionResult += strcasecmp($productValue, $value) != 0 ? 1 : 0;
                                         break;
                                 }
+                                // switch ($conditionItem['equal']) {
+                                //     case '?':
+                                //         $conditionResult++;
+                                //         break;
+                                //     case '!?':
+                                //         break;
+                                //     case '=':
+                                //         $conditionResult += strpos($productValue, $value) !== false ? 1 : 0;
+                                //         break;
+                                //     case '!=':
+                                //         $conditionResult += strpos($productValue, $value) === false ? 1 : 0;
+                                //         break;
+                                //     case '==':
+                                //         $conditionResult += strcasecmp($productValue, $value) == 0 ? 1 : 0;
+                                //         break;
+                                //     case '!==':
+                                //         $conditionResult += strcasecmp($productValue, $value) != 0 ? 1 : 0;
+                                //         break;
+                                // }
                             }
                         }
                     }
