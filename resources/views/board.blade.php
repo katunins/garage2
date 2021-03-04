@@ -187,7 +187,7 @@
 
         <form class="clone" action="/clonetemplate" method="get">
             <input type="hidden" name="line" value="{{ $line }}">
-            <input type="hidden" name="position" value="{{ $position ?? 1 }}">
+            <input type="hidden" name="position" value="{{ ($position ?? 1 ) }}">
             <input type="hidden" name="productid" value="{{ $productId }}">
             <label for="copy">Скопировать шаблон</label>
 
