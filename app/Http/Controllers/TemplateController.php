@@ -19,7 +19,7 @@ class TemplateController extends Controller
 {
     static function repair()
     {
-        dd ('функция для разработчика');
+        dd('функция для разработчика');
         $templates = Templates::whereNotNull('conditions')->get();
         if (!$templates) return;
         foreach ($templates as $item) {
@@ -207,14 +207,12 @@ class TemplateController extends Controller
         foreach ($dealArr['products'] as $key => $dealItem) {
 
             self::$scriptErrors = [];
-            // self::$needExtraSort = [];
 
             $dealName = count($dealArr['products']) > 1 ? $dealArr['params']['deal'] . '/' . $key : $dealArr['params']['deal'];
             if (isset($_GET['log']) == true) echo '- ' . 'Продукт ' . $dealName . '<br>';
 
             $productDataArr = array_merge($dealItem, $dealArr['params']);
             $productDataArr['dealname'] = $dealName;
-
             $tasks = self::taskGenegator($productDataArr); //сформированные по фильтрам задачи из шаблонов
             $tasks = self::linkAllTasks($tasks); //тут уже связанные друг с другом задачи
 
@@ -223,14 +221,17 @@ class TemplateController extends Controller
             if (isset($_GET['log'])) echo '<br><hr><br>';
             else Tasks::where('deal', $dealName)->where('status', 'temp')->update(['status' => 'wait']);
         }
-
         if (isset($_GET['log'])) {
-            echo '<div><a target="_blank" href="';
-            echo '/calendar?filterdealname=' . explode('#', $dealArr['params']['deal'])[1];
-            echo '&calendardays=7';
-            echo '&calendarstyle=1';
-            echo '&date=' . explode(' ', Tasks::where('deal', $dealName)->where('status', 'temp')->orderBy('start')->first()->start)[0];
-            echo '">Перейти в календарь</a></div>';
+            if (Tasks::where('deal', $dealName)->where('status', 'temp')->count() > 0) {
+                echo '<div><a target="_blank" href="';
+                echo '/calendar?filterdealname=' . explode('#', $dealArr['params']['deal'])[1];
+                echo '&calendardays=7';
+                echo '&calendarstyle=1';
+                echo '&date=' . explode(' ', Tasks::where('deal', $dealName)->where('status', 'temp')->orderBy('start')->first()->start)[0];
+                echo '">Перейти в календарь</a></div>';
+            } else {
+                dump('Задачи не сфорированы');
+            }
             dd(self::$scriptErrors);
         }
         if (self::$scriptErrors == []) return true;
@@ -436,10 +437,9 @@ class TemplateController extends Controller
         if (isset($_GET['log']) == true) echo 'taskGenerator()' . '<br>';
 
         $productId = array_search($productParams['productname'], self::getAllProducts());
-
         // $productData = Products::where('title', $productParams['productname'])->get();
         if (!$productId) {
-            dd('нет такого продукта');
+            dump('нет такого продукта в сайте: '.$productParams['productname']);
         }
         $taskArr = [];
         $temporaryid = 0;
