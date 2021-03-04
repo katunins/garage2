@@ -523,7 +523,6 @@ class TemplateController extends Controller
                     // расчитаем время
                     $taskTime = 0;
                     if ($templateItem->producttime) $taskTime += $templateItem->producttime * $productParams['Количество'];
-                    dd ($productParams);
                     if ($templateItem->paramtime && array_key_exists('Формат', $productParams)) {
                         // посчитаем площадь разовротов в квадратных дециметрах (разделим на 100)
                         $size = explode(' ', $productParams['Формат']);
