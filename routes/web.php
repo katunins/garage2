@@ -109,7 +109,7 @@ Route::get('/deal2tasks', function () {
         TemplateController::tasksFromDeal($dealArr);
         return redirect('/calendar');
     } else
-        return redirect('/')->withErrors(['deal' => 'Возможно нет такой сделки']);
+        return redirect('/')->withErrors(['deal' => 'такой сделки']);
 });
 Route::get('/deletealltasks', function () {
     if ($_GET['time'] - time() > 1 /*|| isset($_GET['confirm']) === false*/) return redirect()->back(); //защитимся от перехода в браузере назад

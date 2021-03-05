@@ -19,7 +19,8 @@ class DealsController extends Controller
             CURLOPT_POST => 1,
             CURLOPT_HEADER => 0,
             CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL => 'https://korobook.bitrix24.ru/rest/1/h12qo8y69ztxnzal/' . $action,
+            // CURLOPT_URL => 'https://korobook.bitrix24.ru/rest/1/h12qo8y69ztxnzal/' . $action,
+            CURLOPT_URL => 'https://korobook.bitrix24.ru/rest/1/re5kvosyn1spsrv8/' . $action,
             CURLOPT_POSTFIELDS => $queryData,
         ));
         //расшифровка полученных данных
@@ -61,17 +62,21 @@ class DealsController extends Controller
     static function getDeal($id)
     {
         $arDeal = self::bitrixAPI(["ID" => $id], 'crm.deal.get');
-        if (isset($arDeal->error)) return false;
+        if (isset($arDeal->error)) {
+            dd ($arDeal);
+            return false;
+        }
         $dealTitle =  $arDeal->result->TITLE;
         $comment = $arDeal->result->COMMENTS;
 
         $dealArr = self::commentParser($comment);
-        
+
         $dealArr['params']['deal'] = $dealTitle;
         $dealArr['params']['addinfo'] = unserialize($arDeal->result->ADDITIONAL_INFO);
         $dealArr['params']['dealid'] = $id;
         $dealArr['params']['managernote'] = $arDeal->result->UF_CRM_1476173890;
         $manager = self::bitrixAPI(['ID' => $arDeal->result->ASSIGNED_BY_ID], 'user.get');
+
         if (!isset($manager->error))
             $dealArr['params']['manager'] = $manager->result[0]->NAME . ' ' . $manager->result[0]->LAST_NAME;
         return $dealArr;
