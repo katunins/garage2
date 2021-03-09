@@ -105,6 +105,7 @@ Route::get('master/{id}', function ($id) {
 
 Route::get('/deal2tasks', function () {
     $dealArr = DealsController::getDeal($_GET['id']);
+
     if ($dealArr !== false) {
         TemplateController::tasksFromDeal($dealArr);
         return redirect('/calendar');

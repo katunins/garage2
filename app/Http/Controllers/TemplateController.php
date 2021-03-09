@@ -449,64 +449,68 @@ class TemplateController extends Controller
             foreach ($templates->where('line', $line)->sortBy('position') as $templateItem) {
 
                 // Проверим условия шаблона. Работают по принципу OR
+
                 $conditionResult = 0; // 0 - не сработало / 1 - сработало
                 $conditionCount = 0; // количество не пустых условий
 
                 if ($templateItem->conditions) {
-                    $conditionCount++;
                     foreach ($templateItem->conditions as $conditionItem) {
-                        // "equal" => "=="
-                        // "value" => "С калькой без печати/С печатью на кальке"
-                        // "condition" => "Первая страница книги"
+
+                        $conditionCount++;
+                        // if (isset($productParams[$conditionItem['condition']])) {
 
 
-                        // тут проверяем equal ? или !?
-                        // если есть такие знаки, то проверка по ним
+                        //     $productValue = $productParams[$conditionItem['condition']];
+                        //     foreach (explode('/', $conditionItem['value']) as $value) {
+                        //         switch ($conditionItem['equal']) {
+                        //             case '?':
+                        //                 $conditionResult++;
+                        //                 break (2);
+                        //             case '!?':
+                        //                 break (2);
+                        //             case '=':
+                        //                 $conditionResult += strpos($productValue, $value) !== false ? 1 : 0;
+                        //                 break (1);
+                        //             case '!=':
+                        //                 $conditionResult += strpos($productValue, $value) === false ? 1 : 0;
+                        //                 break (1);
+                        //         }
+                        //     }
+                        // }
+                        
+                        
+                        
+                        $productValue = $productParams[$conditionItem['condition']] ?? null;
+                        
+                        if ($conditionItem['equal'] === '?' && $conditionItem['condition'] === $productValue){
+                            $conditionResult++;
+                            continue;
+                        }
 
+                        if ($conditionItem['equal'] === '!?' && $conditionItem['condition'] === null){
+                            $conditionResult++;
+                            continue;
+                        }
 
-                        if (isset($productParams[$conditionItem['condition']])) {
+                        foreach (explode('/', $conditionItem['value']) as $value) {
+                            
+                            if ($conditionItem['equal'] === '=' && strpos($productValue, $value) !== false){
+                                $conditionResult ++;
+                                continue;
+                            }
 
-                            $productValue = $productParams[$conditionItem['condition']];
-                            foreach (explode('/', $conditionItem['value']) as $value) {
-                                switch ($conditionItem['equal']) {
-                                    case '?':
-                                        $conditionResult++;
-                                        break;
-                                    case '!?':
-                                        break;
-                                    case '=':
-                                        // dump ($productValue, $value, strcasecmp($productValue, $value));
-                                        $conditionResult += strpos($productValue, $value) !== false ? 1 : 0;
-                                        break;
-                                    case '!=':
-                                        $conditionResult += strpos($productValue, $value) === false ? 1 : 0;
-                                        break;
-                                }
-                                // switch ($conditionItem['equal']) {
-                                //     case '?':
-                                //         $conditionResult++;
-                                //         break;
-                                //     case '!?':
-                                //         break;
-                                //     case '=':
-                                //         $conditionResult += strpos($productValue, $value) !== false ? 1 : 0;
-                                //         break;
-                                //     case '!=':
-                                //         $conditionResult += strpos($productValue, $value) === false ? 1 : 0;
-                                //         break;
-                                //     case '==':
-                                //         $conditionResult += strcasecmp($productValue, $value) == 0 ? 1 : 0;
-                                //         break;
-                                //     case '!==':
-                                //         $conditionResult += strcasecmp($productValue, $value) != 0 ? 1 : 0;
-                                //         break;
-                                // }
+                            if ($conditionItem['equal'] === '!=' && strpos($productValue, $value) === false){
+                                $conditionResult ++;
+                                continue;
                             }
                         }
                     }
+                    // echo $conditionCount.' '.$conditionResult.' '.$templateItem->taskname.'<br>';
                 }
 
-                if ($conditionCount == 0 || ($conditionCount > 0 && $conditionResult > 0)) {
+                // заменим логику на AND
+                // if ($conditionCount == 0 || ($conditionCount > 0 && $conditionResult > 0)) {
+                if ($conditionCount == 0 || ($conditionCount > 0 && $conditionResult === $conditionCount)) {
                     // тут шаблон прошел условия, поэтому создадим задачу
                     // если есть минипараметры, которые нужно отобразить в сделке
 
@@ -536,15 +540,14 @@ class TemplateController extends Controller
                                     if (array_key_exists($countParam, $productParams)) $sheetCount = (int)$productParams[$countParam];
                                 }
                                 $area = (int) $widthHeight[0] * (int) $widthHeight[1] * $sheetCount / 100;
-                                $taskTime += $area * ($templateItem->paramtime/60);
+                                $taskTime += $area * ($templateItem->paramtime / 60);
 
                                 if (isset($_GET['log']) == true) {
-                                    echo $templateItem->taskname . ' расчетное время (' . $templateItem->paramtime . ' сек.). ' . 'Площадь ' . $area . ' дм2.' .'<br>';
+                                    echo $templateItem->taskname . ' расчетное время (' . $templateItem->paramtime . ' сек.). ' . 'Площадь ' . $area . ' дм2.' . '<br>';
                                 }
                             }
                         }
                     }
-
                     $taskArr[] = [
                         'temporaryid' => $temporaryid,
                         'realtaskid' => null,
@@ -558,6 +561,7 @@ class TemplateController extends Controller
                 }
             }
         }
+        // dd('ok');
         return $taskArr;
     }
 
