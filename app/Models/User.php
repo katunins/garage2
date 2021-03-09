@@ -55,7 +55,8 @@ class User extends Authenticatable
                 $user->save();
                 return;
             case 'newpass':
-                User::find($data['id'])->update(['password'=>Hash::make($data['password'])]);
+                // User::find($data['id'])->update(['password'=>Hash::make($data['password'])]);
+                User::find($data['id'])->update(['password'=>$data['password']]);
                 return;
             case 'delete':
                 User::find($data['id'])->delete();
