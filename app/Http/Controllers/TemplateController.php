@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 const LUNCH_BREACK = '12:00-13:00'; //перевыр на обед
-const STANDART_BUFFER = 10; //стандартный буфер в минутах
+const STANDART_BUFFER = 10; //стандартный буфер в минутах между людыми задачами в календаре
+const STANDART_PRODUCT_BUFFER = 180; //стандартный буфер в минутах между задачами в конкретном продукте. Он указывается в задаче
 const TIME_AFTER_SCRIPT = 12; //время задержки после запуска скрипта в часах
 
 // const isset($_GET['log']) =  true; //true - идет вывод echo;
@@ -213,9 +214,9 @@ class TemplateController extends Controller
 
             $productDataArr = array_merge($dealItem, $dealArr['params']);
             $productDataArr['dealname'] = $dealName;
-            $tasks = self::taskGenegator($productDataArr); //сформированные по фильтрам задачи из шаблонов
-            $tasks = self::linkAllTasks($tasks); //тут уже связанные друг с другом задачи
 
+            $tasks = self::taskGenegator($productDataArr, $key === count($dealArr['products'])); //сформированные по фильтрам задачи из шаблонов
+            $tasks = self::linkAllTasks($tasks); //тут уже связанные друг с другом задачи
             self::planGeneratorNew($tasks, $dealItem, $productDataArr);
 
             if (isset($_GET['log'])) echo '<br><hr><br>';
@@ -299,6 +300,7 @@ class TemplateController extends Controller
         return $tasks;
     }
 
+    /* 
     // дополнительно передвинем зависящие задачи от предыдущих 
     static function extraSort($dealName)
     {
@@ -393,7 +395,8 @@ class TemplateController extends Controller
             }
         }
     }
-
+    */
+    
     // Возвращяет предыдущий шаблон. TRUE с переходом на другие линии, FALSE - только в данной линии
     static function getBeboreTemplate($currentTemplate, $shiftNextLine = false)
     {
@@ -411,7 +414,7 @@ class TemplateController extends Controller
 
 
     // Подбирет шаблоны под параметры заказа и расчитывает длительность задачи
-    static function taskGenegator($productParams)
+    static function taskGenegator($productParams, $lastProduct)
     {
         // "productname" => "Фотокниги"
         // "Формат" => "20х20 см"
@@ -448,6 +451,11 @@ class TemplateController extends Controller
         for ($line = 1; $line <= $templates->max('line'); $line++) {
             foreach ($templates->where('line', $line)->sortBy('position') as $templateItem) {
 
+                if ($templateItem->grouptask && !$lastProduct) {
+                    // if (isset($_GET['log']) == true) echo 'Общая задача на весь заказ' . '<br>';
+                    continue;
+                };
+
                 // Проверим условия шаблона. Работают по принципу OR
 
                 $conditionResult = 0; // 0 - не сработало / 1 - сработало
@@ -477,30 +485,30 @@ class TemplateController extends Controller
                         //         }
                         //     }
                         // }
-                        
-                        
-                        
+
+
+
                         $productValue = $productParams[$conditionItem['condition']] ?? null;
-                        
-                        if ($conditionItem['equal'] === '?' && $conditionItem['condition'] === $productValue){
+
+                        if ($conditionItem['equal'] === '?' && $conditionItem['condition'] === $productValue) {
                             $conditionResult++;
                             continue;
                         }
 
-                        if ($conditionItem['equal'] === '!?' && $conditionItem['condition'] === null){
+                        if ($conditionItem['equal'] === '!?' && $productValue === null) {
                             $conditionResult++;
                             continue;
                         }
 
                         foreach (explode('/', $conditionItem['value']) as $value) {
-                            
-                            if ($conditionItem['equal'] === '=' && strpos($productValue, $value) !== false){
-                                $conditionResult ++;
+
+                            if ($conditionItem['equal'] === '=' && strpos($productValue, $value) !== false) {
+                                $conditionResult++;
                                 continue;
                             }
 
-                            if ($conditionItem['equal'] === '!=' && strpos($productValue, $value) === false){
-                                $conditionResult ++;
+                            if ($conditionItem['equal'] === '!=' && strpos($productValue, $value) === false) {
+                                $conditionResult++;
                                 continue;
                             }
                         }
@@ -552,9 +560,10 @@ class TemplateController extends Controller
                         'temporaryid' => $temporaryid,
                         'realtaskid' => null,
                         'templateid' => $templateItem->id,
-                        'time' => ceil($taskTime * (int)$productParams['Количество']),
+                        'time' => ceil($templateItem->nocounttime ? $taskTime : $taskTime * (int)$productParams['Количество']),
                         'info' => $taskInfo,
-                        'dealname' => $productParams['dealname']
+                        'dealname' => $productParams['dealname'],
+                        'grouptask' => $templateItem->grouptask,
                     ];
 
                     $temporaryid++;
@@ -763,7 +772,7 @@ class TemplateController extends Controller
         if ($taskIdBefore) $newTask->taskidbefore = $taskIdBefore; //предварительная задача
         $newTask->start = $start->format('Y-m-d H:i:s');
         $newTask->end = $end->format('Y-m-d H:i:s');
-        $newTask->buffer = $template->buffer; // + STANDART_BUFFER; //стандартный буфер задержки после задачи
+        $newTask->buffer = $template->buffer ? $template->buffer: $template->buffer + STANDART_PRODUCT_BUFFER; //стандартный буфер задержки после задачи
 
 
         $newTask->generalinfo = $dealItem['productname'];
@@ -1160,6 +1169,7 @@ class TemplateController extends Controller
         }
         $template->conditions = $trueConditions ?? null;
         $template->standarttemplate = $request->standarttemplate ? 1 : null;
+        $template->grouptask = $request->grouptask ? 1 : null;
 
         $template->save();
         return redirect('/board/' . $request['productid']);

@@ -29,7 +29,9 @@ class CreateTemplatesTable extends Migration
             $table->json('periods')->nullable(); //доступные период 9:00-12:00
             $table->json('conditions')->nullable(); // условие Формат=20х20/30х30
             $table->tinyInteger('standarttemplate')->nullable(); //флаг о том, что шаблон используется для копирования (подтягивается в board - options)
-            
+            $table->tinyInteger('grouptask')->nullable(); //флаг, говорящий о том, что задача должна быть создана один раз на всю сделку
+            $table->tinyInteger('nocounttime')->nullable(); //флаг, говорящий о том, что задача должна быть создана один раз на всю сделку
+
             $table->timestamps();
         });
     }

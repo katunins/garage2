@@ -3,7 +3,6 @@
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DealsController;
 use App\Http\Controllers\TemplateController;
-use App\Models\Products;
 use App\Models\Tasks;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -126,6 +125,10 @@ Route::get('/rebuildtemplate/{productid}', function($productid){
 });
 
 Route::get('/repair',[TemplateController::class, 'repair']);
+
+Route::get('/customtask',function(){
+    return view('customtask')->with('Users', User::all());
+});
 
 
 

@@ -6,7 +6,6 @@
     $template - в случае редактирования
     $allParams; --}}
 
-{{-- {{ dd($allParams) }} --}}
 {{-- сделаем скрытые параметры массива значений --}}
 @foreach ($allParams as $key => $item)
     @foreach ($item as $i)
@@ -87,7 +86,9 @@
             <input class="mini-size" type="text" id="taskidbefore" name="taskidbefore"
                 value="{{ old('taskidbefore', $template->taskidbefore ?? '') }}" placeholder="123">
             <p class="help">Если задача должна быть поставлена после времени окончания задачи из другой линии, то
-                укажите ID задачи из другой линии
+                укажите ID задачи из другой линии </p>
+            <input class="check-box" type="checkbox" id="grouptask" name="grouptask" @if (old('grouptask', $template->grouptask ?? null)) checked @endif>
+            <label style="display: inline" for="grouptask">Одна задача на все продукты в заказе</label>
         </div>
 
         <div class="json-input-group">
@@ -166,6 +167,7 @@
                     </li>
                 @endforeach
             </p>
+            <br>
             <input class="check-box" type="checkbox" id="standarttemplate" name="standarttemplate" @if (old('standarttemplate', $template->standarttemplate ?? null)) checked @endif>
             <label style="display: inline" for="standarttemplate">Использовать шаблон как стандартный</label>
 

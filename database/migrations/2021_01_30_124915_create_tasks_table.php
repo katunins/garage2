@@ -17,7 +17,7 @@ class CreateTasksTable extends Migration
             $table->id();
             $table->string('name');
             $table->integer('master');
-            $table->integer('templateid'); //шаблон, по которому создана задача
+            $table->integer('templateid')->nullable(); //шаблон, по которому создана задача
             $table->float('time'); //min
             $table->string('status'); //temp временная, wait ожитает выполнения, finished выполнена, repair зависла
             $table->text('mastercomment')->nullable();
