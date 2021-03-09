@@ -50,7 +50,8 @@ class User extends Authenticatable
                 $user->name = $data['name'];
                 $user->type = 'master';
                 $user->bitrixid = $data['bitrixid'] == "" ? null : $data['bitrixid'];
-                $user->password = Hash::make($data['password']);
+                // $user->password = Hash::make($data['password']);
+                $user->password = $data['password'];
                 $user->save();
                 return;
             case 'newpass':
