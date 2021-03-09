@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Tasks;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class ApiController extends Controller
 {
     public function checkAuth(Request $request)
     {
         if ($request->has('data') && is_string($request->data))
-            return response()->json(User::wherePassword((string)$request->data)->first(), 200);
+            return response()->json(User::wherePassword(Hash::make((string)$request->data))->first(), 200);
         else return response()->json($request->all(), 400);
     }
 
