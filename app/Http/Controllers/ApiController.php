@@ -52,7 +52,9 @@ class ApiController extends Controller
             switch ($request->data['action']) {
 
                 case 'completed':
-                    Tasks::find($request->data['taskId'])->update(['status' => 'completed']);
+                    $task = Tasks::find($request->data['taskId']);
+                    $task->status = 'completed';
+                    $task->save();
                     return response()->json(true, 200);
                     break;
 
