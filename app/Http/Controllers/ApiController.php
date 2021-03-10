@@ -35,9 +35,9 @@ class ApiController extends Controller
             $taskData = Tasks::find($request->data);
             if ($taskData) {
                 $response = DealsController::getDeal($taskData->dealid);
-                $nextTask = Tasks::where('taskidbefore',$request->data)->first();
+                $nextTask = Tasks::where('taskidbefore', $request->data)->first();
                 if ($nextTask) $nextTask->masterName = User::find($taskData->master);
-                return response()->json(['deal'=>$response, 'nextTask'=>$nextTask], 200);
+                return response()->json(['deal' => $response, 'nextTask' => $nextTask], 200);
             } else return response()->json([], 200);
         } else return response()->json($request->all(), 400);
     }
@@ -48,8 +48,26 @@ class ApiController extends Controller
     // detailitem.js:42 {action: "alert", taskId: 937}
     // detailitem.js:42 {action: "empty", taskId: 937
     {
-        if ($request->has('data')) {
-            return response()->json($request->data['action'], 200);
+        if ($request->has('data') && isset($request->data['action']) && isset($request->data['taskId'])) {
+            switch ($request->data['action']) {
+                case 'completed':
+                    Tasks::find($request->data['taskId'])->update('status', 'completed');
+                    return response()->json(true, 200);
+                    break;
+
+                case 'pause':
+                    # code...
+                    break;
+
+                case 'alert':
+                    # code...
+                    break;
+
+                case 'empty':
+                    # code...
+                    break;
+            }
+            return response()->json(false, 200);
         } else return response()->json($request->all(), 400);
     }
 
