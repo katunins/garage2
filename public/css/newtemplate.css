@@ -29,6 +29,7 @@ label {
   font-size: 22px;
   margin: 10px auto 5px;
   font-weight: bold;
+  text-align: start;
 }
 
 .input-group,
@@ -38,6 +39,10 @@ label {
   margin: 10px;
   width: 600px;
   background-color: #efefef;
+}
+
+.wide-input-block {
+  width: 100%;
 }
 
 .param-input-help {
@@ -56,6 +61,7 @@ label {
   border: 1px solid grey;
   background: transparent;
   border-radius: 10px;
+  padding-bottom: 2px;
 }
 
 .help button {

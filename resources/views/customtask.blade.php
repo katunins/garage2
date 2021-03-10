@@ -7,32 +7,9 @@
 </h1>
 
 <form action="/savetemplate" method="POST">
-    <div class="buttons">
-        <a href="{{ url()->previous() }}">Назад</a>
-        <input type="submit" value="Сохранить">
-    </div>
-    <br>
     @csrf
     <div class="input-blocks">
-
-        <div class="input-group">
-            <label for="masters">ID мастера</label>
-            @error('masters.*')
-                <p class="alert">{{ $message }}</p>
-            @enderror
-            <div class="param-input-help">
-                <div>
-                    <input name="masterid" list="masters" placeholder="Выберете мастера"
-                        value="{{ old('masterid') ?? ($template->masterid ?? '') }}">
-                    <button type="button" onclick="this.parentNode.querySelector('input').value=''">×</button>
-                </div>
-                <datalist id="masters">
-                    @foreach ($Users as $item)
-                        <option value="{{ $item->id }}">{{ $item->name }}</option>
-                    @endforeach
-                </datalist>
-            </div>
-
+        <div class="input-group wide-input-block">
             <div class="param-input-help">
                 <div>
                     <label for="productdate">Дата</label>
@@ -44,57 +21,60 @@
                     <input class="mini-size" type="time" id="producttime" name="producttime"
                         value="{{ old('producttime', '') }}" placeholder="10">
                 </div>
-                <div>
-                    @error('producttime')
-                        <p class="alert">{{ $message }}</p>
-                    @enderror
-                    <label for="time">Длит-сть, мин.</label>
-                    <input class="mini-size" type="text" id="producttime" name="producttime"
-                        value="{{ old('producttime', $template->producttime ?? '') }}" placeholder="10">
-                </div>
             </div>
-
-            <div>
-                <br>
-                <label for="taskidbefore">ID предыдущей задачи</label>
-                <input class="mini-size" type="text" id="taskidbefore" name="taskidbefore"
-                    value="{{ old('taskidbefore', $template->taskidbefore ?? '') }}" placeholder="123">
-                <p class="help">Необходимо оставлять связки для дальнейших групповых перестроений</p>
-            </div>
-
-        </div>
-
-        <div class="input-group">
-            @error('taskname')
-                <p class="alert">{{ $message }}</p>
-            @enderror
-            <label for="taskname">Название задачи</label>
-            <input class="max-size" type="text" id="taskname" name="taskname"
-                value="{{ old('taskname', $template->taskname ?? '') }}" placeholder="Подготовка картона">
-
-            <br><br>
-
-
             <div>
                 <label> Основные параметры</label>
                 <input class="max-size" name="generalparams" placeholder="Фотокнига, Формат 20х20"
                     value="{{ old('generalparams') ?? ($template->generalparams ?? '') }}">
             </div>
+        </div>
+        <div class="input-group wide-input-block">
 
-            <br>
+            <div class="param-input-help">
+                <div>
+                    @error('masterid')
+                    <p class="alert">{{ $message }}</p>
+                    @enderror
+                    <label for="masterid">ID мастера</label>
+                    <input name="masterid" list="masters" placeholder="Выберете мастера"
+                        value="{{ old('masterid') ?? ($template->masterid ?? '') }}">
+                    <button type="button" onclick="this.parentNode.querySelector('input').value=''">×</button>
+                </div>
+                <div>
+                    @error('producttime')
+                    <p class="alert">{{ $message }}</p>
+                    @enderror
+                    <label for="producttime">Длит-сть, мин.</label>
+                    <input class="mini-size" type="text" id="producttime" name="producttime"
+                        value="{{ old('producttime', $template->producttime ?? '') }}" placeholder="10">
+                </div>
+            </div>
+
+            <datalist id="masters">
+                @foreach ($Users as $item)
+                <option value="{{ $item->id }}">{{ $item->name }}</option>
+                @endforeach
+            </datalist>
+
             <div>
+                @error('taskname')
+                <p class="alert">{{ $message }}</p>
+                @enderror
+                <label for="taskname">Название задачи</label>
+                <input class="max-size" type="text" id="taskname" name="taskname"
+                    value="{{ old('taskname', $template->taskname ?? '') }}" placeholder="Подготовка картона">
+            </div>
 
+            <div>
                 <label> Мини-параметры</label>
                 <input class="max-size" name="miniparams" placeholder="Черный форзац, калька"
                     value="{{ old('miniparams') ?? ($template->miniparams ?? '') }}">
+                <p class="help">Параметры, которые будет видеть мастер в задаче, не открывая ее. Основные параметры
+                    (номер
+                    заказа и название продукта указывать не нужно, так как они присутсвуют в задаче по умолчанию)</p>
+
             </div>
-
-
-            <p class="help">Параметры, которые будет видеть мастер в задаче, не открывая ее. Основные параметры (номер
-                заказа и название продукта указывать не нужно, так как они присутсвуют в задаче по умолчанию)</p>
         </div>
-
-
     </div>
 
     <div class="buttons">
