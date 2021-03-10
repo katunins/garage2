@@ -43,9 +43,13 @@ class ApiController extends Controller
     }
 
     public function taskAction(Request $request)
+    // {action: "completed", taskId: 937}
+    // detailitem.js:42 {action: "pause", taskId: 937}
+    // detailitem.js:42 {action: "alert", taskId: 937}
+    // detailitem.js:42 {action: "empty", taskId: 937
     {
         if ($request->has('data')) {
-            return response()->json($request->data, 200);
+            return response()->json($request->data['action'], 200);
         } else return response()->json($request->all(), 400);
     }
 
