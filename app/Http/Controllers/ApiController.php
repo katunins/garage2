@@ -54,8 +54,7 @@ class ApiController extends Controller
                 case 'completed':
                     $task = Tasks::find($request->data['taskId']);
                     $task->status = 'finished';
-                    $task->save();
-                    return response()->json(true, 200);
+                    return response()->json($task->save(), 200);
                     break;
 
                 case 'pause':
