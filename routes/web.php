@@ -129,7 +129,7 @@ Route::get('/repair',[TemplateController::class, 'repair']);
 Route::get('/customtask',function(){
     return view('customtask')->with('Users', User::all());
 });
-
+Route::post('/newcustomtask',[CalendarController::class, 'newCustomTask']);
 
 
 

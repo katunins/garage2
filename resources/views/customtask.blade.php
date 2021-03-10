@@ -3,78 +3,44 @@
 
 <h1>
     <a class="to-main-page" href="/"></a>
-    Новая задача
+    Новая нестандартная задача
 </h1>
 
-<form action="/savetemplate" method="POST">
+<form action="/newcustomtask" method="POST" onsubmit="formSubmit()">
     @csrf
     <div class="input-blocks">
-        <div class="input-group wide-input-block">
+        <div class="input-group">
             <div class="param-input-help">
                 <div>
-                    <label for="productdate">Дата</label>
-                    <input class="mini-size" type="date" id="productdate" name="productdate"
-                        value="{{ old('productdate', '') }}" placeholder="10">
+                    <label for="startdate">Дата</label>
+                    <input class="mini-size no-empty" type="date" id="startdate" name="startdate" placeholder="10">
                 </div>
                 <div>
-                    <label for="producttime">Время</label>
-                    <input class="mini-size" type="time" id="producttime" name="producttime"
-                        value="{{ old('producttime', '') }}" placeholder="10">
+                    <label for="starttime">Время</label>
+                    <input class="mini-size no-empty" type="time" id="starttime" name="starttime" placeholder="10">
+                </div>
+                <div>
+                    <label for="dealid">ID сделки</label>
+                    <input class="mini-size no-empty" type="text" id="dealid" name="dealid" placeholder="10">
                 </div>
             </div>
             <div>
-                <label> Основные параметры</label>
-                <input class="max-size" name="generalparams" placeholder="Фотокнига, Формат 20х20"
-                    value="{{ old('generalparams') ?? ($template->generalparams ?? '') }}">
+                <label>Основные параметры</label>
+                <input class="max-size no-empty" name="generalparams" placeholder="Фотокнига, Формат 20х20">
             </div>
+            <p class="help">В этом блоке необохдимо указать общие парамеры и время старта группа задач</p>
         </div>
-        <div class="input-group wide-input-block">
+        <input type="hidden" class="task-item">
 
-            <div class="param-input-help">
-                <div>
-                    @error('masterid')
-                    <p class="alert">{{ $message }}</p>
-                    @enderror
-                    <label for="masterid">ID мастера</label>
-                    <input name="masterid" list="masters" placeholder="Выберете мастера"
-                        value="{{ old('masterid') ?? ($template->masterid ?? '') }}">
-                    <button type="button" onclick="this.parentNode.querySelector('input').value=''">×</button>
-                </div>
-                <div>
-                    @error('producttime')
-                    <p class="alert">{{ $message }}</p>
-                    @enderror
-                    <label for="producttime">Длит-сть, мин.</label>
-                    <input class="mini-size" type="text" id="producttime" name="producttime"
-                        value="{{ old('producttime', $template->producttime ?? '') }}" placeholder="10">
-                </div>
-            </div>
-
-            <datalist id="masters">
-                @foreach ($Users as $item)
+        <datalist id="masters">
+            @foreach ($Users as $item)
                 <option value="{{ $item->id }}">{{ $item->name }}</option>
-                @endforeach
-            </datalist>
+            @endforeach
+        </datalist>
+    </div>
 
-            <div>
-                @error('taskname')
-                <p class="alert">{{ $message }}</p>
-                @enderror
-                <label for="taskname">Название задачи</label>
-                <input class="max-size" type="text" id="taskname" name="taskname"
-                    value="{{ old('taskname', $template->taskname ?? '') }}" placeholder="Подготовка картона">
-            </div>
-
-            <div>
-                <label> Мини-параметры</label>
-                <input class="max-size" name="miniparams" placeholder="Черный форзац, калька"
-                    value="{{ old('miniparams') ?? ($template->miniparams ?? '') }}">
-                <p class="help">Параметры, которые будет видеть мастер в задаче, не открывая ее. Основные параметры
-                    (номер
-                    заказа и название продукта указывать не нужно, так как они присутсвуют в задаче по умолчанию)</p>
-
-            </div>
-        </div>
+    <div class="input-group">
+        <button type="button" class="button" onclick="buidNewBlock()">Добавить задачу</button>
     </div>
 
     <div class="buttons">
@@ -84,75 +50,85 @@
 
 </form>
 <script>
-    function helpTimeCalc() {
-        let productTime = Number(document.getElementById('producttime').value)
-        let paramTime = Number(document.getElementById('paramtime').value)
-        document.querySelectorAll('.help-time-calc').forEach(el => {
-            console.log(el)
-            let square = Number(el.getAttribute('data-square'))
-            el.innerHTML = Math.round(productTime + paramTime / 60 * square)
+    document.addEventListener('DOMContentLoaded', function() {
+        buidNewBlock()
+    })
+
+    function formSubmit() {
+        let noEmptyElems = document.querySelectorAll('.no-empty')
+        let noEmptyInputs = 0;
+        noEmptyElems.forEach(el => {
+            if (!el.value) {
+                el.classList.add('empty-alert')
+                noEmptyInputs++
+            }
         })
-    }
-
-    function setHelpValues(elemId) {
-        let valuesArr = []
-
-        document.querySelectorAll('input[name="' + event.target.parentNode.querySelector('.condition').value + '"]')
-            .forEach(el => valuesArr.push(el.value))
-        html = ''
-        valuesArr.forEach(el => {
-            html += '<button '
-            console.log()
-            if (event.target.parentNode.querySelector('.param-input').value.indexOf(el) != -1) html +=
-                'class="active-help-button" ';
-            html += 'type="button" onclick="clickHelpButtons()">' + el + '</button>'
-        })
-
-        // let paraminput = event.target.parentNode.querySelector('.param-input')
-        // paraminput.value = ''
-        // console.log (elemId, document.getElementById(elemId))
-        document.getElementById(elemId).innerHTML = html
-    }
-
-    function clickHelpButtons() {
-        let paramInput = event.target.parentNode.parentNode.querySelector('.param-input')
-
-        if (event.target.classList.contains('active-help-button')) {
-            // удаляем 
-            event.target.classList.remove('active-help-button')
-            if (paramInput.value.indexOf('/') < 0) paramInput.value = '';
-            paramInput.value = paramInput.value.replace(event.target.innerHTML + '/', '')
-            paramInput.value = paramInput.value.replace('/' + event.target.innerHTML, '')
-
-        } else {
-            // добавляем
-            event.target.classList.add('active-help-button')
-            if (paramInput.value == '') paramInput.value += event.target.innerHTML;
-            else paramInput.value += '/' + event.target.innerHTML;
+        if (noEmptyInputs > 0) {
+            event.preventDefault()
         }
-
-
     }
 
-    function clickMasterButtons(elem) {
+    function deleteInput() {
+        event.target.parentNode.querySelector('input').value = ''
+    }
 
-        mastersIDinput = document.getElementById('masters')
-        mastersIDstring = mastersIDinput.value
+    function deleteTask(id) {
+        let elem = document.querySelector(`.task-item[itemid="${id}"]`)
+        elem.parentNode.removeChild(elem);
+    }
 
-        if (elem.classList.contains('active-help-button')) {
-            // удаляем  мастера
-            elem.classList.remove('active-help-button')
-            // console.log (mastersIDstring)
-            // mastersIDinput.value = mastersIDstring.value.replace('/'+elem.id. '')
-            mastersIDinput.value = mastersIDstring.replace(elem.id + '/', '')
-            mastersIDinput.value = mastersIDstring.replace('/' + elem.id, '')
-            if (mastersIDstring.indexOf('/') < 0) mastersIDinput.value = '';
-        } else {
-            // добавляем мастера
-            elem.classList.add('active-help-button')
-            if (mastersIDstring == '') mastersIDinput.value += elem.id;
-            else mastersIDinput.value += '/' + elem.id;
-        }
+    function buidNewBlock() {
+        let inputElems = document.querySelectorAll('.task-item')
+        let lastInputElem = inputElems[inputElems.length - 1]
+        let lastId = lastInputElem.getAttribute('itemid')
+        let id = lastId === null ? 1 : Number(lastId) + 1
+
+        let innerHtml = ''
+        innerHtml += `<div class="custom-task-number"><span>${id}</span></div>`
+
+        innerHtml += '<div class="param-input-help">'
+
+        innerHtml += '<div>'
+        innerHtml += `<label for="masterid[${id}]">ID мастера</label>`
+        innerHtml += `<input class="no-empty" name="masterid[${id}]" list="masters" placeholder="Выберете мастера">`
+        innerHtml += '<button type="button" onclick="deleteInput()">×</button>'
+        innerHtml += '</div>'
+
+        innerHtml += '<div>'
+        innerHtml += `<label for="producttime[${id}]">Время, мин.</label>`
+        innerHtml += `<input class="mini-size no-empty" type="text" name="producttime[${id}]" placeholder="10">`
+        innerHtml += '</div>'
+
+        innerHtml += '<div>'
+        innerHtml += `<label for="bufer[${id}]">Буффер, мин.</label>`
+        innerHtml += `<input class="mini-size" type="text" name="bufer[${id}]" placeholder="1440">`
+        innerHtml += '</div>'
+
+        innerHtml += '</div>'
+
+        innerHtml += '<div>'
+        innerHtml += `<label for="taskname[${id}]">Название задачи</label>`
+        innerHtml +=
+            `<input class="max-size no-empty" type="text" name="taskname[${id}]" placeholder="Подготовка картона">`
+        innerHtml += '</div>'
+
+        innerHtml += '<div>'
+        innerHtml += `<label for="miniparams[${id}]">Мини-параметры</label>`
+        innerHtml += `<input class="max-size" name="miniparams[${id}]" placeholder="Черный форзац, калька">`
+        // innerHtml +=
+        //     '<p class="help">Параметры, которые будет видеть мастер в задаче, не открывая ее. Основные параметры (номер заказа и название продукта указывать не нужно, так как они присутсвуют в задаче по умолчанию)</p>'
+        innerHtml += '</div>'
+
+        innerHtml += '<div>'
+        innerHtml += `<br><button type="button" onclick="deleteTask(${id})">Удалить задачу</button>`
+        innerHtml += '</div>'
+
+        let inputGroup = document.createElement('div')
+        inputGroup.className = 'input-group task-item'
+        inputGroup.setAttribute('itemid', id)
+        inputGroup.innerHTML = innerHtml
+
+        lastInputElem.parentNode.insertBefore(inputGroup, lastInputElem.nextSibling);
     }
 
 </script>

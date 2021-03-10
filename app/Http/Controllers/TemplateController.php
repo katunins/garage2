@@ -18,6 +18,14 @@ use Illuminate\Support\Facades\Http;
 
 class TemplateController extends Controller
 {
+
+    static function getStandartVars()
+    {
+        return [
+            'STANDART_BUFFER' => STANDART_BUFFER,
+        ];
+    }
+
     static function repair()
     {
         dd('функция для разработчика');
@@ -49,6 +57,20 @@ class TemplateController extends Controller
     // 100	Ошибка в дате	400
     // 101	Данные не найдены	404
     // 199	Ошибка сервиса	400
+
+
+    // Загрузим выходные
+    static function isHolidayInit()
+    {
+        $ch = curl_init('https://isdayoff.ru/api/getdata?year=' . date('Y') . '&delimeter=/');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        $result = curl_exec($ch);
+        if (!$result) self::$scriptErrors[] = 'Не загрузились данные о выходных и праздниках';
+        self::$isHoliday = explode('/', $result);
+        curl_close($ch);
+    }
 
     static $startTime;
     static $needExtraSort; //true если необходимо досортировать задачи, к примеру если были задачи, зависящие от других
@@ -195,15 +217,7 @@ class TemplateController extends Controller
         if (isset($_GET['log']) == true) echo 'tasksFromDeal()' . 'Start' . '<br>';
         self::$scriptErrors = [];
 
-        // Загрузим выходные
-        $ch = curl_init('https://isdayoff.ru/api/getdata?year=' . date('Y') . '&delimeter=/');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        $result = curl_exec($ch);
-        if (!$result) self::$scriptErrors[] = 'Не загрузились данные о выходных и праздниках';
-        self::$isHoliday = explode('/', $result);
-        curl_close($ch);
+        self::isHolidayInit();
 
         foreach ($dealArr['products'] as $key => $dealItem) {
 
@@ -396,7 +410,7 @@ class TemplateController extends Controller
         }
     }
     */
-    
+
     // Возвращяет предыдущий шаблон. TRUE с переходом на другие линии, FALSE - только в данной линии
     static function getBeboreTemplate($currentTemplate, $shiftNextLine = false)
     {
@@ -772,7 +786,7 @@ class TemplateController extends Controller
         if ($taskIdBefore) $newTask->taskidbefore = $taskIdBefore; //предварительная задача
         $newTask->start = $start->format('Y-m-d H:i:s');
         $newTask->end = $end->format('Y-m-d H:i:s');
-        $newTask->buffer = $template->buffer ? $template->buffer: $template->buffer + STANDART_PRODUCT_BUFFER; //стандартный буфер задержки после задачи
+        $newTask->buffer = $template->buffer ? $template->buffer : $template->buffer + STANDART_PRODUCT_BUFFER; //стандартный буфер задержки после задачи
 
 
         $newTask->generalinfo = $dealItem['productname'];
@@ -828,6 +842,7 @@ class TemplateController extends Controller
             if (isset($_GET['log']) == true) echo 'Мастер ' . $masterId . ' / Поиск  ' . self::$startTime->format('Y-m-d H:i:s') . ' / ' . $time . ' мин.';
             $result = self::tryToPlan($time, $periods, $masterId);
         } while ($result == false);
+
         if (isset($_GET['log']) == true) echo ' OK<br><br>';
         return self::$startTime;
     }

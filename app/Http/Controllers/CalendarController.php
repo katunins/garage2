@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Tasks;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 class CalendarController extends Controller
@@ -28,7 +29,7 @@ class CalendarController extends Controller
     public function initCalendar()
     {
         if (isset($_GET['date']) !== false) {
-            
+
             $Date = Carbon::parse($_GET['date']);
             session()->put('calendarDate', $Date->toDateString());
         } else {
@@ -49,12 +50,11 @@ class CalendarController extends Controller
             if (isset($_GET['status-' . $key]) !== false) {
                 $statusFilter['status-' . $key] = $_GET['status-' . $key];
                 session()->put('status-' . $key, $_GET['status-' . $key]);
-            
             } else {
                 if (session()->has('status-' . $key)) {
                     $statusFilter['status-' . $key] = session()->get('status-' . $key);
                 } else {
-                    $statusFilter['status-' . $key]='1';
+                    $statusFilter['status-' . $key] = '1';
                     session()->put(('status-' . $key), $statusFilter['status-' . $key]);
                 }
             }
@@ -95,7 +95,7 @@ class CalendarController extends Controller
                 session()->put('calendarDays', $calendarDays);
             }
         }
-        
+
 
         $workTimeStart = 9; //вермя начала и конца
         $workTimeEnd = 18;
@@ -103,13 +103,13 @@ class CalendarController extends Controller
 
         $scale = 5; //масштаб пикселей для одной строки ячейки
         $gridRowCount = ($workTimeEnd - $workTimeStart + 1 + $beforeAfter * 2) * $gridInHour; //строк в одной линии для рабочего дня
-        
+
         $startCalendarTime = clone $Date;
         $startCalendarTime->hour = floor($workTimeStart - $beforeAfter);
         $startCalendarTime->minute = $beforeAfter * 60;
         $startCalendarTime->second = 0;
 
-        
+
         $endCalendarTime = clone $Date;
         if ($calendarDays == 7) $endCalendarTime->addWeek();
 
@@ -150,31 +150,94 @@ class CalendarController extends Controller
         $activeStatus = $statusFilter;
         foreach ($statusFilter as $key => $value) {
             if ($value == "1") {
-                $activeStatus[]=explode('-', $key)[1];
+                $activeStatus[] = explode('-', $key)[1];
             }
         }
 
         $tasks = Tasks::whereBetween('start', [$startCalendarTime, $endCalendarTime])
-        ->whereBetween('end', [$startCalendarTime, $endCalendarTime])
-        ->where('deal', 'like', '%' . $filterDealName . '%')
-        ->whereIn('status', $activeStatus)
-        ->get();
+            ->whereBetween('end', [$startCalendarTime, $endCalendarTime])
+            ->where('deal', 'like', '%' . $filterDealName . '%')
+            ->whereIn('status', $activeStatus)
+            ->get();
 
         foreach ($tasks as $item) {
             $taskStartTime = Carbon::createFromFormat('Y-m-d H:i:s', $item->start);
             $taskEndTime = Carbon::createFromFormat('Y-m-d H:i:s', $item->end);
-            $startCalendarTime->setDateFrom ($taskStartTime);
+            $startCalendarTime->setDateFrom($taskStartTime);
 
             $starlGridLine = (int)ceil($taskStartTime->diffInMinutes($startCalendarTime) * $oneRow + $gridStart);
             $endGridLine = (int)floor($taskEndTime->diffInMinutes($startCalendarTime) * $oneRow + $gridStart);
             $safeWidth = ($endGridLine - $starlGridLine) * $scale;
             if ($safeWidth < $minHeight) $endGridLine = $starlGridLine + round($minHeight / $scale); //если малый масштаб и высота < 30px, то делаем минимальную высоту
-            
+
             //ячейка начала = разница в минутах между началом календаря и временем задачи
             $item->startGrid = $starlGridLine;
             $item->endGrid = $endGridLine;
         }
 
         return $tasks;
+    }
+
+    //создает кастомную задачу
+    public function newCustomTask(Request $request)
+    {
+        // array:8 [▼
+        //     "_token" => "GGwVnXwtDly9q8fee6m1viGWzuKnhaH47HTgROlE"
+        //     "startdate" => "2021-03-10"
+        //     "starttime" => "13:34"
+        //     "generalparams" => "Фотокнига 20х20"
+        //     "masterid" => array:2 [▼
+        //         1 => "2"
+        //         2 => "6"
+        //     ]
+        //     "producttime" => array:2 [▼
+        //         1 => "10"
+        //         2 => "20"
+        //     ]
+        //     "taskname" => array:2 [▼
+        //         1 => "Поклейка"
+        //         2 => "вторая задача"
+        //     ]
+        //     "miniparams" => array:2 [▼
+        //         1 => "мини"
+        //         2 => "мини2"
+        //     ]
+
+        TemplateController::$startTime = Carbon::parse($request->startdate . ' ' . $request->starttime);
+        TemplateController::isHolidayInit();
+
+        $taskIdBefore = null;
+
+        foreach ($request->taskname as $key => $taskName) {
+
+            TemplateController::getFreePlan($request->masterid[$key], $request->producttime[$key], TemplateController::$startTime, []);
+            $endTime = clone TemplateController::$startTime;
+            $endTime->addMinutes($request->producttime[$key]);
+
+            $dealData = DealsController::getDeal($request->dealid);
+
+            $newTask = new Tasks;
+            $newTask->name = $taskName;
+            $newTask->master = $request->masterid[$key];
+            $newTask->time = $request->producttime[$key];
+            $newTask->line = 0;
+            $newTask->position = $key;
+            $newTask->status = 'wait';
+            $newTask->taskidbefore = $taskIdBefore;
+            $newTask->start = TemplateController::$startTime;
+            $newTask->end = $endTime;
+            $newTask->buffer = $request->bufer[$key] ? $request->bufer[$key] : TemplateController::getStandartVars()['STANDART_BUFFER'];
+            $newTask->generalinfo = $request->generalparams;
+            $newTask->info = $request->miniparams[$key];
+            $newTask->deal = $dealData['params']['deal'];
+            $newTask->dealid = $request->dealid;
+            $newTask->manager = $dealData['params']['manager'];
+            if ($dealData['params']['managernote'] != "") $newTask->managernote = true;
+            $newTask->save();
+            $taskIdBefore = $newTask->id;
+            $endTime->addMinutes($newTask->buffer);
+            TemplateController::$startTime = clone $endTime;
+        }
+        return redirect('/calendar?calendarstyle=1&filterdealname='.$dealData['params']['deal']);
     }
 }

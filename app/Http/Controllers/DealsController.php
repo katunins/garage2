@@ -63,7 +63,7 @@ class DealsController extends Controller
     {
         $arDeal = self::bitrixAPI(["ID" => $id], 'crm.deal.get');
         if (isset($arDeal->error)) {
-            dd ($arDeal);
+            dd($arDeal);
             return false;
         }
         $dealTitle =  $arDeal->result->TITLE;
@@ -79,6 +79,7 @@ class DealsController extends Controller
 
         if (!isset($manager->error))
             $dealArr['params']['manager'] = $manager->result[0]->NAME . ' ' . $manager->result[0]->LAST_NAME;
+        else $dealArr['params']['manager'] = '';
         return $dealArr;
     }
 
