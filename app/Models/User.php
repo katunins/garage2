@@ -59,7 +59,7 @@ class User extends Authenticatable
                 return;
             case 'newpass':
                 // User::find($data['id'])->update(['password'=>Hash::make($data['password'])]);
-                User::find($data['id'])->update(['password'=>$data['password']]);
+                User::find($data['id'])->update(['password' => $data['password']]);
                 return;
             case 'delete':
                 User::find($data['id'])->delete();
@@ -67,27 +67,22 @@ class User extends Authenticatable
         }
     }
 
-    static function updateAvatar(){
-        foreach (User::all() as $userItem){
-            if (isNull($userItem->avatar)) {
-                $bitrixUser = DealsController::bitrixAPI(["ID" => $userItem->bitrixid], 'user.get');
-                if (!$bitrixUser->error && $bitrixUser->result){
-                   $userItem->avatar = '$bitrixUser->result[0]->PERSONAL_PHOTO';
-                //    $userItem->save();
-                };
-                dump($userItem);
+    static function updateAvatar()
+    {
+        dump('Обновление аватарок');
+        foreach (User::all() as $userItem) {
+
+            if ($userItem->id === 9999) continue;
+            $bitrixUser = DealsController::bitrixAPI(["ID" => $userItem->bitrixid], 'user.get');
+            if (isset($bitrixUser->error) === false && isset($bitrixUser->result) === true) {
+                $url = $bitrixUser->result[0]->PERSONAL_PHOTO;
+                if ($url !== '') {
+                    $userItem->avatar = $bitrixUser->result[0]->PERSONAL_PHOTO;
+                    $userItem->save();
+                }
             };
+            dump($userItem->name);
         }
-        dd ('ok');
-        
-        // $userId, $url
-        // dd(DealsController::bitrixAPI(["ID" => User::find(1)->bitrixid], 'user.get')->result[0]->PERSONAL_PHOTO);
-        // $User = User::find($userId);
-        // if ($User && $url) {
-        //     $User->avatar = $url;
-        //     $User->save();
-        //     return true;
-        // }
-        // return false;
+        dd('ok');
     }
 }

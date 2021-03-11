@@ -4,7 +4,6 @@
 {{-- $Users, $Date, $Tasks --}}
 
 <div class="head-block">
-
     <a class="to-main-page" href="/"></a>
     <div class="date-block">
         @if ($calendarDays == 1)<div class="date-title">
@@ -134,8 +133,9 @@
         }
     @endphp
 
-    <div class="calendar-block" @if ($calendarStyle==0) style="grid-template-columns: 60px repeat({{ $Users->count() }}, 240px); 
-    grid-template-rows: 1fr repeat({{ $gridRowCount }}, {{ $scale }}px);" @endif>
+    <div class="calendar-block" @if ($calendarStyle==0)
+        style="grid-template-columns: 60px repeat({{ $Users->count() }}, 240px); grid-template-rows: 1fr repeat({{ $gridRowCount }}, {{ $scale }}px);"
+        @endif >
 
         @if ($calendarStyle==0)
             {{-- заголовок --}}
@@ -155,14 +155,13 @@
         @foreach ($Tasks->whereBetween('start', [$weekCalendarDay, $weekEndTimeFilter])->sortBy('start') as $item)
 
             @php
-
                 // подготовим тектс для модального окна
                 $modalMessage = '';
                 foreach ($item->getAttributes() as $param => $value) {
                 if ($param == 'master') $value = $Users->find($value)->name;
-                
+
                 if ($param == 'taskidbefore') {
-                    $value = $Tasks->find($value)->name ?? '';
+                $value = $Tasks->find($value)->name ?? '';
                 }
 
                 $skip = false;
@@ -180,17 +179,24 @@
             <div class="task task-status-{{ $item->status }}" @if ($calendarStyle==0)
                 style="grid-row: {{ $item->startGrid }}/{{ $item->endGrid }}; grid-column: {{ $userColumn[$item->master] }}"
             @else style="width: 600px; height: 40px;" @endif
-            onclick="modal('open', '{{ $item->deal }} - {{ $item->generalinfo }}','{{ $modalMessage }}', {name:
-            `ok`,
+            onclick="modal('open', '{{ $item->deal }} - {{ $item->generalinfo }}','{{ $modalMessage }}', {name:`ok`,
             function: ()=>{modal(`close`)}})">
-
-            <div @if ($calendarStyle!=0) style="margin-left: 25px" @endif class="title"><span
-                    class="dealname">{{ $item->deal }}</span>{{ $item->name }}
+            <div @if ($calendarStyle!=0) style="margin-left: 25px" @endif class="title">
+                <span class="dealname">{{ $item->deal }}</span>
+                {{ $item->name }}
                 @if ($calendarStyle!=0)
-                    {{ $Users->find($item->master)->name }}@endif</div>
-            <div @if ($calendarStyle!=0) style="margin-left: 25px" @endif class="taskname">{{ $item->generalinfo }}
+                    {{ $Users->find($item->master)->name }}
+                @endif
             </div>
+            @if ($calendarStyle!=0)
+                <div class="avatar"
+                    style="background-image: url({{ $Users->find($item->master)->avatar ?? '' }})">
+                </div>
+            @endif
 
+            <div @if ($calendarStyle!=0) style="margin-left: 25px" @endif class="taskname">
+                {{ $item->generalinfo }}
+            </div>
     </div>
     <input class="task-checkbox" type="checkbox" value="{{ $item->id }}" onchange="changeIDtodelete()">
 
@@ -214,10 +220,12 @@
         </div>
     @endfor
     {{-- часовые ячейки --}}
-    @for ($row = 0; $row <= $workTimeEnd-$workTimeStart; $row ++) @php $rowStart=$gridInHour*$beforeAfter+2 +
-        $row*$gridInHour; $rowEnd=$gridInHour*$beforeAfter+2 + ($row+1)*$gridInHour; @endphp @for ($column=1;
-        $column < $Users->count()+2; $column++)
-
+    @for ($row = 0; $row <= $workTimeEnd-$workTimeStart; $row ++)
+        @php
+            $rowStart=$gridInHour*$beforeAfter+2 +
+            $row*$gridInHour; $rowEnd=$gridInHour*$beforeAfter+2 + ($row+1)*$gridInHour;
+        @endphp
+        @for ($column=1; $column < $Users->count()+2; $column++)
             <div class="hour-line"
                 style="grid-row: {{ $rowStart }}/{{ $rowEnd }}; grid-column: {{ $column }}/{{ $column+1 }}">
                 @if ($column == 1)
@@ -226,28 +234,26 @@
                     </div>
                 @endif
             </div>
+        @endfor
+
     @endfor
 
-@endfor
-
-{{-- конечная 1/2 линия --}}
-@php
-    $rowStart = $gridInHour*$beforeAfter+2 + ($row)*$gridInHour;
-    $rowEnd = $rowStart+$gridInHour/2;
-@endphp
-@for ($column = 1; $column < $Users->count()+2; $column++)
-    <div class="hour-line"
-        style="grid-row: {{ $rowStart }}/{{ $rowEnd }}; grid-column: {{ $column }}/{{ $column+1 }}">
-        @if ($column == 1)
-            <div class="time-tag">
-                {{ round($workTimeEnd) }} : 30
-            </div>
-        @endif
-    </div>
-@endfor
+    {{-- конечная 1/2 линия --}}
+    @php
+        $rowStart = $gridInHour*$beforeAfter+2 + ($row)*$gridInHour;
+        $rowEnd = $rowStart+$gridInHour/2;
+    @endphp
+    @for ($column = 1; $column < $Users->count()+2; $column++)
+        <div class="hour-line"
+            style="grid-row: {{ $rowStart }}/{{ $rowEnd }}; grid-column: {{ $column }}/{{ $column+1 }}">
+            @if ($column == 1)
+                <div class="time-tag">
+                    {{ round($workTimeEnd) }} : 30
+                </div>
+            @endif
+        </div>
+    @endfor
 @endif
-
-</div>
 
 </div>
 

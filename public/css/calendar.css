@@ -2,6 +2,17 @@
   font-size: 25px;
 }
 
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-position: center;
+  background-size: cover;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+
 .half-opacity {
   background-color: #f8f8f8 !important;
   pointer-events: none;
