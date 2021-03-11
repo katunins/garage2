@@ -125,6 +125,9 @@ Route::get('/rebuildtemplate/{productid}', function($productid){
 });
 
 Route::get('/repair',[TemplateController::class, 'repair']);
+Route::get('/ava', function(){
+    dd(DealsController::bitrixAPI(["ID" => 1], 'crm.contact.get'));
+});
 
 Route::get('/customtask',function(){
     return view('customtask')->with('Users', User::all());

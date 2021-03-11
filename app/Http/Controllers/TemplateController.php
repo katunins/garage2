@@ -71,6 +71,7 @@ class TemplateController extends Controller
         if (!$result) self::$scriptErrors[] = 'Не загрузились данные о выходных и праздниках';
         self::$isHoliday = explode('/', $result);
         curl_close($ch);
+        sleep(1);
     }
 
     static $startTime;
