@@ -68,7 +68,9 @@ class ApiController extends Controller
                     break;
 
                 case 'empty':
-                    # code...
+                    $task = Tasks::find($request->data['taskId']);
+                    $message = 'Сделка: '.$task->deal.', '.'Задача: '.$task->name.' - нет предыдущей поставки';
+                    DealsController::bitrixAPI(array("TO" => 1, "MESSAGE" => 'У мастера '.User::find($task->master)->name.' проблема<br>'.$message), 'im.notify');
                     break;
             }
             return response()->json(false, 200);
