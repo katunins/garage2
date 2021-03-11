@@ -172,7 +172,7 @@
                 if (!$skip) $modalMessage .='<b>'.$param.'</b>'.' '.$value.'<br>';
                 }
 
-                $modalMessage .= '111'
+                $modalMessage .= '<p><a href="/edittask/'.$item->id.'">Редактировать задачу</a></p>';
 
                 if ($calendarStyle!=0) $tasksToDelete[]=$item->id;
             @endphp
