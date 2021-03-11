@@ -38,6 +38,7 @@
                             style="background-image: url({{ $Users->find($itemTask->master)->avatar ?? '' }})"></span>
                         <span>{{ $itemTask->name }}</span>
                         <span>{{ $itemTask->end }}</span>
+                        <span class="dealname">{{ $itemTask->deal }}</span>
                     </li>
                 @endforeach
             </ul>

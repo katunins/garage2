@@ -58,7 +58,9 @@ class ApiController extends Controller
                     break;
 
                 case 'pause':
-                    # code...
+                    $task = Tasks::find($request->data['taskId']);
+                    $task->status = 'pause';
+                    return response()->json($task->save(), 200);
                     break;
 
                 case 'alert':

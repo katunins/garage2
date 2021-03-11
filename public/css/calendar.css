@@ -99,12 +99,6 @@
 .calendar-block .task .title {
   font-weight: bold;
 }
-.calendar-block .task .title .dealname {
-  background-color: #e4e4e4;
-  padding: 1px 5px;
-  border-radius: 3px;
-  margin-right: 5px;
-}
 .calendar-block .task .taskname {
   font-size: 13px;
   margin-left: 4px;

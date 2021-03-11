@@ -47,3 +47,10 @@ a.to-main-page:after {
 .task-status-dedline {
   background-color: #EB7777;
 }
+
+.dealname {
+  background-color: #eaeaea;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-right: 5px;
+}
