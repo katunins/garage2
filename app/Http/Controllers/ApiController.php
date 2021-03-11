@@ -70,13 +70,13 @@ class ApiController extends Controller
 
                 case 'empty':
                     $task = Tasks::find($request->data['taskId']);
-                    $taskBefore = Tasks::find($task->taskidbefore);
                     $message = 'Сделка: ' . $task->deal . ', ' . 'Задача: ' . $task->name . '[br]';
 
+                    $taskBefore = Tasks::find($task->taskidbefore);
                     if ($taskBefore) {
-                        $message .='от '.User::find($taskBefore->master) . ', задача ' . $taskBefore->name;
-                        } else $message .='Странно, но предыдущей задачи не существует';
-                    return response()->json(DealsController::bitrixAPI(array("TO" => [1, 38], "MESSAGE" => 'У '.User::find($task->master)->name . '  нет предыдущей поставки:[br]' . $message), 'im.notify'), 200);
+                        $message .= 'от ' . User::find($taskBefore->master)->name . ', задача ' . $taskBefore->name;
+                    } else $message .= 'Странно, но предыдущей задачи не существует';
+                    return response()->json(DealsController::bitrixAPI(array("TO" => [1, 38], "MESSAGE" => 'У ' . User::find($task->master)->name . '  нет предыдущей поставки:[br]' . $message), 'im.notify'), 200);
 
                     break;
             }
