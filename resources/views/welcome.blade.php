@@ -33,7 +33,7 @@
             <h2>Просроченные задачи</h2>
             <ul class="over-tasks">
                 @foreach ($overTasks->sortBy('master') as $itemTask)
-                    <li>
+                    <li class="task-status-{{ $itemTask->status }}">
                         <span class="avatar"
                             style="background-image: url({{ $Users->find($itemTask->master)->avatar ?? '' }})"></span>
                         <span>{{ $itemTask->name }}</span>
