@@ -252,4 +252,48 @@ class CalendarController extends Controller
         }
         return collect($resultTask);
     }
+
+    public function saveEditTask(Request $request)
+    // array:8 [▼
+    //     "_token" => "ENVz3Aq95KbD37hm3VtTJbojhmNsXaldNIgBpvdf"
+    //     "taskid" => "737"
+    //     "master" => "2"
+    //     "taskname" => "Проверка фотографий"
+    //     "generalinfo" => "Фотокниги 15х15 см (минибук), 10 разворотов"
+    //     "info" => "Печать : Матовая, Формат : 15х15 см (минибук)"
+    //     "start" => "2021-03-11 09:00:00"
+    //     "time" => "2"
+
+    {
+        $request->validate([
+            'master' => 'required',
+            'master' => 'required',
+            'taskname' => 'required',
+            'generalinfo' => 'required',
+            'start' => 'required',
+            'time' => 'required',
+        ], [
+            // 'taskname.required' => 'Заполните название задачи',
+            // 'masters.0.required' => 'Хотя бы один мастер должен быть указан',
+            // 'producttime.required_without' => 'Должен быть заполнен хотя бы один параметр времени',
+            // 'paramtime.required_without'=>'Должен быть заполнен хотя бы один параметр времени'
+        ]);
+
+        $startTime = Carbon::parse($request->start);
+        $endTime = clone $startTime;
+        $endTime->addMinutes($request->time);
+
+        $task = Tasks::find($request->taskid);
+        $task->master = $request->master;
+        $task->name = $request->taskname;
+        $task->generalinfo = $request->generalinfo;
+        $task->info = $request->info;
+
+        $task->start = $startTime;
+        $task->end = $endTime;
+        $task->time = $request->time;
+
+        $task->save();
+        return redirect('/calendar');
+    }
 }

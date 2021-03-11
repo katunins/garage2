@@ -135,5 +135,8 @@ Route::get('/customtask',function(){
 Route::post('/newcustomtask',[CalendarController::class, 'newCustomTask']);
 Route::get('/edittask/{taskId}', function ($id){
     $Task = Tasks::find($id);
-    if ($Task) return view('edittask')->with('Task', $Task);
+    if ($Task) return view('edittask')
+    ->with('Task', $Task)
+    ->with('Users', User::all());
 });
+Route::post('/saveedittask',[CalendarController::class, 'saveEditTask']);
