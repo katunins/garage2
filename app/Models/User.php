@@ -64,4 +64,17 @@ class User extends Authenticatable
                 return;
         }
     }
+
+    static function updateAvatar(){
+        dd (User::all());
+        // $userId, $url
+        // dd(DealsController::bitrixAPI(["ID" => User::find(1)->bitrixid], 'user.get')->result[0]->PERSONAL_PHOTO);
+        // $User = User::find($userId);
+        // if ($User && $url) {
+        //     $User->avatar = $url;
+        //     $User->save();
+        //     return true;
+        // }
+        // return false;
+    }
 }

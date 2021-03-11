@@ -18,7 +18,7 @@ class CreateUsersTable extends Migration
             $table->integer('bitrixid')->nullable(); //для мастеров
             $table->string('type')->nullable(); //master - мастер / admin - admin
             $table->string('name');
-            // $table->string('code');
+            $table->string('avatar')->nullable();
             // $table->string('email')->unique();
             // $table->timestamp('email_verified_at')->nullable();
             $table->string('password');

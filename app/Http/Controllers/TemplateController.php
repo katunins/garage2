@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 const LUNCH_BREACK = '12:00-13:00'; //перевыр на обед
 const STANDART_BUFFER = 10; //стандартный буфер в минутах между людыми задачами в календаре
-const STANDART_PRODUCT_BUFFER = 180; //стандартный буфер в минутах между задачами в конкретном продукте. Он указывается в задаче
+const MINIMAL_PRODUCT_BUFFER = 180; //стандартный буфер в минутах между задачами в конкретном продукте. Он указывается в задаче
 // const TIME_AFTER_SCRIPT = 12; //время задержки после запуска скрипта в часах
 const TIME_AFTER_SCRIPT = 0; //время задержки после запуска скрипта в часах
 
@@ -789,7 +789,8 @@ class TemplateController extends Controller
         if ($taskIdBefore) $newTask->taskidbefore = $taskIdBefore; //предварительная задача
         $newTask->start = $start->format('Y-m-d H:i:s');
         $newTask->end = $end->format('Y-m-d H:i:s');
-        $newTask->buffer = $template->buffer ? $template->buffer : $template->buffer + STANDART_PRODUCT_BUFFER; //стандартный буфер задержки после задачи
+        $newTask->buffer = $template->buffer > MINIMAL_PRODUCT_BUFFER ? $template->buffer : MINIMAL_PRODUCT_BUFFER;
+        // $newTask->buffer = $template->buffer ? $template->buffer : $template->buffer + STANDART_PRODUCT_BUFFER; //стандартный буфер задержки после задачи
 
 
         $newTask->generalinfo = $dealItem['productname'];
