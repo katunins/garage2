@@ -189,7 +189,7 @@
                 @endif
             </div>
             @if ($calendarStyle!=0)
-                <div class="avatar"
+                <div class="avatar calendar-avatar"
                     style="background-image: url({{ $Users->find($item->master)->avatar ?? '' }})">
                 </div>
             @endif

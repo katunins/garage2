@@ -19,7 +19,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('welcome')
+    ->with('overTasks', CalendarController::getOverTasks())
+    ->with('Users', User::all());
 });
 
 Route::get('/templates', function () {

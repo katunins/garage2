@@ -19,7 +19,7 @@
             <form action="/deal2tasks" method="GET">
                 {{-- @csrf --}}
 
-                @error('deal')
+                @error ('deal')
                     <p>{{ $message }}</p>
                 @enderror
                 <label for="id">ID сделки в Битрикс24</label>
@@ -28,6 +28,19 @@
                 <label for="log">Логирование</label>
                 <p><input type="submit" name="" value="Создать"></p>
             </form>
+        </div>
+        <div class="dashboard">
+            <h2>Просроченные задачи</h2>
+            <ul class="over-tasks">
+                @foreach ($overTasks->sortBy('master') as $itemTask)
+                    <li>
+                        <span class="avatar"
+                            style="background-image: url({{ $Users->find($itemTask->master)->avatar ?? '' }})"></span>
+                        <span>{{ $itemTask->name }}</span>
+                        <span>{{ $itemTask->end }}</span>
+                    </li>
+                @endforeach
+            </ul>
         </div>
     </div>
 

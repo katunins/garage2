@@ -240,4 +240,16 @@ class CalendarController extends Controller
         }
         return redirect('/calendar?calendarstyle=1&filterdealname='.$dealData['params']['deal']);
     }
+
+    // Возвращает просроченные задачи
+    static function getOverTasks($whithBuffer = false){
+        $currentTime = Carbon::now();
+        $resultTask = [];
+        foreach (Tasks::whereNotIn('status', ['finished'])->get() as $taskItem) {
+            $endTime = Carbon::parse($taskItem->end);
+            if ($whithBuffer) $endTime->addMinutes($taskItem->buffer);
+            if ($endTime->lessThan($currentTime)) $resultTask[] = $taskItem;
+        }
+        return collect($resultTask);
+    }
 }
