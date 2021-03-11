@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 const LUNCH_BREACK = '12:00-13:00'; //перевыр на обед
 const STANDART_BUFFER = 10; //стандартный буфер в минутах между людыми задачами в календаре
 const STANDART_PRODUCT_BUFFER = 180; //стандартный буфер в минутах между задачами в конкретном продукте. Он указывается в задаче
-const TIME_AFTER_SCRIPT = 12; //время задержки после запуска скрипта в часах
+// const TIME_AFTER_SCRIPT = 12; //время задержки после запуска скрипта в часах
+const TIME_AFTER_SCRIPT = 0; //время задержки после запуска скрипта в часах
 
 // const isset($_GET['log']) =  true; //true - идет вывод echo;
 
