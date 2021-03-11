@@ -125,7 +125,7 @@ Route::get('/rebuildtemplate/{productid}', function($productid){
 });
 
 Route::get('/repair',[TemplateController::class, 'repair']);
-Route::get('/updateavatar', User::updateAvatar());
+Route::get('/updateavatar', [User::class, 'updateAvatar']);
 
 Route::get('/customtask',function(){
     return view('customtask')->with('Users', User::all());

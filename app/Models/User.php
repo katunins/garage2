@@ -9,6 +9,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 
+use function PHPUnit\Framework\isNull;
+
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
@@ -66,7 +68,18 @@ class User extends Authenticatable
     }
 
     static function updateAvatar(){
-        dd (User::all());
+        foreach (User::all() as $userItem){
+            if (isNull($userItem->avatar)) {
+                $bitrixUser = DealsController::bitrixAPI(["ID" => $userItem->bitrixid], 'user.get');
+                if (!$bitrixUser->error && $bitrixUser->result){
+                   $userItem->avatar = '$bitrixUser->result[0]->PERSONAL_PHOTO';
+                //    $userItem->save();
+                };
+                dump($userItem);
+            };
+        }
+        dd ('ok');
+        
         // $userId, $url
         // dd(DealsController::bitrixAPI(["ID" => User::find(1)->bitrixid], 'user.get')->result[0]->PERSONAL_PHOTO);
         // $User = User::find($userId);
