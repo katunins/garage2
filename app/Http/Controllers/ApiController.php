@@ -70,7 +70,8 @@ class ApiController extends Controller
                 case 'empty':
                     $task = Tasks::find($request->data['taskId']);
                     $message = 'Сделка: '.$task->deal.', '.'Задача: '.$task->name.' - нет предыдущей поставки';
-                    DealsController::bitrixAPI(array("TO" => 1, "MESSAGE" => 'У мастера '.User::find($task->master)->name.' проблема<br>'.$message), 'im.notify');
+                    return response()->json(DealsController::bitrixAPI(array("TO" => 1, "MESSAGE" => 'У мастера '.User::find($task->master)->name.' проблема<br>'.$message), 'im.notify'), 200);
+                    
                     break;
             }
             return response()->json(false, 200);
