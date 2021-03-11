@@ -52,9 +52,9 @@ class ApiController extends Controller
         if ($request->has('data') && isset($request->data['action']) && isset($request->data['taskId'])) {
             switch ($request->data['action']) {
 
-                case 'completed':
+                case 'status':
                     $task = Tasks::find($request->data['taskId']);
-                    $task->status = 'finished';
+                    $task->status = 'status';
                     return response()->json($task->save(), 200);
                     break;
 
