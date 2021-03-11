@@ -172,6 +172,8 @@
                 if (!$skip) $modalMessage .='<b>'.$param.'</b>'.' '.$value.'<br>';
                 }
 
+                $modalMessage .= '111'
+
                 if ($calendarStyle!=0) $tasksToDelete[]=$item->id;
             @endphp
 
