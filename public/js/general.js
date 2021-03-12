@@ -11,13 +11,13 @@ window.ajax = function (url, data) {
   var callBack = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
   fetch(url, {
     headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json, text-plain, */*',
-      'X-Requested-With': 'XMLHttpRequest',
-      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      "Content-Type": "application/json",
+      Accept: "application/json, text-plain, */*",
+      "X-Requested-With": "XMLHttpRequest",
+      "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content")
     },
-    method: 'post',
-    credentials: 'same-origin',
+    method: "post",
+    credentials: "same-origin",
     body: JSON.stringify(data)
   }).then(function (response) {
     return response.json();
@@ -33,63 +33,126 @@ window.modal = function (action) {
   var text = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
   var button1 = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
   var button2 = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : null;
-  var modal = document.getElementById('modal');
-  var modalTitle = modal.querySelector('.modal-title');
-  var modalText = modal.querySelector('.modal-text');
-  var modalButtons = modal.querySelector('.modal-buttons');
-  var modalButton1 = modal.querySelector('.modal-button1');
-  var modalButton2 = modal.querySelector('.modal-button2');
+  var modal = document.getElementById("modal");
+  var modalTitle = modal.querySelector(".modal-title");
+  var modalText = modal.querySelector(".modal-text");
+  var modalButtons = modal.querySelector(".modal-buttons");
+  var modalButton1 = modal.querySelector(".modal-button1");
+  var modalButton2 = modal.querySelector(".modal-button2");
 
-  if (action == 'open') {
-    if (modal.classList.contains('hide')) modal.classList.remove('hide');
+  if (action == "open") {
+    if (modal.classList.contains("hide")) modal.classList.remove("hide");
 
     if (title) {
-      if (modalTitle.classList.contains('hide')) modalTitle.classList.remove('hide');
+      if (modalTitle.classList.contains("hide")) modalTitle.classList.remove("hide");
       modalTitle.innerHTML = title;
     }
 
     if (text) {
-      if (modalText.classList.contains('hide')) modalText.classList.remove('hide');
+      if (modalText.classList.contains("hide")) modalText.classList.remove("hide");
       modalText.innerHTML = text;
     }
 
     if (button1) {
-      if (modalButtons.classList.contains('hide')) modalButtons.classList.remove('hide');
-      if (modalButton1.classList.contains('hide')) modalButton1.classList.remove('hide');
+      if (modalButtons.classList.contains("hide")) modalButtons.classList.remove("hide");
+      if (modalButton1.classList.contains("hide")) modalButton1.classList.remove("hide");
       modalButton1.innerHTML = button1.name;
       modalButton1.onclick = button1["function"];
     }
 
     if (button2) {
-      if (modalButtons.classList.contains('hide')) modalButtons.classList.remove('hide');
-      if (modalButton2.classList.contains('hide')) modalButton2.classList.remove('hide');
+      if (modalButtons.classList.contains("hide")) modalButtons.classList.remove("hide");
+      if (modalButton2.classList.contains("hide")) modalButton2.classList.remove("hide");
       modalButton2.innerHTML = button2.name;
       modalButton2.onclick = button2["function"];
     }
 
-    document.addEventListener('keydown', escapeModal = function escapeModal(e) {
+    document.addEventListener("keydown", escapeModal = function escapeModal(e) {
       var keyCode = e.keyCode;
 
       if (keyCode === 27) {
         //keycode is an Integer, not a String
-        window.modal('close');
+        window.modal("close");
       }
     });
   } else {
-    document.removeEventListener('keydown', escapeModal);
-    modal.classList.add('hide');
-    modalButtons.classList.add('hide');
-    modalTitle.innerHTML = '';
-    modalText.innerHTML = '';
-    modalButton1.innerHTML = '';
+    document.removeEventListener("keydown", escapeModal);
+    modal.classList.add("hide");
+    modalButtons.classList.add("hide");
+    modalTitle.innerHTML = "";
+    modalText.innerHTML = "";
+    modalButton1.innerHTML = "";
     modalButton1.onclick = null;
-    modalButton2.innerHTML = '';
+    modalButton2.innerHTML = "";
     modalButton2.onclick = null;
-    modalTitle.classList.add('hide');
-    modalText.classList.add('hide');
-    modalButton1.classList.add('hide');
-    modalButton2.classList.add('hide');
+    modalTitle.classList.add("hide");
+    modalText.classList.add("hide");
+    modalButton1.classList.add("hide");
+    modalButton2.classList.add("hide");
   }
+};
+
+window.modalFromTask = function (props) {
+  // generalinfo: "Холсты 30х40" -
+  // info: null -
+  // master: 4 -
+  // name: "Натяжка холста на подрамник" -
+  // start: "2021-03-11 16:40:00"
+  // time: 6
+  console.log(props);
+  var html = "";
+  html += '<form id="detail-task-form" action="/saveedittask" method="POST">';
+  html += "<input type=\"hidden\" name=\"id\" value=\"".concat(props.id, "\">");
+  html += "<input type=\"hidden\" name=\"_token\" value=\"".concat(document.querySelector('input[name="_token"]').value, "\">");
+  html += '<div class="form-block">';
+  html += '<div class="form-elem">';
+  html += '<label for="name">Название задачи</label>';
+  html += "<input class=\"input-required\" type=\"text\" name=\"name\" value=\"".concat(props.name, "\">");
+  html += "</div>";
+  html += '<div class="form-elem">';
+  html += '<label for="generalinfo">Основные параметры</label>';
+  html += "<input class=\"input-required\" type=\"text\" name=\"generalinfo\" value=\"".concat(props.generalinfo, "\">");
+  html += "</div>";
+  html += '<div class="form-elem">';
+  html += '<label for="info">Дополнительные параметры</label>';
+  html += "<input type=\"text\" name=\"info\" value=\"".concat(props.info, "\">");
+  html += "</div>";
+  html += "</div>";
+  html += '<div class="form-block">';
+  html += '<div class="form-elem form-elem__min">';
+  html += '<label for="master">ID Мастера</label>';
+  html += "<input class=\"input-required\" list=\"masters\" name=\"master\" value=\"".concat(props.master, "\">");
+  html += "</div>";
+  html += '<div class="form-elem form-elem__min">';
+  html += '<label for="start">Дата начала задачи</label>';
+  html += "<input class=\"input-required\" type=\"text\" name=\"start\" value=\"".concat(props.start, "\">");
+  html += "</div>";
+  html += '<div class="form-elem form-elem__min">';
+  html += '<label for="time">Время, мин.</label>';
+  html += "<input class=\"input-required\" type=\"text\" name=\"time\" value=\"".concat(props.time, "\">");
+  html += "</div>";
+  html += '<div class="form-elem form-elem__min">';
+  html += '<label for="bufer">Буфер, мин.</label>';
+  html += "<input class=\"input-required\" type=\"text\" name=\"bufer\" value=\"".concat(props.buffer, "\">");
+  html += "</div>";
+  html += "</div>";
+  html += '<button class="form-modal-button" type="button" onclick="detailTaskFormSubmit()">Сохранить</button>';
+  html += "</form>";
+  modal("open", null, html);
+};
+
+window.detailTaskFormSubmit = function () {
+  var requaredInputs = document.querySelectorAll(".input-required");
+  var alert = 0;
+  requaredInputs.forEach(function (el) {
+    if (el.value === "") {
+      el.classList.add("form-alert");
+      alert++;
+    } else {
+      if (el.classList.contains("form-alert")) el.classList.remove("form-alert");
+    }
+  });
+  if (alert === 0) document.getElementById('detail-task-form').submit();
 };
 
 /***/ }),
@@ -202,11 +265,11 @@ __webpack_require__.r(__webpack_exports__);
 /******/ 	
 /******/ 	// the startup function
 /******/ 	// It's empty as some runtime module handles the default behavior
-/******/ 	__webpack_require__.x = x => {};
+/******/ 	__webpack_require__.x = x => {}
 /************************************************************************/
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
 /******/ 	(() => {
-/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 		__webpack_require__.o = (obj, prop) => Object.prototype.hasOwnProperty.call(obj, prop)
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
@@ -316,9 +379,7 @@ __webpack_require__.r(__webpack_exports__);
 /******/ 	})();
 /******/ 	
 /************************************************************************/
-/******/ 	
 /******/ 	// run startup
-/******/ 	var __webpack_exports__ = __webpack_require__.x();
-/******/ 	
+/******/ 	__webpack_require__.x();
 /******/ })()
 ;

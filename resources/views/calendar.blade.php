@@ -1,5 +1,6 @@
 <link rel="stylesheet" href="css/calendar.css">
 <link rel="stylesheet" href="css/general.css">
+@csrf
 
 {{-- $Users, $Date, $Tasks --}}
 
@@ -95,7 +96,8 @@
         @foreach ([
             'temp'=>'Временные',
             'wait'=>'Новые',
-            'repair'=>'В ремонте',
+            // 'repair'=>'В ремонте',
+            'pause'=>'Остановлены',
             'finished'=>'Завершены',
             ] as $key=>$item)
             @if ($calendarStyle == 1)
@@ -154,8 +156,7 @@
 
         @foreach ($Tasks->whereBetween('start', [$weekCalendarDay, $weekEndTimeFilter])->sortBy('start') as $item)
 
-            @php
-                // подготовим тектс для модального окна
+            {{-- // подготовим тектс для модального окна
                 $modalMessage = '';
                 foreach ($item->getAttributes() as $param => $value) {
                 if ($param == 'master') $value = $Users->find($value)->name;
@@ -172,7 +173,8 @@
                 if (!$skip) $modalMessage .='<b>'.$param.'</b>'.' '.$value.'<br>';
                 }
 
-                $modalMessage .= '<p><a href="/edittask/'.$item->id.'">Редактировать задачу</a></p>';
+                $modalMessage .= '<p><a href="/edittask/'.$item->id.'">Редактировать задачу</a></p>'; --}}
+            @php
 
                 if ($calendarStyle!=0) $tasksToDelete[]=$item->id;
             @endphp
@@ -181,8 +183,11 @@
             <div class="task task-status-{{ $item->status }}" @if ($calendarStyle==0)
                 style="grid-row: {{ $item->startGrid }}/{{ $item->endGrid }}; grid-column: {{ $userColumn[$item->master] }}"
             @else style="width: 600px; height: 40px;" @endif
-            onclick="modal('open', '{{ $item->deal }} - {{ $item->generalinfo }}','{{ $modalMessage }}', {name:`ok`,
-            function: ()=>{modal(`close`)}})">
+
+            {{-- onclick="modal('open', '{{ $item->deal }} -
+            {{ $item->generalinfo }}','{{ $modalMessage }}', {name:`ok`,
+            function: ()=>{modal(`close`)}})" --}}
+            onclick="modalFromTask({{ json_encode($item) }})">
             <div @if ($calendarStyle!=0) style="margin-left: 25px" @endif class="title">
                 <span class="dealname">{{ $item->deal }}</span>
                 {{ $item->name }}
@@ -273,17 +278,7 @@
 @endif
 
 <div class="footer-block"></div>
-<div id="modal" class="hide">
-    <div class="modal-container">
-        <div class="modal-title hide"></div>
-        <div class="modal-text hide"></div>
-        <div class="modal-buttons hide">
-            <button class="modal-button1 hide"></button>
-            <button class="modal-button2 hide"></button>
-        </div>
-        <button class="modal-close-button" onclick="modal('close')">✕</button>
-    </div>
-</div>
+@include ('modal')
 <script src="js/general.js"></script>
 <script>
     function changeGroupFilter() {

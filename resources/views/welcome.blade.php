@@ -1,5 +1,6 @@
 <link rel="stylesheet" href="css/welcome.css">
 <link rel="stylesheet" href="css/general.css">
+@csrf
 
 <div class="container">
     <h1>korobook Администратор</h1>
@@ -33,7 +34,8 @@
             <h2>Просроченные задачи</h2>
             <ul class="over-tasks">
                 @foreach ($overTasks->sortBy('master') as $itemTask)
-                    <li class="task-status-{{ $itemTask->status }}">
+                    <li class="task-status-{{ $itemTask->status }}"
+                        onclick="modalFromTask({{ json_encode($itemTask) }})">
                         <span class="avatar"
                             style="background-image: url({{ $Users->find($itemTask->master)->avatar ?? '' }})"></span>
                         <span>{{ $itemTask->name }}</span>
@@ -45,4 +47,6 @@
         </div>
     </div>
 
+    @include ('modal')
 </div>
+<script src="js/general.js"></script>

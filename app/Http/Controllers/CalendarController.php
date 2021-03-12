@@ -45,6 +45,7 @@ class CalendarController extends Controller
             'temp' => 'Временный',
             'wait' => 'Ожидает выполнения',
             'repair' => 'В ремонте',
+            'pause' => 'Задерживается',
             'finished' => 'Завершена',
         ] as $key => $item) {
             if (isset($_GET['status-' . $key]) !== false) {
@@ -140,7 +141,7 @@ class CalendarController extends Controller
     // получим задачи во временном периоде для календаря и расчитаем в них строки начала и строки конца для Grid
     static function getTask($startCalendarTime, $endCalendarTime, $gridInHour, $scale, $filterDealName, $statusFilter)
     {
-
+// dd ($statusFilter);
         // $startCalendarTime, $endCalendarTime - время начала и конца линии календаря
         $gridStart = 2; //с этой ячейки начинается календарь
         $oneRow = $gridInHour / 60; //строк в одной минуте
@@ -242,7 +243,7 @@ class CalendarController extends Controller
     }
 
     // Возвращает просроченные задачи
-    static function getOverTasks($whithBuffer = false){
+    static function getOverTasks($whithBuffer = true){
         $currentTime = Carbon::now();
         $resultTask = [];
         foreach (Tasks::whereNotIn('status', ['finished'])->get() as $taskItem) {
@@ -264,28 +265,39 @@ class CalendarController extends Controller
     //     "start" => "2021-03-11 09:00:00"
     //     "time" => "2"
 
+    // "id" => "941"
+    // "_token" => "9UfOR6Q0kt5BH3WNTyeA0vgP1CmaSmRoRgmX4sJB"
+    // "name" => "Завершить задачи битрикс"
+    // "generalinfo" => "Завершить задачи битрикс"
+    // "info" => "null"
+    // "master" => "2"
+    // "start" => "2021-03-11 09:00:00"
+    // "time" => "60"
+    // "bufer" => "10"
+
+    
     {
-        $request->validate([
-            'master' => 'required',
-            'master' => 'required',
-            'taskname' => 'required',
-            'generalinfo' => 'required',
-            'start' => 'required',
-            'time' => 'required',
-        ], [
-            // 'taskname.required' => 'Заполните название задачи',
-            // 'masters.0.required' => 'Хотя бы один мастер должен быть указан',
-            // 'producttime.required_without' => 'Должен быть заполнен хотя бы один параметр времени',
-            // 'paramtime.required_without'=>'Должен быть заполнен хотя бы один параметр времени'
-        ]);
+        // $request->validate([
+        //     'master' => 'required',
+        //     'master' => 'required',
+        //     'taskname' => 'required',
+        //     'generalinfo' => 'required',
+        //     'start' => 'required',
+        //     'time' => 'required',
+        // ], [
+        //     // 'taskname.required' => 'Заполните название задачи',
+        //     // 'masters.0.required' => 'Хотя бы один мастер должен быть указан',
+        //     // 'producttime.required_without' => 'Должен быть заполнен хотя бы один параметр времени',
+        //     // 'paramtime.required_without'=>'Должен быть заполнен хотя бы один параметр времени'
+        // ]);
 
         $startTime = Carbon::parse($request->start);
         $endTime = clone $startTime;
         $endTime->addMinutes($request->time);
 
-        $task = Tasks::find($request->taskid);
+        $task = Tasks::find($request->id);
         $task->master = $request->master;
-        $task->name = $request->taskname;
+        $task->name = $request->name;
         $task->generalinfo = $request->generalinfo;
         $task->info = $request->info;
 
@@ -294,6 +306,6 @@ class CalendarController extends Controller
         $task->time = $request->time;
 
         $task->save();
-        return redirect('/calendar');
+        return redirect()->back();
     }
 }

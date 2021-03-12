@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Bellota+Text:wght@400;700&display=swap');
-
 * {
     font-family: 'Bellota Text', cursive;
 }
@@ -8,8 +7,12 @@
     display: none !important;
 }
 
+.form-alert {
+    border: 2px solid red !important;
+}
+
 a.to-main-page {
-        /* border: 1px solid grey; */
+    /* border: 1px solid grey; */
     /* background: white; */
     /* border-radius: 20px; */
     text-decoration: none;
@@ -22,14 +25,11 @@ a.to-main-page {
     /* height: 21px; */
     /* width: 18px; */
     font-weight: 100;
-
-    
 }
 
 a.to-main-page:after {
     content: '⌂';
 }
-
 
 .task-status-temp {
     background-color: #77CFEB;
@@ -39,7 +39,8 @@ a.to-main-page:after {
     background-color: #AAEB77;
 }
 
-.task-status-repair {
+.task-status-repair,
+.task-status-pause {
     background-color: #EBD877;
 }
 
@@ -53,8 +54,85 @@ a.to-main-page:after {
 
 .dealname {
     // font-size: 16px;
-    background-color:  #eaeaea;
+    background-color: #eaeaea;
     padding: 1px 5px;
     border-radius: 3px;
     margin-right: 5px;
+}
+
+#modal {
+    width: 100%;
+    height: 100%;
+    background: #d8d8d8ad;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    .modal-container {
+        position: relative;
+        background-color: white;
+        position: relative;
+        width: 800px;
+        // height: 500px;
+        background-color: white;
+        border-radius: 5px;
+        filter: drop-shadow(3px 2px 4px black);
+        padding: 20px;
+        .modal-title {
+            font-size: large;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .modal-text {
+            .form-block {
+                // display: flex;
+                background: #e8e8e8;
+                width: 80%;
+                margin-bottom: 5px;
+                // margin: 0 auto;
+                padding: 20px;
+                border-radius: 5px;
+                .form-elem {
+                    margin-bottom: 10px;
+                    label {
+                        font-weight: bold;
+                        display: block;
+                        margin-bottom: 5px;
+                    }
+                    input {
+                        padding: 10px 20px;
+                        background-color: white;
+                        border-radius: 5px;
+                        border: none;
+                        width: 100%;
+                        max-width: 500px;
+                    }
+                }
+                .form-elem__min {
+                    width: 230px;
+                    display: inline-block;
+                    margin: 10px;
+                }
+            }
+            .form-modal-button {
+                background: #def6f6;
+                padding: 8px 30px;
+                border: 1px solid #b8b8b8;
+                border-radius: 10px;
+            }
+        }
+        .modal-close-button {
+            top: 10px;
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: 1px solid grey;
+            color: grey;
+            padding: 2px 5px;
+            border-radius: 12px;
+        }
+    }
 }

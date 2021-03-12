@@ -8,6 +8,10 @@
   display: none !important;
 }
 
+.form-alert {
+  border: 2px solid red !important;
+}
+
 a.to-main-page {
   /* border: 1px solid grey; */
   /* background: white; */
@@ -36,7 +40,8 @@ a.to-main-page:after {
   background-color: #AAEB77;
 }
 
-.task-status-repair {
+.task-status-repair,
+.task-status-pause {
   background-color: #EBD877;
 }
 
@@ -53,4 +58,76 @@ a.to-main-page:after {
   padding: 1px 5px;
   border-radius: 3px;
   margin-right: 5px;
+}
+
+#modal {
+  width: 100%;
+  height: 100%;
+  background: #d8d8d8ad;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+}
+#modal .modal-container {
+  position: relative;
+  background-color: white;
+  position: relative;
+  width: 800px;
+  background-color: white;
+  border-radius: 5px;
+  filter: drop-shadow(3px 2px 4px black);
+  padding: 20px;
+}
+#modal .modal-container .modal-title {
+  font-size: large;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+#modal .modal-container .modal-text .form-block {
+  background: #e8e8e8;
+  width: 80%;
+  margin-bottom: 5px;
+  padding: 20px;
+  border-radius: 5px;
+}
+#modal .modal-container .modal-text .form-block .form-elem {
+  margin-bottom: 10px;
+}
+#modal .modal-container .modal-text .form-block .form-elem label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+#modal .modal-container .modal-text .form-block .form-elem input {
+  padding: 10px 20px;
+  background-color: white;
+  border-radius: 5px;
+  border: none;
+  width: 100%;
+  max-width: 500px;
+}
+#modal .modal-container .modal-text .form-block .form-elem__min {
+  width: 230px;
+  display: inline-block;
+  margin: 10px;
+}
+#modal .modal-container .modal-text .form-modal-button {
+  background: #def6f6;
+  padding: 8px 30px;
+  border: 1px solid #b8b8b8;
+  border-radius: 10px;
+}
+#modal .modal-container .modal-close-button {
+  top: 10px;
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: 1px solid grey;
+  color: grey;
+  padding: 2px 5px;
+  border-radius: 12px;
 }

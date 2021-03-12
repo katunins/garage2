@@ -5,9 +5,7 @@
     font-size: 25px;
 }
 
-
 .calendar-avatar {
-    
     position: absolute;
     right: 10px;
     top: 10px;
@@ -140,42 +138,6 @@
 
 .footer-block {
     height: 200px;
-}
-
-#modal {
-    width: 100%;
-    height: 100%;
-    background: #d8d8d8ad;
-    position: fixed;
-    top: 0px;
-    left: 0px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2;
-    .modal-container {
-        position: relative;
-        width: 800px;
-        height: 400px;
-        background-color: white;
-        position: relative;
-        width: 800px;
-        height: 500px;
-        background-color: white;
-        border-radius: 5px;
-        filter: drop-shadow(3px 2px 4px black);
-        padding: 20px;
-        .modal-close-button {
-            top: 10px;
-            position: absolute;
-            right: 10px;
-            background: none;
-            border: 1px solid grey;
-            color: grey;
-            padding: 2px 5px;
-            border-radius: 12px;
-        }
-    }
 }
 
 .erase-all-button {
