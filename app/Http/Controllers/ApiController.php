@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\StuckDeals;
 use App\Models\Tasks;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -62,6 +63,12 @@ class ApiController extends Controller
                     $task = Tasks::find($request->data['taskId']);
                     $task->status = 'pause';
                     return response()->json($task->save(), 200);
+                    
+                    $stuckDeal = new StuckDeals();
+                    $stuckDeal->taskId = $request->data['taskId'];
+                    $stuckDeal->type = 'pause';
+                    $stuckDeal->save();
+
                     break;
 
                 case 'alert':
@@ -73,6 +80,11 @@ class ApiController extends Controller
                     $message = 'Сделка: ' . $task->deal . ', ' . 'Задача: ' . $task->name . '[br]';
 
                     $taskBefore = Tasks::find($task->taskidbefore);
+
+                    $stuckDeal = new StuckDeals();
+                    $stuckDeal->taskId = $request->data['taskId'];
+                    $stuckDeal->type = 'empty';
+                    $stuckDeal->save();
                     
                     if ($taskBefore) {
                         $message .= 'от ' . User::find($taskBefore->master)->name . ', задача ' . $taskBefore->name;
