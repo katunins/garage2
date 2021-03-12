@@ -33,11 +33,12 @@
         <div class="dashboard">
             <div>
                 <h2>Остановленые сделки</h2>
-                <ul class="stop-deals">
-                    @foreach ($StopDeals as $item)
-                        <li>
-                            <span>{{ $item->name }}</span>
-                            <span>{{ $item->reason }}</span>
+                <ul class="stuck-deals">
+                    @foreach ($Stuck as $item)
+                        <li class="task-status-{{ $item->type }}">
+                            <span
+                                class="dealname">{{ $item->deal["params"]["deal"] }}</span>
+                            <span>{{ $item->task->name }}</span>
                         </li>
                     @endforeach
                 </ul>

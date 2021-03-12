@@ -57,7 +57,8 @@ a.to-main-page:after {
   background-color: #BFBFBF;
 }
 
-.task-status-dedline {
+.task-status-dedline,
+.task-status-empty {
   background-color: #EB7777;
 }
 

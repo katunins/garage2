@@ -22,21 +22,26 @@ td {
     background-size: cover;
 }
 
-.over-tasks {
+
+.dashboard {
+    display: flex;
+
+    ul {
+        padding: 0;
+        margin-right: 30px;
+    }
+
     li {
         border: 1px solid grey;
-        width: 600px;
+        width: 500px;
         height: 50px;
         display: flex;
         align-items: center;
         border-radius: 6px;
         margin-bottom: 5px;
+        font-size: small;
         span {
             margin: 0 5px;
         }
     }
-}
-
-.dashboard {
-    display: flex;
 }

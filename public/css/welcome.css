@@ -21,19 +21,23 @@ td {
   background-size: cover;
 }
 
-.over-tasks li {
+.dashboard {
+  display: flex;
+}
+.dashboard ul {
+  padding: 0;
+  margin-right: 30px;
+}
+.dashboard li {
   border: 1px solid grey;
-  width: 600px;
+  width: 500px;
   height: 50px;
   display: flex;
   align-items: center;
   border-radius: 6px;
   margin-bottom: 5px;
+  font-size: small;
 }
-.over-tasks li span {
+.dashboard li span {
   margin: 0 5px;
-}
-
-.dashboard {
-  display: flex;
 }

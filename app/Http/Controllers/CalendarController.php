@@ -239,11 +239,12 @@ class CalendarController extends Controller
             $endTime->addMinutes($newTask->buffer);
             TemplateController::$startTime = clone $endTime;
         }
-        return redirect('/calendar?calendarstyle=1&filterdealname='.$dealData['params']['deal']);
+        return redirect('/calendar?calendarstyle=1&filterdealname=' . $dealData['params']['deal']);
     }
 
     // Возвращает просроченные задачи
-    static function getOverTasks($whithBuffer = true){
+    static function getOverTasks($whithBuffer = true)
+    {
         $currentTime = Carbon::now();
         $resultTask = [];
         foreach (Tasks::whereNotIn('status', ['finished'])->get() as $taskItem) {
@@ -275,7 +276,7 @@ class CalendarController extends Controller
     // "time" => "60"
     // "bufer" => "10"
 
-    
+
     {
         // $request->validate([
         //     'master' => 'required',
@@ -309,25 +310,92 @@ class CalendarController extends Controller
         return redirect()->back();
     }
 
-    static function getStopDeals(){
+    static function getStuck()
+    {
+        // dd ((StuckDeals::where('taskId', 937)->first())?1:2);
         // "id" => 1
         // "taskId" => 937
         // "comment" => null
         // "type" => "pause"
         $result = [];
-        foreach (StuckDeals::all() as $key=>$item){
-            
-            $stuckTask = Tasks::find($item->taskId);
+        foreach (StuckDeals::all() as $item) {
 
-            if ($stuckTask){
-                $result[] = (object)[
-                    'task'=>$stuckTask,
-                    'deal'=>DealsController::getDeal(Tasks::find($item->taskId)->dealid),
-                ];
+            $stuckTask = Tasks::find($item->taskId);
+            if ($stuckTask) {
+                $stuckDeal = DealsController::getDeal(Tasks::find($item->taskId)->dealid);
+                if ($stuckDeal) {
+                    $result[] = (object)[
+                        'task' => $stuckTask,
+                        'deal' => $stuckDeal,
+                        'type' => $item->type
+                    ];
+                }
             }
-            
-            dump ($dealName);
         }
-        dd ('ok');
+
+        return $result;
+    }
+
+    static function newTaskStatus($id, $status)
+    {
+
+        $result = null;
+        switch ($status) {
+            case 'finished':
+                $task = Tasks::find($id);
+                if ($task) {
+                    $task->status = $status;
+                    $task->save();
+                    $result = $task->id;
+
+                    StuckDeals::where('taskId', $id)->delete();
+                }
+                break;
+
+            case 'pause':
+                $task = Tasks::find($id);
+                if ($task) {
+                    $task->status = $status;
+                    $task->save();
+
+                    if (StuckDeals::where('taskId', $id)->count() === 0) {
+                        $stuck = new StuckDeals();
+                        $stuck->taskId = (int)$id;
+                        $stuck->type = $status;
+                        $stuck->save();
+                        $result = $stuck->id;
+                    }
+                }
+                break;
+
+            case 'empty':
+                $task = Tasks::find($id);
+                if ($task) {
+
+                    $taskBefore = Tasks::find($task->taskidbefore);
+
+                    $B24message = 'Сделка: ' . $task->deal . ', ' . 'Задача: ' . $task->name . '[br]';
+                    if ($taskBefore) {
+                        $B24message .= 'от ' . User::find($taskBefore->master)->name . ', задача ' . $taskBefore->name;
+
+                        if (StuckDeals::where('taskId', $id)->count() === 0) {
+                            $stuck = new StuckDeals();
+                            $stuck->taskId = $taskBefore->id;
+                            $stuck->type = $status;
+                            $stuck->save();
+                            $result = $stuck->id;
+                        }
+
+                    } else $B24message .= 'Странно, но предыдущей задачи не существует';
+
+                    DealsController::bitrixAPI(array("TO" => [1, 8, 38], "MESSAGE" => 'У ' . User::find($task->master)->name . '  нет предыдущей поставки:[br]' . $B24message), 'im.notify');
+                }
+
+                break;
+
+            default:
+                break;
+        }
+        return $result;
     }
 }

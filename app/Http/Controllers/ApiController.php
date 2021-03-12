@@ -27,6 +27,16 @@ class ApiController extends Controller
                 })
                 ->orderBy('start')
                 ->get();
+
+            // пометим задачи, которые учавствуют 
+            foreach (StuckDeals::all() as $item) {
+                foreach ($tasks->where('dealid', Tasks::find($item->taskId)->dealid) as $el){
+                    $stuckTask = Tasks::find($item->taskId);
+                    $stuckTask->masterName = User::find($stuckTask->master)->name;
+                    $el->stuck = $stuckTask;
+                }
+            }
+
             return response()->json($tasks, 200);
         } else return response()->json($request->all(), 400);
     }
@@ -51,50 +61,7 @@ class ApiController extends Controller
     // detailitem.js:42 {action: "empty", taskId: 937
     {
         if ($request->has('data') && isset($request->data['action']) && isset($request->data['taskId'])) {
-            switch ($request->data['action']) {
-
-                case 'finished':
-                    $task = Tasks::find($request->data['taskId']);
-                    $task->status = 'finished';
-                    return response()->json($task->save(), 200);
-                    break;
-
-                case 'pause':
-                    $task = Tasks::find($request->data['taskId']);
-                    $task->status = 'pause';
-                    
-                    $stuckDeal = new StuckDeals();
-                    $stuckDeal->taskId = (int)$request->data['taskId'];
-                    $stuckDeal->type = 'pause';
-                    $stuckDeal->save();
-
-
-                    return response()->json($task->save(), 200);
-                    break;
-
-                case 'alert':
-                    # code...
-                    break;
-
-                case 'empty':
-                    $task = Tasks::find($request->data['taskId']);
-                    $message = 'Сделка: ' . $task->deal . ', ' . 'Задача: ' . $task->name . '[br]';
-
-                    $taskBefore = Tasks::find($task->taskidbefore);
-
-                    $stuckDeal = new StuckDeals();
-                    $stuckDeal->taskId = (int)$request->data['taskId'];
-                    $stuckDeal->type = 'empty';
-                    $stuckDeal->save();
-                    
-                    if ($taskBefore) {
-                        $message .= 'от ' . User::find($taskBefore->master)->name . ', задача ' . $taskBefore->name;
-                    } else $message .= 'Странно, но предыдущей задачи не существует';
-                    return response()->json(DealsController::bitrixAPI(array("TO" => [1, 8, 38], "MESSAGE" => 'У ' . User::find($task->master)->name . '  нет предыдущей поставки:[br]' . $message), 'im.notify'), 200);
-
-                    break;
-            }
-            return response()->json(false, 200);
+            return response()->json(CalendarController::newTaskStatus($request->data['taskId'], $request->data['action']), 200);
         } else return response()->json($request->all(), 400);
     }
 
