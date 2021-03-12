@@ -73,6 +73,7 @@ class ApiController extends Controller
                     $message = 'Сделка: ' . $task->deal . ', ' . 'Задача: ' . $task->name . '[br]';
 
                     $taskBefore = Tasks::find($task->taskidbefore);
+                    
                     if ($taskBefore) {
                         $message .= 'от ' . User::find($taskBefore->master)->name . ', задача ' . $taskBefore->name;
                     } else $message .= 'Странно, но предыдущей задачи не существует';

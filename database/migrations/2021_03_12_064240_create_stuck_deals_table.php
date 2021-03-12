@@ -15,6 +15,10 @@ class CreateStuckDealsTable extends Migration
     {
         Schema::create('stuck_deals', function (Blueprint $table) {
             $table->id();
+            $table->integer('dealId'); //id сделки, в коротой сформированы задачи
+            $table->integer('taskId'); //id задачи, которая инициировала застревание
+            $table->string('comment')->nullable(); //комментарий мастера
+            $table->string('type'); //тип события empty/pause/alert
             $table->timestamps();
         });
     }
