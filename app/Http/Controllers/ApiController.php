@@ -76,7 +76,7 @@ class ApiController extends Controller
                     if ($taskBefore) {
                         $message .= 'от ' . User::find($taskBefore->master)->name . ', задача ' . $taskBefore->name;
                     } else $message .= 'Странно, но предыдущей задачи не существует';
-                    return response()->json(DealsController::bitrixAPI(array("TO" => [1, 38], "MESSAGE" => 'У ' . User::find($task->master)->name . '  нет предыдущей поставки:[br]' . $message), 'im.notify'), 200);
+                    return response()->json(DealsController::bitrixAPI(array("TO" => [1, 8, 38], "MESSAGE" => 'У ' . User::find($task->master)->name . '  нет предыдущей поставки:[br]' . $message), 'im.notify'), 200);
 
                     break;
             }

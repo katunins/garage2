@@ -265,11 +265,11 @@ __webpack_require__.r(__webpack_exports__);
 /******/ 	
 /******/ 	// the startup function
 /******/ 	// It's empty as some runtime module handles the default behavior
-/******/ 	__webpack_require__.x = x => {}
+/******/ 	__webpack_require__.x = x => {};
 /************************************************************************/
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
 /******/ 	(() => {
-/******/ 		__webpack_require__.o = (obj, prop) => Object.prototype.hasOwnProperty.call(obj, prop)
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
@@ -379,7 +379,9 @@ __webpack_require__.r(__webpack_exports__);
 /******/ 	})();
 /******/ 	
 /************************************************************************/
+/******/ 	
 /******/ 	// run startup
-/******/ 	__webpack_require__.x();
+/******/ 	var __webpack_exports__ = __webpack_require__.x();
+/******/ 	
 /******/ })()
 ;
