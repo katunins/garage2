@@ -31,19 +31,32 @@
             </form>
         </div>
         <div class="dashboard">
-            <h2>Просроченные задачи</h2>
-            <ul class="over-tasks">
-                @foreach ($overTasks->sortBy('master') as $itemTask)
-                    <li class="task-status-{{ $itemTask->status }}"
-                        onclick="modalFromTask({{ json_encode($itemTask) }})">
-                        <span class="avatar"
-                            style="background-image: url({{ $Users->find($itemTask->master)->avatar ?? '' }})"></span>
-                        <span>{{ $itemTask->name }}</span>
-                        <span>{{ $itemTask->end }}</span>
-                        <span class="dealname">{{ $itemTask->deal }}</span>
-                    </li>
-                @endforeach
-            </ul>
+            <div>
+                <h2>Остановленые сделки</h2>
+                <ul class="stop-deals">
+                    @foreach ($StopDeals as $item)
+                        <li>
+                            <span>{{ $item->name }}</span>
+                            <span>{{ $item->reason }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+            <div>
+                <h2>Просроченные задачи</h2>
+                <ul class="over-tasks">
+                    @foreach ($overTasks->sortBy('master') as $itemTask)
+                        <li class="task-status-{{ $itemTask->status }}"
+                            onclick="modalFromTask({{ json_encode($itemTask) }})">
+                            <span class="avatar"
+                                style="background-image: url({{ $Users->find($itemTask->master)->avatar ?? '' }})"></span>
+                            <span>{{ $itemTask->name }}</span>
+                            <span>{{ $itemTask->end }}</span>
+                            <span class="dealname">{{ $itemTask->deal }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
         </div>
     </div>
 

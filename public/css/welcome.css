@@ -33,3 +33,7 @@ td {
 .over-tasks li span {
   margin: 0 5px;
 }
+
+.dashboard {
+  display: flex;
+}

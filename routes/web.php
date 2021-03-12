@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome')
     ->with('overTasks', CalendarController::getOverTasks())
+    ->with('StopDeals', CalendarController::getStopDeals())
     ->with('Users', User::all());
 });
 

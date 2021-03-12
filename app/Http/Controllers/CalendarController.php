@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\StuckDeals;
 use App\Models\Tasks;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -141,7 +142,6 @@ class CalendarController extends Controller
     // получим задачи во временном периоде для календаря и расчитаем в них строки начала и строки конца для Grid
     static function getTask($startCalendarTime, $endCalendarTime, $gridInHour, $scale, $filterDealName, $statusFilter)
     {
-// dd ($statusFilter);
         // $startCalendarTime, $endCalendarTime - время начала и конца линии календаря
         $gridStart = 2; //с этой ячейки начинается календарь
         $oneRow = $gridInHour / 60; //строк в одной минуте
@@ -307,5 +307,27 @@ class CalendarController extends Controller
 
         $task->save();
         return redirect()->back();
+    }
+
+    static function getStopDeals(){
+        // "id" => 1
+        // "taskId" => 937
+        // "comment" => null
+        // "type" => "pause"
+        $result = [];
+        foreach (StuckDeals::all() as $key=>$item){
+            
+            $stuckTask = Tasks::find($item->taskId);
+
+            if ($stuckTask){
+                $result[] = (object)[
+                    'task'=>$stuckTask,
+                    'deal'=>DealsController::getDeal(Tasks::find($item->taskId)->dealid),
+                ];
+            }
+            
+            dump ($dealName);
+        }
+        dd ('ok');
     }
 }
