@@ -62,13 +62,14 @@ class ApiController extends Controller
                 case 'pause':
                     $task = Tasks::find($request->data['taskId']);
                     $task->status = 'pause';
-                    return response()->json($task->save(), 200);
                     
                     $stuckDeal = new StuckDeals();
-                    $stuckDeal->taskId = $request->data['taskId'];
+                    $stuckDeal->taskId = (int)$request->data['taskId'];
                     $stuckDeal->type = 'pause';
                     $stuckDeal->save();
 
+
+                    return response()->json($task->save(), 200);
                     break;
 
                 case 'alert':
@@ -82,7 +83,7 @@ class ApiController extends Controller
                     $taskBefore = Tasks::find($task->taskidbefore);
 
                     $stuckDeal = new StuckDeals();
-                    $stuckDeal->taskId = $request->data['taskId'];
+                    $stuckDeal->taskId = (int)$request->data['taskId'];
                     $stuckDeal->type = 'empty';
                     $stuckDeal->save();
                     
