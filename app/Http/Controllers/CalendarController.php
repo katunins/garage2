@@ -296,7 +296,10 @@ class CalendarController extends Controller
         //     // 'paramtime.required_without'=>'Должен быть заполнен хотя бы один параметр времени'
         // ]);
 
-        // dd($request->all());
+        if($request->deleteconfirm === 'on'){
+            Tasks::find($request->id)->delete();
+            return redirect()->back();
+        }
 
         $startTime = Carbon::parse($request->start);
         $endTime = clone $startTime;
@@ -305,7 +308,7 @@ class CalendarController extends Controller
         $task = $request->id === 'undefined' ? new Tasks : Tasks::find($request->id);
         $task->master = $request->master;
         $task->name = $request->name;
-        $task->status = 'wait';
+        $task->status = $request->status;
         $task->buffer = $request->bufer;
         $task->line = 1;
 
@@ -315,7 +318,6 @@ class CalendarController extends Controller
         $task->start = $startTime;
         $task->end = $endTime;
         $task->time = $request->time;
-        // dd ($task);
         $task->save();
         return redirect()->back();
     }

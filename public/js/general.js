@@ -135,9 +135,26 @@ window.modalFromTask = function (props) {
   html += '<label for="bufer">Буфер, мин.</label>';
   html += "<input class=\"input-required\" type=\"text\" name=\"bufer\" value=\"".concat(props.buffer, "\">");
   html += "</div>";
+  html += '<div class="form-elem form-elem__min">';
+  html += '<label for="status">Статус задачи:</label><select id="status" name="status">';
+  var statusArr = [{
+    status: 'wait',
+    name: 'Ожидает исполнения'
+  }, {
+    status: 'pause',
+    name: 'Остановлена'
+  }, {
+    status: 'finished',
+    name: 'Завершена'
+  }];
+  statusArr.forEach(function (el) {
+    html += "<option value=\"".concat(el.status, "\" ").concat(el.status === props.status ? 'selected' : '', ">").concat(el.name, "</option>");
+  });
+  html += '</select>';
+  html += "</div>";
   html += "</div>";
   html += '<button class="form-modal-button" type="button" onclick="detailTaskFormSubmit()">Сохранить</button>';
-  html += '<button class="form-modal-button" type="button" onclick="detailTaskFormSubmit()">Сохранить</button>';
+  if (typeof props.id !== 'undefined') html += '<input class="delete-confirm" type="checkbox" name="deleteconfirm"><labelfor="deleteconfirm">Удалить задачу?</label>';
   html += "</form>";
   modal("open", null, html);
 };
