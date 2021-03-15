@@ -46,7 +46,7 @@ class ApiController extends Controller
         if ($request->has('data')) {
             $taskData = Tasks::find($request->data);
             if ($taskData) {
-                $response = $taskData->dealid ? DealsController::getDeal($taskData->dealid):[];
+                $response = $taskData->dealid ? DealsController::getDeal($taskData->dealid):null;
                 $nextTask = Tasks::where('taskidbefore', $request->data)->first();
                 if ($nextTask) $nextTask->masterName = User::find($nextTask->master);
                 return response()->json(['deal' => $response, 'nextTask' => $nextTask], 200);
