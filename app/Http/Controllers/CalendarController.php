@@ -8,8 +8,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
-use function PHPUnit\Framework\isNull;
-
 class CalendarController extends Controller
 {
     // преобразуем дату в русский формат
@@ -296,7 +294,7 @@ class CalendarController extends Controller
         //     // 'paramtime.required_without'=>'Должен быть заполнен хотя бы один параметр времени'
         // ]);
 
-        if($request->deleteconfirm === 'on'){
+        if ($request->deleteconfirm === 'on') {
             Tasks::find($request->id)->delete();
             return redirect()->back();
         }
@@ -346,6 +344,20 @@ class CalendarController extends Controller
         }
 
         return $result;
+    }
+
+    static function deadlineDeals()
+    {
+        foreach (Tasks::where('status', '!=', 'finished')->get()->groupBy('dealid') as $item) {
+            $lastTask = $item->sortBy('end')->last();
+            $lastTaskEnd = Carbon::parse($lastTask->end);
+            $dealData = DealsController::getDeal($lastTask->dealid);
+            $deadLineString = $dealData['params']["Срок готовности"] ?? '2099.01.01|';
+            $deadLine = Carbon::createFromFormat('Y.m.d*', $deadLineString);
+            $deadLine->setHour(12);
+            $deadLine->setMinute(0);
+            if ($deadLine < $lastTaskEnd) dump($dealData['params']['deal'] . ', Срок: ' . ($dealData['params']['Срок готовности'] ?? 'Без срока').'. Краяняя задача: '.$lastTask->end);
+        }
     }
 
     static function newTaskStatus($id, $status)

@@ -20,9 +20,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome')
-    ->with('overTasks', CalendarController::getOverTasks())
-    ->with('Stuck', CalendarController::getStuck())
-    ->with('Users', User::all());
+        ->with('overTasks', CalendarController::getOverTasks())
+        ->with('Stuck', CalendarController::getStuck())
+        ->with('Users', User::all());
+});
+
+Route::get('/checkDeadline', function () {
+    CalendarController::deadlineDeals();
 });
 
 Route::get('/templates', function () {
@@ -121,22 +125,22 @@ Route::get('/deletealltasks', function () {
 
 Route::get('/calendar', [CalendarController::class, 'initCalendar']);
 
-Route::get('/rebuildtemplate/{productid}', function($productid){
+Route::get('/rebuildtemplate/{productid}', function ($productid) {
     TemplateController::rebuildTemplate($productid);
-    return redirect('/board/'.$productid);
+    return redirect('/board/' . $productid);
 });
 
-Route::get('/repair',[TemplateController::class, 'repair']);
+Route::get('/repair', [TemplateController::class, 'repair']);
 Route::get('/updateavatar', [User::class, 'updateAvatar']);
 
-Route::get('/customtask',function(){
+Route::get('/customtask', function () {
     return view('customtask')->with('Users', User::all());
 });
-Route::post('/newcustomtask',[CalendarController::class, 'newCustomTask']);
-Route::get('/edittask/{taskId}', function ($id){
+Route::post('/newcustomtask', [CalendarController::class, 'newCustomTask']);
+Route::get('/edittask/{taskId}', function ($id) {
     $Task = Tasks::find($id);
     if ($Task) return view('edittask')
-    ->with('Task', $Task)
-    ->with('Users', User::all());
+        ->with('Task', $Task)
+        ->with('Users', User::all());
 });
-Route::post('/saveedittask',[CalendarController::class, 'saveEditTask']);
+Route::post('/saveedittask', [CalendarController::class, 'saveEditTask']);
