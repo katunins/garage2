@@ -3,6 +3,7 @@
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DealsController;
 use App\Http\Controllers\TemplateController;
+use App\Models\StuckDeals;
 use App\Models\Tasks;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -118,7 +119,7 @@ Route::get('/deal2tasks', function () {
         return redirect('/')->withErrors(['deal' => 'такой сделки']);
 });
 Route::get('/deletealltasks', function () {
-    if ($_GET['time'] - time() > 1 /*|| isset($_GET['confirm']) === false*/) return redirect()->back(); //защитимся от перехода в браузере назад
+    if ($_GET['time'] - time() > 1) return redirect()->back(); //защитимся от перехода в браузере назад
     Tasks::whereIn('id', json_decode($_GET['taskstodelete']))->delete();
     return redirect('/calendar');
 });
@@ -144,3 +145,4 @@ Route::get('/edittask/{taskId}', function ($id) {
         ->with('Users', User::all());
 });
 Route::post('/saveedittask', [CalendarController::class, 'saveEditTask']);
+Route::get('/removestuck', [CalendarController::class, 'removeStuck']);

@@ -94,7 +94,6 @@
   font-size: 12px;
   overflow: hidden;
   z-index: 1;
-  cursor: pointer;
 }
 .calendar-block .task .title {
   font-weight: bold;

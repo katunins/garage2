@@ -41,3 +41,11 @@ td {
 .dashboard li span {
   margin: 0 5px;
 }
+
+.block-right-button {
+  position: relative;
+}
+.block-right-button .right-button {
+  position: absolute;
+  right: 10px;
+}

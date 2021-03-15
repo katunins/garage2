@@ -330,13 +330,14 @@ class CalendarController extends Controller
         $result = [];
         foreach (StuckDeals::all() as $item) {
 
-            $stuckTask = Tasks::find($item->taskId);
+            $stuckTask = Tasks::find($item->taskId)->name;
             if ($stuckTask) {
                 $stuckDeal = DealsController::getDeal(Tasks::find($item->taskId)->dealid);
                 if ($stuckDeal) {
                     $result[] = (object)[
+                        'id' => $item->id,
                         'task' => $stuckTask,
-                        'deal' => $stuckDeal,
+                        'deal' => $stuckDeal["params"]["deal"],
                         'type' => $item->type
                     ];
                 }
@@ -344,6 +345,12 @@ class CalendarController extends Controller
         }
 
         return $result;
+    }
+
+    public function removestuck(Request $request)
+    {
+        StuckDeals::find($request->stuckid)->delete();
+        return redirect()->back();
     }
 
     static function deadlineDeals()

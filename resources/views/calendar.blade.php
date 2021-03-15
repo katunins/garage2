@@ -166,8 +166,7 @@
             <div class="task task-status-{{ $item->status }}" @if ($calendarStyle==0)
                 style="grid-row: {{ $item->startGrid }}/{{ $item->endGrid }}; grid-column: {{ $userColumn[$item->master] }}"
             @else style="width: 600px; height: 40px;" @endif
-
-
+            draggable="true"
             onclick="modalFromTask({{ json_encode($item) }})">
             <div @if ($calendarStyle!=0) style="margin-left: 25px" @endif class="title">
                 <span class="dealname">{{ $item->deal }}</span>
@@ -322,5 +321,7 @@
             })
         }
     })
+
+
 
 </script>

@@ -45,3 +45,12 @@ td {
         }
     }
 }
+
+.block-right-button{
+    position: relative;
+
+    .right-button {
+        position: absolute;
+        right: 10px;
+    }
+}
