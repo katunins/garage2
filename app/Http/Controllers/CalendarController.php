@@ -293,7 +293,7 @@ class CalendarController extends Controller
         //     // 'producttime.required_without' => 'Должен быть заполнен хотя бы один параметр времени',
         //     // 'paramtime.required_without'=>'Должен быть заполнен хотя бы один параметр времени'
         // ]);
-
+// dd ($request->status);
         if ($request->deleteconfirm === 'on') {
             Tasks::find($request->id)->delete();
             return redirect()->back();
