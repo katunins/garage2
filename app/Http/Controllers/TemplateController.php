@@ -6,7 +6,7 @@ const LUNCH_BREACK = '12:00-13:00'; //перевыр на обед
 const STANDART_BUFFER = 0; //стандартный буфер в минутах между людыми задачами в календаре
 const MINIMAL_PRODUCT_BUFFER = 90; //стандартный буфер в минутах между задачами в конкретном продукте. Он указывается в задаче
 // const TIME_AFTER_SCRIPT = 12; //время задержки после запуска скрипта в часах
-const TIME_AFTER_SCRIPT = 0; //время задержки после запуска скрипта в часах
+const TIME_AFTER_SCRIPT = 4; //время задержки после запуска скрипта в часах
 
 // const isset($_GET['log']) =  true; //true - идет вывод echo;
 
@@ -622,7 +622,7 @@ class TemplateController extends Controller
         });
 
         $startFrom = new Carbon; //время с которого можно ставить задачи
-        $startFrom->addHours(TIME_AFTER_SCRIPT);
+        if (!isset($_GET['startnow'])) $startFrom->addHours(TIME_AFTER_SCRIPT);
 
         // Поставим статровые задачи
         if (isset($_GET['log']) == true) echo 'Поставим первые задачи в линиях' . '<br>';

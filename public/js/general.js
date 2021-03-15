@@ -99,7 +99,7 @@ window.modalFromTask = function (props) {
   // name: "Натяжка холста на подрамник" -
   // start: "2021-03-11 16:40:00"
   // time: 6
-  console.log(props);
+  // console.log (props)
   var html = "";
   html += '<form id="detail-task-form" action="/saveedittask" method="POST">';
   html += "<input type=\"hidden\" name=\"id\" value=\"".concat(props.id, "\">");
@@ -136,6 +136,7 @@ window.modalFromTask = function (props) {
   html += "<input class=\"input-required\" type=\"text\" name=\"bufer\" value=\"".concat(props.buffer, "\">");
   html += "</div>";
   html += "</div>";
+  html += '<button class="form-modal-button" type="button" onclick="detailTaskFormSubmit()">Сохранить</button>';
   html += '<button class="form-modal-button" type="button" onclick="detailTaskFormSubmit()">Сохранить</button>';
   html += "</form>";
   modal("open", null, html);

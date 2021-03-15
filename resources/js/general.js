@@ -154,8 +154,10 @@ window.modalFromTask = function (props) {
     html += "</div>";
     html +=
         '<button class="form-modal-button" type="button" onclick="detailTaskFormSubmit()">Сохранить</button>';
-    
-    
+    html +=
+        '<button class="form-modal-button" type="button" onclick="detailTaskFormSubmit()">Сохранить</button>';
+
+
     html += "</form>";
 
     modal("open", null, html);

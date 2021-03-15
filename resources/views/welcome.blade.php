@@ -27,6 +27,8 @@
                 <input type="text" id="id" name="id">
                 <input type="checkbox" name="log" id="log">
                 <label for="log">Логирование</label>
+                <input type="checkbox" name="startnow" id="startnow">
+                <label for="startnow">В ближайшее время</label>
                 <p><input type="submit" name="" value="Создать"></p>
             </form>
         </div>
