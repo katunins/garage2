@@ -90,7 +90,7 @@
 </div>
 
 
-<div class="">
+<div>
     <div class="status-filter-title">Фильтр по стадиям</div>
     <div class="status-filter">
         @foreach ([
@@ -156,24 +156,7 @@
 
         @foreach ($Tasks->whereBetween('start', [$weekCalendarDay, $weekEndTimeFilter])->sortBy('start') as $item)
 
-            {{-- // подготовим тектс для модального окна
-                $modalMessage = '';
-                foreach ($item->getAttributes() as $param => $value) {
-                if ($param == 'master') $value = $Users->find($value)->name;
 
-                if ($param == 'taskidbefore') {
-                $value = $Tasks->find($value)->name ?? '';
-                }
-
-                $skip = false;
-                foreach (['templateid', 'status', 'deal', 'created_at', 'updated_at', 'startGrid', 'endGrid'] as $el) {
-                if ($param == $el) $skip = true;
-                }
-
-                if (!$skip) $modalMessage .='<b>'.$param.'</b>'.' '.$value.'<br>';
-                }
-
-                $modalMessage .= '<p><a href="/edittask/'.$item->id.'">Редактировать задачу</a></p>'; --}}
             @php
 
                 if ($calendarStyle!=0) $tasksToDelete[]=$item->id;
@@ -184,9 +167,7 @@
                 style="grid-row: {{ $item->startGrid }}/{{ $item->endGrid }}; grid-column: {{ $userColumn[$item->master] }}"
             @else style="width: 600px; height: 40px;" @endif
 
-            {{-- onclick="modal('open', '{{ $item->deal }} -
-            {{ $item->generalinfo }}','{{ $modalMessage }}', {name:`ok`,
-            function: ()=>{modal(`close`)}})" --}}
+
             onclick="modalFromTask({{ json_encode($item) }})">
             <div @if ($calendarStyle!=0) style="margin-left: 25px" @endif class="title">
                 <span class="dealname">{{ $item->deal }}</span>
@@ -205,64 +186,66 @@
                 {{ $item->generalinfo }}
             </div>
     </div>
-    <input class="task-checkbox" type="checkbox" value="{{ $item->id }}" onchange="changeIDtodelete()">
+    @if ($calendarStyle!==0) <input class="task-checkbox" type="checkbox" value="{{ $item->id }}" onchange="changeIDtodelete()"> @endif
 
-@endforeach
+    @endforeach
 
-@if ($calendarStyle==0)
-    {{-- Сетка --}}
-    {{-- начальная 1/2 линия --}}
-    @php
-        $rowStart = 2;
-        $rowEnd =$gridInHour*$beforeAfter+2;
-    @endphp
-    @for ($column = 1; $column < $Users->count()+2; $column++)
-        <div class="hour-line"
-            style="grid-row: {{ $rowStart }}/{{ $rowEnd }}; grid-column: {{ $column }}/{{ $column+1 }}">
-            @if ($column == 1)
-                <div class="time-tag">
-                    {{ floor($workTimeStart-$beforeAfter) }} : 30
-                </div>
-            @endif
-        </div>
-    @endfor
-    {{-- часовые ячейки --}}
-    @for ($row = 0; $row <= $workTimeEnd-$workTimeStart; $row ++)
+    @if ($calendarStyle==0)
+        {{-- Сетка --}}
+        {{-- начальная 1/2 линия --}}
         @php
-            $rowStart=$gridInHour*$beforeAfter+2 +
-            $row*$gridInHour; $rowEnd=$gridInHour*$beforeAfter+2 + ($row+1)*$gridInHour;
+            $rowStart = 2;
+            $rowEnd =$gridInHour*$beforeAfter+2;
         @endphp
-        @for ($column=1; $column < $Users->count()+2; $column++)
+        @for ($column = 1; $column < $Users->count()+2; $column++)
             <div class="hour-line"
                 style="grid-row: {{ $rowStart }}/{{ $rowEnd }}; grid-column: {{ $column }}/{{ $column+1 }}">
                 @if ($column == 1)
                     <div class="time-tag">
-                        {{ $workTimeStart+$row }} : 00
+                        {{ floor($workTimeStart-$beforeAfter) }} : 30
                     </div>
                 @endif
             </div>
         @endfor
-
-    @endfor
-
-    {{-- конечная 1/2 линия --}}
-    @php
-        $rowStart = $gridInHour*$beforeAfter+2 + ($row)*$gridInHour;
-        $rowEnd = $rowStart+$gridInHour/2;
-    @endphp
-    @for ($column = 1; $column < $Users->count()+2; $column++)
-        <div class="hour-line"
-            style="grid-row: {{ $rowStart }}/{{ $rowEnd }}; grid-column: {{ $column }}/{{ $column+1 }}">
-            @if ($column == 1)
-                <div class="time-tag">
-                    {{ round($workTimeEnd) }} : 30
+        {{-- часовые ячейки --}}
+        @for ($row = 0; $row <= $workTimeEnd-$workTimeStart; $row ++)
+            @php
+                $rowStart=$gridInHour*$beforeAfter+2 +
+                $row*$gridInHour; $rowEnd=$gridInHour*$beforeAfter+2 + ($row+1)*$gridInHour;
+            @endphp
+            @for ($column=1; $column < $Users->count()+2; $column++)
+                <div class="hour-line clickable"
+                    style="grid-row: {{ $rowStart }}/{{ $rowEnd }}; grid-column: {{ $column }}/{{ $column+1 }}"
+                    hourData={{ $workTimeStart+$row }} userID={{ $column-1 }}
+                    dateData={{ $weekCalendarDay->format('Y-m-d') }}>
+                    @if ($column == 1)
+                        <div class="time-tag">
+                            {{ $workTimeStart+$row }} : 00
+                        </div>
+                    @endif
                 </div>
-            @endif
-        </div>
-    @endfor
-@endif
+            @endfor
 
-</div>
+        @endfor
+
+        {{-- конечная 1/2 линия --}}
+        @php
+            $rowStart = $gridInHour*$beforeAfter+2 + ($row)*$gridInHour;
+            $rowEnd = $rowStart+$gridInHour/2;
+        @endphp
+        @for ($column = 1; $column < $Users->count()+2; $column++)
+            <div class="hour-line"
+                style="grid-row: {{ $rowStart }}/{{ $rowEnd }}; grid-column: {{ $column }}/{{ $column+1 }}">
+                @if ($column == 1)
+                    <div class="time-tag">
+                        {{ round($workTimeEnd) }} : 30
+                    </div>
+                @endif
+            </div>
+        @endfor
+    @endif
+
+    </div>
 
 @endfor
 
@@ -319,5 +302,25 @@
             changeIDtodelete(el.value)
         })
     }
+
+    document.addEventListener('click', (event) => {
+        let cursorElem = event.toElement
+
+        if (cursorElem.classList.contains('clickable')) {
+            let hours = cursorElem.getAttribute('hourdata')
+            let userId = cursorElem.getAttribute('userid')
+            let minutes = Math.round((event.pageY - cursorElem.offsetTop) / (cursorElem.clientHeight / 60))
+            let date = cursorElem.getAttribute('dateData')
+            modalFromTask({
+                generalinfo: '',
+                info: '',
+                master: userId,
+                name: '',
+                start: date + ' ' + hours + ':' + minutes + ':00',
+                time: '',
+                buffer: 0,
+            })
+        }
+    })
 
 </script>

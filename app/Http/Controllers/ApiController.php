@@ -28,10 +28,10 @@ class ApiController extends Controller
                 ->orderBy('start')
                 ->get();
 
-            // пометим задачи, которые учавствуют 
+            // пометим задачи, которые застряли
             foreach (StuckDeals::all() as $item) {
-                foreach ($tasks->where('dealid', Tasks::find($item->taskId)->dealid) as $el){
-                    $stuckTask = Tasks::find($item->taskId);
+                $stuckTask = Tasks::find($item->taskId);
+                foreach ($tasks->where('dealid', $stuckTask->dealid)->where('deal', $stuckTask->deal) as $el) {
                     $stuckTask->masterName = User::find($stuckTask->master)->name;
                     $el->stuck = $stuckTask;
                 }

@@ -27,28 +27,38 @@ class TemplateController extends Controller
         ];
     }
 
+    // test - можно удалять
     static function repair()
     {
-        dd('функция для разработчика');
-        $templates = Templates::whereNotNull('conditions')->get();
-        if (!$templates) return;
-        foreach ($templates as $item) {
-            $conditions = $item->conditions;
-            foreach ($conditions as $key => $el) {
-                if ($el['equal'] === '==') {
-                    $conditions[$key]['equal'] = '=';
-                    dump($conditions[$key]['equal']);
-                }
-                if ($el['equal'] === '!==') {
-                    $conditions[$key]['equal'] = '!=';
-                    dump($conditions[$key]['equal']);
-                }
+
+        // @stuckId - ID зависшей задачи
+        // Возвращает массив ID связанных последующих не закрытых задач
+        function getStuckTasks($stuckId)
+        {
+            $safeCount = 0;
+            $currentTask = Tasks::find($stuckId);
+            $genetalTask = Tasks::where('deal', $currentTask->deal)->where('name', 'Проверка продукта')->first();
+
+            $result = [];
+            while ($currentTask && $safeCount < 50) {
+
+                $safeCount++;
+
+                $currentID = $currentTask->id;
+                $currentTask = Tasks::where('taskidbefore', $currentID)->first();
+                if ($currentTask) $result[] = $currentTask->id;
+                // dump($currentTask);
             }
-            $item->conditions = $conditions;
-            $item->save();
+
+            if ($genetalTask) $result[] = $genetalTask->id;
+
+            return $result;
         }
-        dd($templates->first(), 'ok');
+        dump('функция для разработчика');
+        dump(getStuckTasks(1453));
+        dd('stop');
     }
+
 
     static  $isHoliday; //праздники
     // 0	Рабочий день	200

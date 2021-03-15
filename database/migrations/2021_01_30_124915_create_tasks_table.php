@@ -26,15 +26,15 @@ class CreateTasksTable extends Migration
             $table->dateTime('end');
             $table->integer('buffer')->nullable(); //задержка в минутах
             $table->integer('line'); //линия параллельного производства
-            $table->integer('position'); //позиция в линии
+            $table->integer('position')->nullable(); //позиция в линии
             $table->string('generalinfo');
             $table->text('info')->nullable();
 
-            $table->integer('dealid');
-            $table->string('manager');
+            $table->integer('dealid')->nullable();
+            $table->string('manager')->nullable();
             $table->boolean('managernote')->default(false);
 
-            $table->string('deal');
+            $table->string('deal')->nullable();
             $table->timestamps();
         });
     }

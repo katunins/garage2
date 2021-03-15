@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
+use function PHPUnit\Framework\isNull;
+
 class CalendarController extends Controller
 {
     // преобразуем дату в русский формат
@@ -119,7 +121,7 @@ class CalendarController extends Controller
         $endCalendarTime->minute = $beforeAfter * 60;
         $endCalendarTime->second = 0;
 
-        $filterDealName = $_GET['filterdealname'] ?? '';
+        $filterDealName = $_GET['filterdealname'] ?? null;
 
         return view('calendar')
             ->with('Users', User::where('type', 'master')->get())
@@ -147,7 +149,7 @@ class CalendarController extends Controller
         $oneRow = $gridInHour / 60; //строк в одной минуте
         $minHeight = 30; //минимальная количество строк Grid в задаче в календаре из расчета на 30 px
 
-        // dd ($statusFilter);
+        // $filterDealNameExpression =if ($filterDealName) $filterDealName = ;
         $activeStatus = $statusFilter;
         foreach ($statusFilter as $key => $value) {
             if ($value == "1") {
@@ -157,7 +159,9 @@ class CalendarController extends Controller
 
         $tasks = Tasks::whereBetween('start', [$startCalendarTime, $endCalendarTime])
             ->whereBetween('end', [$startCalendarTime, $endCalendarTime])
-            ->where('deal', 'like', '%' . $filterDealName . '%')
+            ->where(function ($query) use ($filterDealName) {
+                if ($filterDealName) $query->where('deal', 'like', '%' . $filterDealName . '%');
+            })
             ->whereIn('status', $activeStatus)
             ->get();
 
@@ -292,20 +296,26 @@ class CalendarController extends Controller
         //     // 'paramtime.required_without'=>'Должен быть заполнен хотя бы один параметр времени'
         // ]);
 
+        // dd($request->all());
+
         $startTime = Carbon::parse($request->start);
         $endTime = clone $startTime;
         $endTime->addMinutes($request->time);
 
-        $task = Tasks::find($request->id);
+        $task = $request->id === 'undefined' ? new Tasks : Tasks::find($request->id);
         $task->master = $request->master;
         $task->name = $request->name;
+        $task->status = 'wait';
+        $task->buffer = $request->bufer;
+        $task->line = 1;
+
         $task->generalinfo = $request->generalinfo;
         $task->info = $request->info;
 
         $task->start = $startTime;
         $task->end = $endTime;
         $task->time = $request->time;
-
+        // dd ($task);
         $task->save();
         return redirect()->back();
     }
@@ -385,7 +395,6 @@ class CalendarController extends Controller
                             $stuck->save();
                             $result = $stuck->id;
                         }
-
                     } else $B24message .= 'Странно, но предыдущей задачи не существует';
 
                     DealsController::bitrixAPI(array("TO" => [1, 8, 38], "MESSAGE" => 'У ' . User::find($task->master)->name . '  нет предыдущей поставки:[br]' . $B24message), 'im.notify');
