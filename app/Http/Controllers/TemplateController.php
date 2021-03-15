@@ -30,33 +30,38 @@ class TemplateController extends Controller
     // test - можно удалять
     static function repair()
     {
+        // $dealArr['params']['dealid']=31127;
+        // $packageTasks = Tasks::where('dealid', (int)$dealArr['params']['dealid'])->where('name', 'Упаковка')->orderBy('end');
+        // if ($packageTasks->count()) $packageTasks->take($packageTasks->count()-1)->delete();
+        
+        
 
-        // @stuckId - ID зависшей задачи
-        // Возвращает массив ID связанных последующих не закрытых задач
-        function getStuckTasks($stuckId)
-        {
-            $safeCount = 0;
-            $currentTask = Tasks::find($stuckId);
-            $genetalTask = Tasks::where('deal', $currentTask->deal)->where('name', 'Проверка продукта')->first();
+        // // @stuckId - ID зависшей задачи
+        // // Возвращает массив ID связанных последующих не закрытых задач
+        // function getStuckTasks($stuckId)
+        // {
+        //     $safeCount = 0;
+        //     $currentTask = Tasks::find($stuckId);
+        //     $genetalTask = Tasks::where('deal', $currentTask->deal)->where('name', 'Проверка продукта')->first();
 
-            $result = [];
-            while ($currentTask && $safeCount < 50) {
+        //     $result = [];
+        //     while ($currentTask && $safeCount < 50) {
 
-                $safeCount++;
+        //         $safeCount++;
 
-                $currentID = $currentTask->id;
-                $currentTask = Tasks::where('taskidbefore', $currentID)->first();
-                if ($currentTask) $result[] = $currentTask->id;
-                // dump($currentTask);
-            }
+        //         $currentID = $currentTask->id;
+        //         $currentTask = Tasks::where('taskidbefore', $currentID)->first();
+        //         if ($currentTask) $result[] = $currentTask->id;
+        //         // dump($currentTask);
+        //     }
 
-            if ($genetalTask) $result[] = $genetalTask->id;
+        //     if ($genetalTask) $result[] = $genetalTask->id;
 
-            return $result;
-        }
-        dump('функция для разработчика');
-        dump(getStuckTasks(1453));
-        dd('stop');
+        //     return $result;
+        // }
+        // dump('функция для разработчика');
+        // dump(getStuckTasks(1453));
+        // dd('stop');
     }
 
 
@@ -255,12 +260,8 @@ class TemplateController extends Controller
         }
 
         // Уберем лишнюю упаковку. Оставим только позднюю
-        $packageTasks = Tasks::where('dealid', (int)$dealArr['params']['dealid'])->where('name', 'Упаковка');
-        if ($packageTasks->get()->count() > 1) {
-
-            $lastpackageTask = $packageTasks->orderByDesc('end')->first();
-            $packageTasks->where('id', '!=', $lastpackageTask->id)->delete();
-        }
+        $packageTasks = Tasks::where('dealid', (int)$dealArr['params']['dealid'])->where('name', 'Упаковка')->orderBy('end');
+        if ($packageTasks->count()) $packageTasks->take($packageTasks->count()-1)->delete();
 
 
 
@@ -342,103 +343,6 @@ class TemplateController extends Controller
         return $tasks;
     }
 
-    /* 
-    // дополнительно передвинем зависящие задачи от предыдущих 
-    static function extraSort($dealName)
-    {
-        $tasks = Tasks::where('deal', $dealName)->where('status', 'temp')->get();
-
-        // обработка ошибок
-        if ($tasks->count() == 0) {
-            self::$scriptErrors[] = 'extraSort() При дополнительной сортировке зависящих задач возникла ошибка';
-            return false;
-        }
-        if (isset($_GET['log'])) echo 'extraSort()<br>';
-        // возьмем все задачи с taskidbefore = NULL
-        foreach ($tasks->whereNull('taskidbefore') as $item) {
-
-            $beforeTask = null;
-            $safeCount = 0;
-            $currentTemplate = Templates::find($item->templateid);
-            $itemTemplate = $currentTemplate;
-
-            if (isset($_GET['log'])) echo 'Задача <b>' . $item->name . '</b> - ' . $item->id . ' не привязана к предыдущей. Найдем задачу по карте шаблонов<br>';
-            while (self::getBeboreTemplate($itemTemplate, true) && $safeCount < 100) {
-                if ($beforeTemplate = self::getBeboreTemplate($itemTemplate, true)) {
-                    $safeCount++;
-                    if (isset($_GET['log'])) echo '+';
-                    if ($beforeTask = $tasks->where('templateid', $beforeTemplate->id)->first()) {
-                        if (isset($_GET['log'])) echo ' Нашли задачу ' . $beforeTask->id . '(' . $beforeTask->name . ')' . ' по шаблону ' . $beforeTemplate->id . '<br>';
-                        $item->taskidbefore = $beforeTask->id;
-                        $item->save();
-                        break;
-                    }
-                    $itemTemplate = $beforeTemplate;
-                }
-            }
-
-            // if (isset($_GET['log'])) echo '<br>';
-
-            if ($item->taskidbefore == null) {
-                if ($currentTemplate->taskidbefore && $currentTemplate->position > 1) {
-                    if (isset($_GET['log'])) echo 'Задача была привязана к шаблону из другой линии. Ни одна задача из этой ветки шаблонов не поставлена. Найдем предущую задачу по шаблону из родительской линии<br>';
-                    $itemTemplate = $currentTemplate;
-                    while (self::getBeboreTemplate($itemTemplate) && $safeCount < 100) {
-                        if ($beforeTemplate = self::getBeboreTemplate($itemTemplate)) {
-                            $safeCount++;
-                            if (isset($_GET['log'])) echo '+';
-                            if ($beforeTask = $tasks->where('templateid', $beforeTemplate->id)->first()) {
-                                if (isset($_GET['log'])) echo ' Нашли задачу ' . $beforeTask->id . ' по шаблону ' . $beforeTemplate->id . '<br>';
-                                $item->taskidbefore = $beforeTask->id;
-                                $item->save();
-                                break;
-                            }
-                            $itemTemplate = $beforeTemplate;
-                        }
-                    }
-
-                    if (isset($_GET['log'])) echo '<br>';
-                } else {
-                    if (isset($_GET['log'])) echo ' Привязанной задачи нет!<br>';
-                }
-            }
-
-            // на всякйи случай проверим время старта найденной задачи и время предыдущей задачи в родительской линии
-            if ($item->taskidbefore) {
-                // && $parentBeforeTemplate = self::getBeboreTemplate(Templates::find($item->templateid))
-
-                $beforeTask = null;
-                $safeCount = 0;
-                $itemTemplate = Templates::find($item->templateid);
-                $beforeParentTask = NULL; //предыдущая задача в родительской линии
-
-                while (self::getBeboreTemplate($itemTemplate) && $safeCount < 100) {
-                    if ($beforeTemplate = self::getBeboreTemplate($itemTemplate)) {
-                        if ($beforeTask = $tasks->where('templateid', $beforeTemplate->id)->first()) {
-                            $beforeParentTask = $beforeTask;
-                            break;
-                        }
-                        $itemTemplate = $beforeTemplate;
-                    }
-                }
-
-                if ($beforeParentTask) {
-                    // dump (Tasks::find($item->taskidbefore)->end,Tasks::find($item->taskidbefore)->end );
-                    // dump (Tasks::find($item->taskidbefore)->end, Tasks::find($beforeParentTask->taskidbefore)->end);
-                    $timeBeforeTask = Carbon::parse($tasks->find($item->taskidbefore)->end);
-                    $timeBeforeParentTask = Carbon::parse($beforeParentTask->end);
-
-                    if ($timeBeforeParentTask->greaterThan($timeBeforeTask)) {
-                        if (isset($_GET['log'])) echo 'Предыдущая задача, найденная в ветках из других линий оказась в календаре раньше, чем предыдущая задача в родительской линии <b>' . $beforeParentTask->name . '</b>. Сделаем связку с родителькой задачей<br>';
-                        $item->taskidbefore = $beforeParentTask->id;
-                        $item->save();
-                    }
-                }
-            }
-        }
-    }
-    */
-
     // Возвращяет предыдущий шаблон. TRUE с переходом на другие линии, FALSE - только в данной линии
     static function getBeboreTemplate($currentTemplate, $shiftNextLine = false)
     {
@@ -458,29 +362,9 @@ class TemplateController extends Controller
     // Подбирет шаблоны под параметры заказа и расчитывает длительность задачи
     static function taskGenegator($productParams, $lastProduct)
     {
-        // "productname" => "Фотокниги"
-        // "Формат" => "20х20 см"
-        // "Материал обложки" => "Toronto Toronto Белый"
-        // "Персонализация" => "Без персонализации"
-        // "Форзацы" => "Белые Без печати"
-        // "Первая страница книги" => "Без кальки"
-        // "Печать" => "Шелк"
-        // "Короб в комплекте" => "Без короба"
-        // "Количество разворотов" => 12
-        // "Ссылка на макет" => "yadi.sk/d/M_crzlp8U5vVfA?w=1"
-        // "Количество" => 1
-        // "Комментарий" => ""
-        // "Рабочих дней на заказ" => 7
-        // "Срок готовности" => "2021.02.09|"
-        // "ПВЗ" => "ул. Профсоюзная, 126, ТЦ Крокус, 1 этаж"
-        // "Доставка" => "До склада"
-        // "Город" => "44"
-        // "Получатель" => "Костина Татьяна"
-        // "Телефон" => "+7(903) 110-52-07"
 
         // получим id продукта
         if (isset($_GET['log']) == true) echo 'taskGenerator()' . '<br>';
-
         $productId = array_search($productParams['productname'], self::getAllProducts());
         // $productData = Products::where('title', $productParams['productname'])->get();
         if (!$productId) {
