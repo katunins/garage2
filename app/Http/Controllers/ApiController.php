@@ -6,6 +6,7 @@ use App\Models\StuckDeals;
 use App\Models\Tasks;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class ApiController extends Controller
 {
@@ -37,7 +38,13 @@ class ApiController extends Controller
                 }
             }
 
-            return response()->json($tasks, 200);
+            // добавим не закрытые задачи до этого периода
+            $notFinished = Tasks::where('master', $request->data['user_id'])
+                ->where('status', '<>', 'finished')
+                ->whereDate('end', '<', Carbon::parse($request->data['date']))
+                ->count();
+
+            return response()->json(['tasks' => $tasks, 'notfinished' => $notFinished], 200);
         } else return response()->json($request->all(), 400);
     }
 
@@ -46,7 +53,7 @@ class ApiController extends Controller
         if ($request->has('data')) {
             $taskData = Tasks::find($request->data);
             if ($taskData) {
-                $response = $taskData->dealid ? DealsController::getDeal($taskData->dealid):null;
+                $response = $taskData->dealid ? DealsController::getDeal($taskData->dealid) : null;
                 $nextTask = Tasks::where('taskidbefore', $request->data)->first();
                 if ($nextTask) $nextTask->masterName = User::find($nextTask->master);
                 return response()->json(['deal' => $response, 'nextTask' => $nextTask], 200);
