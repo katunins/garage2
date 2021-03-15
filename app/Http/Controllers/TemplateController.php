@@ -225,6 +225,7 @@ class TemplateController extends Controller
     // проходит по каждому продукту в сделке
     static function tasksFromDeal($dealArr)
     {
+
         if (isset($_GET['log']) == true) echo 'tasksFromDeal()' . 'Start' . '<br>';
         self::$scriptErrors = [];
 
@@ -233,6 +234,8 @@ class TemplateController extends Controller
         sleep(1);
 
         foreach ($dealArr['products'] as $key => $dealItem) {
+
+
 
             self::$scriptErrors = [];
 
@@ -243,12 +246,24 @@ class TemplateController extends Controller
             $productDataArr['dealname'] = $dealName;
 
             $tasks = self::taskGenegator($productDataArr, $key === count($dealArr['products'])); //сформированные по фильтрам задачи из шаблонов
+
             $tasks = self::linkAllTasks($tasks); //тут уже связанные друг с другом задачи
             self::planGeneratorNew($tasks, $dealItem, $productDataArr);
 
             if (isset($_GET['log'])) echo '<br><hr><br>';
             else Tasks::where('deal', $dealName)->where('status', 'temp')->update(['status' => 'wait']);
         }
+
+        // Уберем лишнюю упаковку. Оставим только позднюю
+        $packageTasks = Tasks::where('dealid', (int)$dealArr['params']['dealid'])->where('name', 'Упаковка');
+        if ($packageTasks->get()->count() > 1) {
+
+            $lastpackageTask = $packageTasks->orderByDesc('end')->first();
+            $packageTasks->where('id', '!=', $lastpackageTask->id)->delete();
+        }
+
+
+
         if (isset($_GET['log'])) {
             if (Tasks::where('deal', $dealName)->where('status', 'temp')->count() > 0) {
                 echo '<div><a target="_blank" href="';
@@ -477,11 +492,6 @@ class TemplateController extends Controller
         $templates = Templates::where('productid', $productId)->get();
         for ($line = 1; $line <= $templates->max('line'); $line++) {
             foreach ($templates->where('line', $line)->sortBy('position') as $templateItem) {
-
-                if ($templateItem->grouptask && !$lastProduct) {
-                    // if (isset($_GET['log']) == true) echo 'Общая задача на весь заказ' . '<br>';
-                    continue;
-                };
 
                 // Проверим условия шаблона. Работают по принципу OR
 
