@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 class DealsController extends Controller
 {
 
@@ -70,11 +68,11 @@ class DealsController extends Controller
         $comment = $arDeal->result->COMMENTS;
 
         $dealArr = self::commentParser($comment);
-
         $dealArr['params']['deal'] = $dealTitle;
         $dealArr['params']['addinfo'] = unserialize($arDeal->result->ADDITIONAL_INFO);
         $dealArr['params']['dealid'] = $id;
         $dealArr['params']['managernote'] = $arDeal->result->UF_CRM_1476173890;
+        $dealArr['params']['Срок готовности'] = explode('T', $arDeal->result->CLOSEDATE)[0];
         $manager = self::bitrixAPI(['ID' => $arDeal->result->ASSIGNED_BY_ID], 'user.get');
 
         if (!isset($manager->error))

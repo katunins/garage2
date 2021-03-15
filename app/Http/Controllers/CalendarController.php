@@ -352,11 +352,10 @@ class CalendarController extends Controller
             $lastTask = $item->sortBy('end')->last();
             $lastTaskEnd = Carbon::parse($lastTask->end);
             $dealData = DealsController::getDeal($lastTask->dealid);
-            $deadLineString = $dealData['params']["Срок готовности"] ?? '2099.01.01|';
-            $deadLine = Carbon::createFromFormat('Y.m.d*', $deadLineString);
-            $deadLine->setHour(12);
-            $deadLine->setMinute(0);
-            if ($deadLine < $lastTaskEnd) dump($dealData['params']['deal'] . ', Срок: ' . ($dealData['params']['Срок готовности'] ?? 'Без срока').'. Краяняя задача: '.$lastTask->end);
+            // $deadLineString = $dealData['params']["Срок готовности"] ?? '2099.01.01|';
+            $deadLine = Carbon::parse($dealData['params']["Срок готовности"]);
+            $deadLine->setHour(10);
+            if ($deadLine < $lastTaskEnd) echo '<b>'.$dealData['params']['deal'].'</b>' . ', дата завершения - ' . ($dealData['params']['Срок готовности'] ?? 'Без срока').'. Краяняя задача: '.$lastTask->end.'<br>';
         }
     }
 
