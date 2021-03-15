@@ -43,7 +43,6 @@ class ApiController extends Controller
 
     public function getDetailTask(Request $request)
     {
-        return response()->json($request->all(), 400);
         if ($request->has('data')) {
             $taskData = Tasks::find($request->data);
             if ($taskData) {
