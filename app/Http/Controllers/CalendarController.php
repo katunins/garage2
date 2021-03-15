@@ -293,7 +293,7 @@ class CalendarController extends Controller
         //     // 'producttime.required_without' => 'Должен быть заполнен хотя бы один параметр времени',
         //     // 'paramtime.required_without'=>'Должен быть заполнен хотя бы один параметр времени'
         // ]);
-// dd ($request->status);
+        // dd ($request->status);
         if ($request->deleteconfirm === 'on') {
             Tasks::find($request->id)->delete();
             return redirect()->back();
@@ -355,7 +355,7 @@ class CalendarController extends Controller
             // $deadLineString = $dealData['params']["Срок готовности"] ?? '2099.01.01|';
             $deadLine = Carbon::parse($dealData['params']["Срок готовности"]);
             $deadLine->setHour(10);
-            if ($deadLine < $lastTaskEnd) echo '<b>'.$dealData['params']['deal'].'</b>' . ', дата завершения - ' . ($dealData['params']['Срок готовности'] ?? 'Без срока').'. Краяняя задача: '.$lastTask->end.'<br>';
+            if ($deadLine < $lastTaskEnd) echo '<b>' . $dealData['params']['deal'] . '</b>' . ', дата завершения - ' . ($dealData['params']['Срок готовности'] ?? 'Без срока') . '. Краяняя задача: ' . $lastTask->end . '<br>';
         }
     }
 
@@ -388,6 +388,14 @@ class CalendarController extends Controller
                         $stuck->save();
                         $result = $stuck->id;
                     }
+                }
+                break;
+
+            case 'wait':
+                $task = Tasks::find($id);
+                if ($task) {
+                    $task->status = $status;
+                    $task->save();
                 }
                 break;
 
