@@ -25,11 +25,6 @@ Route::get('/', function () {
         ->with('Users', User::all());
 });
 
-Route::get('/stuck', function () {
-    return view('stuck')
-        ->with('Stuck', CalendarController::getStuck());
-});
-
 Route::get('/checkDeadline', function () {
     CalendarController::deadlineDeals();
 });

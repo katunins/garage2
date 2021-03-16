@@ -11,7 +11,6 @@
             <li><a href="/templates">Шаблоны задач</a></li>
             <li><a href="/masters">Список мастеров</a></li>
             <li><a href="/checkDeadline" target="blank">Проверить Deadline сделок</a></li>
-            {{-- <li><a href="/stuck" target="blank">Сделки под угрозой</a></li> --}}
             <li><a href="/calendar">Календарь</a></li>
             <br>
             <li><a href="http://fixtome.ru/research/Z5VKIU3xtynTR2wKPIrb8yri5P4WB2LSqumMSyMcqH">Посоветуй что добавить в
