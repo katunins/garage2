@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome')
         ->with('overTasks', CalendarController::getOverTasks())
-        ->with('Stuck', CalendarController::getStuck())
+        // ->with('Stuck', CalendarController::getStuck())
         ->with('Users', User::all());
 });
 
