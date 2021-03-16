@@ -78,6 +78,8 @@ class DealsController extends Controller
         if (!isset($manager->error))
             $dealArr['params']['manager'] = $manager->result[0]->NAME . ' ' . $manager->result[0]->LAST_NAME;
         else $dealArr['params']['manager'] = '';
+
+        if ($arDeal->result->UF_CRM_1615928997) $dealArr['params']['Объединен'] = $arDeal->result->UF_CRM_1615928997;
         return $dealArr;
     }
 

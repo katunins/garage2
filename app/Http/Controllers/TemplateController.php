@@ -250,9 +250,11 @@ class TemplateController extends Controller
             $productDataArr = array_merge($dealItem, $dealArr['params']);
             $productDataArr['dealname'] = $dealName;
 
+            dump ($productDataArr);
             $tasks = self::taskGenegator($productDataArr, $key === count($dealArr['products'])); //сформированные по фильтрам задачи из шаблонов
 
             $tasks = self::linkAllTasks($tasks); //тут уже связанные друг с другом задачи
+            dd ($tasks);
             self::planGeneratorNew($tasks, $dealItem, $productDataArr);
 
             if (isset($_GET['log'])) echo '<br><hr><br>';
