@@ -333,7 +333,7 @@ class CalendarController extends Controller
         foreach (StuckDeals::all() as $item) {
 
             $stuckTask = Tasks::find($item->taskId)->name;
-            $dealId = Tasks::find($item->taskId)->dealid2;
+            $dealId = Tasks::find($item->taskId)->dealid;
             if ($stuckTask) {
                 $stuckDeal = is_null($dealId) ? 'Без сделки' : DealsController::getDeal(Tasks::find($item->taskId)->dealid)["params"]["deal"];
                 $result[] = (object)[
