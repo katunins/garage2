@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
+use function PHPUnit\Framework\isNull;
+
 class CalendarController extends Controller
 {
     // преобразуем дату в русский формат
@@ -331,16 +333,15 @@ class CalendarController extends Controller
         foreach (StuckDeals::all() as $item) {
 
             $stuckTask = Tasks::find($item->taskId)->name;
+            $dealId = Tasks::find($item->taskId)->dealid2;
             if ($stuckTask) {
-                $stuckDeal = DealsController::getDeal(Tasks::find($item->taskId)->dealid);
-                if ($stuckDeal) {
-                    $result[] = (object)[
-                        'id' => $item->id,
-                        'task' => $stuckTask,
-                        'deal' => $stuckDeal["params"]["deal"],
-                        'type' => $item->type
-                    ];
-                }
+                $stuckDeal = is_null($dealId) ? 'Без сделки' : DealsController::getDeal(Tasks::find($item->taskId)->dealid)["params"]["deal"];
+                $result[] = (object)[
+                    'id' => $item->id,
+                    'task' => $stuckTask,
+                    'deal' => $stuckDeal,
+                    'type' => $item->type
+                ];
             }
         }
 

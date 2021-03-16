@@ -3,7 +3,6 @@
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DealsController;
 use App\Http\Controllers\TemplateController;
-use App\Models\StuckDeals;
 use App\Models\Tasks;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -22,8 +21,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome')
         ->with('overTasks', CalendarController::getOverTasks())
-        // ->with('Stuck', CalendarController::getStuck())
+        ->with('Stuck', CalendarController::getStuck())
         ->with('Users', User::all());
+});
+
+Route::get('/stuck', function () {
+    return view('stuck')
+        ->with('Stuck', CalendarController::getStuck());
 });
 
 Route::get('/checkDeadline', function () {
