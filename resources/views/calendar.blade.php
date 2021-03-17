@@ -167,7 +167,8 @@
                 style="grid-row: {{ $item->startGrid }}/{{ $item->endGrid }}; grid-column: {{ $userColumn[$item->master] }}"
             @else style="width: 600px; height: 40px;" @endif
             draggable="true"
-            onclick="modalFromTask({{ json_encode($item) }})">
+            taskdata="{{ json_encode($item) }}"
+            onclick="modalFromTask(JSON.parse(this.getAttribute('taskdata')))">
             <div @if ($calendarStyle!=0) style="margin-left: 25px" @endif class="title">
                 <span class="dealname">{{ $item->deal }}</span>
                 {{ $item->name }}
@@ -322,6 +323,29 @@
         }
     })
 
+    let mouseTopShift
 
+    document.addEventListener(`dragstart`, (evt) => {
+        mouseTopShift = evt.offsetY
+    })
+    document.addEventListener(`dragend`, (evt) => {
+        let x = evt.clientX
+        let y = evt.clientY - mouseTopShift
+        let targetElem = document.elementFromPoint(x, y)
+
+        if (!targetElem.classList.contains('clickable')) return
+
+        let dragElemData = JSON.parse(evt.target.getAttribute('taskdata'))
+
+        let date = targetElem.getAttribute('dateData')
+        let hours = targetElem.getAttribute('hourdata')
+        let minutes = Math.round((evt.pageY - mouseTopShift - targetElem.offsetTop) / (targetElem.clientHeight /
+            60))
+
+        dragElemData.master = targetElem.getAttribute('userid')
+        dragElemData.start = date + ' ' + hours + ':' + minutes + ':00'
+
+        modalFromTask(dragElemData)
+    })
 
 </script>
