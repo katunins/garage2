@@ -68,7 +68,7 @@ class ApiController extends Controller
     // detailitem.js:42 {action: "empty", taskId: 937
     {
         if ($request->has('data') && isset($request->data['action']) && isset($request->data['taskId'])) {
-            return response()->json(CalendarController::newTaskStatus($request->data['taskId'], $request->data['action']), 200);
+            return response()->json(CalendarController::newTaskStatus($request->data['taskId'], $request->data['action'], $request), 200);
         } else return response()->json($request->all(), 400);
     }
 

@@ -367,7 +367,7 @@ class CalendarController extends Controller
         }
     }
 
-    static function newTaskStatus($id, $status)
+    static function newTaskStatus($id, $status, $request)
     {
 
         $result = null;
@@ -383,16 +383,33 @@ class CalendarController extends Controller
                 }
                 break;
 
-            case 'pause':
+                // case 'pause':
+                //     $task = Tasks::find($id);
+                //     if ($task) {
+                //         $task->status = $status;
+                //         $task->save();
+
+                //         if (StuckDeals::where('taskId', $id)->count() === 0) {
+                //             $stuck = new StuckDeals();
+                //             $stuck->taskId = (int)$id;
+                //             $stuck->type = $status;
+                //             $stuck->save();
+                //             $result = $stuck->id;
+                //         }
+                //     }
+                //     break;
+
+            case 'mastermessage':
                 $task = Tasks::find($id);
                 if ($task) {
-                    $task->status = $status;
-                    $task->save();
+                    // $task->status = $status;
+                    // $task->save();
 
                     if (StuckDeals::where('taskId', $id)->count() === 0) {
                         $stuck = new StuckDeals();
                         $stuck->taskId = (int)$id;
-                        $stuck->type = $status;
+                        $stuck->type = 'mastermessage';
+                        $stuck->comment = $request->data['message'];
                         $stuck->save();
                         $result = $stuck->id;
                     }
@@ -407,29 +424,29 @@ class CalendarController extends Controller
                 }
                 break;
 
-            case 'empty':
-                $task = Tasks::find($id);
-                if ($task) {
+                // case 'empty':
+                //     $task = Tasks::find($id);
+                //     if ($task) {
 
-                    $taskBefore = Tasks::find($task->taskidbefore);
+                //         $taskBefore = Tasks::find($task->taskidbefore);
 
-                    $B24message = 'Сделка: ' . $task->deal . ', ' . 'Задача: ' . $task->name . '[br]';
-                    if ($taskBefore) {
-                        $B24message .= 'от ' . User::find($taskBefore->master)->name . ', задача ' . $taskBefore->name;
+                //         $B24message = 'Сделка: ' . $task->deal . ', ' . 'Задача: ' . $task->name . '[br]';
+                //         if ($taskBefore) {
+                //             $B24message .= 'от ' . User::find($taskBefore->master)->name . ', задача ' . $taskBefore->name;
 
-                        if (StuckDeals::where('taskId', $id)->count() === 0) {
-                            $stuck = new StuckDeals();
-                            $stuck->taskId = $taskBefore->id;
-                            $stuck->type = $status;
-                            $stuck->save();
-                            $result = $stuck->id;
-                        }
-                    } else $B24message .= 'Странно, но предыдущей задачи не существует';
+                //             if (StuckDeals::where('taskId', $id)->count() === 0) {
+                //                 $stuck = new StuckDeals();
+                //                 $stuck->taskId = $taskBefore->id;
+                //                 $stuck->type = $status;
+                //                 $stuck->save();
+                //                 $result = $stuck->id;
+                //             }
+                //         } else $B24message .= 'Странно, но предыдущей задачи не существует';
 
-                    DealsController::bitrixAPI(array("TO" => [1, 8, 38], "MESSAGE" => 'У ' . User::find($task->master)->name . '  нет предыдущей поставки:[br]' . $B24message), 'im.notify');
-                }
+                //         DealsController::bitrixAPI(array("TO" => [1, 8, 38], "MESSAGE" => 'У ' . User::find($task->master)->name . '  нет предыдущей поставки:[br]' . $B24message), 'im.notify');
+                //     }
 
-                break;
+                //     break;
 
             default:
                 break;
