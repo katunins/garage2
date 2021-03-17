@@ -410,6 +410,8 @@ class CalendarController extends Controller
                         $stuck->taskId = (int)$id;
                         $stuck->type = 'mastermessage';
                         $stuck->comment = $request->data['message'];
+                        $stuck->dealid = Tasks::find($id)->dealid;
+                        $stuck->deal = DealsController::getDeal($stuck->dealid)['params']['deal'];
                         $stuck->save();
                         $result = $stuck->id;
                     }

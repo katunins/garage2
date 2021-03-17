@@ -30,38 +30,8 @@ class TemplateController extends Controller
     // test - можно удалять
     static function repair()
     {
-        // $dealArr['params']['dealid']=31127;
-        // $packageTasks = Tasks::where('dealid', (int)$dealArr['params']['dealid'])->where('name', 'Упаковка')->orderBy('end');
-        // if ($packageTasks->count()) $packageTasks->take($packageTasks->count()-1)->delete();
-        
-        
-
-        // // @stuckId - ID зависшей задачи
-        // // Возвращает массив ID связанных последующих не закрытых задач
-        // function getStuckTasks($stuckId)
-        // {
-        //     $safeCount = 0;
-        //     $currentTask = Tasks::find($stuckId);
-        //     $genetalTask = Tasks::where('deal', $currentTask->deal)->where('name', 'Проверка продукта')->first();
-
-        //     $result = [];
-        //     while ($currentTask && $safeCount < 50) {
-
-        //         $safeCount++;
-
-        //         $currentID = $currentTask->id;
-        //         $currentTask = Tasks::where('taskidbefore', $currentID)->first();
-        //         if ($currentTask) $result[] = $currentTask->id;
-        //         // dump($currentTask);
-        //     }
-
-        //     if ($genetalTask) $result[] = $genetalTask->id;
-
-        //     return $result;
-        // }
-        // dump('функция для разработчика');
-        // dump(getStuckTasks(1453));
-        // dd('stop');
+        // dump (DealsController::getDeal(Tasks::find(1528)->dealid)['params']['deal']);
+        dd('stop');
     }
 
 
