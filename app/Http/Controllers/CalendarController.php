@@ -324,28 +324,33 @@ class CalendarController extends Controller
 
     static function getStuck()
     {
-        // dd ((StuckDeals::where('taskId', 937)->first())?1:2);
-        // "id" => 1
-        // "taskId" => 937
-        // "comment" => null
-        // "type" => "pause"
-        $result = [];
-        foreach (StuckDeals::all() as $item) {
+        //     // dd ((StuckDeals::where('taskId', 937)->first())?1:2);
+        //     // "id" => 1
+        //     // "taskId" => 937
+        //     // "comment" => null
+        //     // "type" => "pause"
+        //     $result = [];
+        $allStuck = StuckDeals::all();
+            foreach ($allStuck as $item) {
+                $stuckTask = Tasks::find($item->taskId);
+                $item->masterName =User::find($stuckTask->master)->name;
+                $item->taskName = $stuckTask->master;
+                // array_push($item, ['taskName'=>$stuckTask->master->name]);
+                // $result[]=$item;
+        //         // $stuckTask = Tasks::find($item->taskId)->name;
+        //         // $dealId = Tasks::find($item->taskId)->dealid;
+        //         if ($stuckTask) {
+        //             // $stuckDeal = is_null($dealId) ? 'Без сделки' : DealsController::getDeal(Tasks::find($item->taskId)->dealid)["params"]["deal"];
+        //             $result[] = (object)[
+        //                 // 'id' => $item->id,
 
-            $stuckTask = Tasks::find($item->taskId)->name;
-            $dealId = Tasks::find($item->taskId)->dealid;
-            if ($stuckTask) {
-                $stuckDeal = is_null($dealId) ? 'Без сделки' : DealsController::getDeal(Tasks::find($item->taskId)->dealid)["params"]["deal"];
-                $result[] = (object)[
-                    'id' => $item->id,
-                    'task' => $stuckTask,
-                    'deal' => $stuckDeal,
-                    'type' => $item->type
-                ];
+        //                 'task' => Tasks::find($item->taskId)->name;
+        //                 'deal' => $stuckDeal,
+        //                 // 'type' => $item->type
+        //             ];
+        //         }
             }
-        }
-
-        return $result;
+        return $allStuck;
     }
 
     public function removestuck(Request $request)

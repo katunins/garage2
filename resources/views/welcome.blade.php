@@ -11,7 +11,7 @@
             <li><a href="/templates">Шаблоны задач</a></li>
             <li><a href="/masters">Список мастеров</a></li>
             <li><a href="/checkDeadline" target="blank">Проверить Deadline сделок</a></li>
-            <li><a href="/stuck">Сделки под угрозой</a></li>
+            {{-- <li><a href="/stuck">Сделки под угрозой</a></li> --}}
             <li><a href="/calendar">Календарь</a></li>
             <br>
             <li><a href="http://fixtome.ru/research/Z5VKIU3xtynTR2wKPIrb8yri5P4WB2LSqumMSyMcqH">Посоветуй что добавить в
@@ -35,7 +35,27 @@
             </form>
         </div>
         <div class="dashboard">
-
+            <div>
+                <h2>Задачи с проблемами</h2>
+                <ul class="stuck-deals">
+                    @foreach ($Stuck as $item)
+                        <li class="block-right-button task-status-pause">
+                            <span class="dealname">{{ $item->deal }}</span>
+                            <span>
+                                {{ $item->masterName }},
+                                {{ $item->taskName }}
+                                <br>
+                                {{ $item->comment }}
+                                <form action="/removestuck" method="get">
+                                    @csrf
+                                    <input type="hidden" name="stuckid" value="{{ $item->id }}">
+                                    <input class="right-button" type="submit" value="Удалить">
+                                </form>
+                            </span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
             <div>
                 <h2>Просроченные задачи</h2>
                 <ul class="over-tasks">

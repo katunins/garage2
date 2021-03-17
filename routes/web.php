@@ -21,13 +21,14 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome')
         ->with('overTasks', CalendarController::getOverTasks())
-        ->with('Users', User::all());
-});
-
-Route::get('/stuck', function () {
-    return view('stuck')
+        ->with('Users', User::all())
         ->with('Stuck', CalendarController::getStuck());
 });
+
+// Route::get('/stuck', function () {
+//     return view('stuck')
+//         ->with('Stuck', CalendarController::getStuck());
+// });
 
 Route::get('/checkDeadline', function () {
     CalendarController::deadlineDeals();
