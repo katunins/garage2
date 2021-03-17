@@ -1,7 +1,6 @@
 <link rel="stylesheet" href="css/calendar.css">
 <link rel="stylesheet" href="css/general.css">
 @csrf
-
 {{-- $Users, $Date, $Tasks --}}
 
 <div class="head-block">
@@ -328,14 +327,23 @@
     document.addEventListener(`dragstart`, (evt) => {
         mouseTopShift = evt.offsetY
     })
+
+    function getStyleGridData(elem) {
+        return elem.style.gridArea.replace(/\s/g, '').split('/')
+    }
+
     document.addEventListener(`dragend`, (evt) => {
+        // console.log(evt)
         let x = evt.clientX
         let y = evt.clientY - mouseTopShift
+        let currentElem = evt.target
         let targetElem = document.elementFromPoint(x, y)
 
-        if (!targetElem.classList.contains('clickable')) return
+        if (!targetElem.classList.contains('clickable')) {
+            return
+        }
 
-        let dragElemData = JSON.parse(evt.target.getAttribute('taskdata'))
+        let dragElemData = JSON.parse(currentElem.getAttribute('taskdata'))
 
         let date = targetElem.getAttribute('dateData')
         let hours = targetElem.getAttribute('hourdata')
@@ -345,7 +353,35 @@
         dragElemData.master = targetElem.getAttribute('userid')
         dragElemData.start = date + ' ' + hours + ':' + minutes + ':00'
 
-        modalFromTask(dragElemData)
+        ajax('/shiftTask', dragElemData, result => {
+            if (result) {
+
+                currentElem.setAttribute('taskdata', JSON.stringify(dragElemData))
+                // передвинем элемент в сетке
+                let rowsInMinute = document.querySelector('input[name="gridinhour"]').value / 60
+
+                let shiftFromTop = Math.round(rowsInMinute * minutes)
+                let elemLenght = getStyleGridData(currentElem)[2] - getStyleGridData(currentElem)[0]
+
+                let startNewRow = shiftFromTop + Number(getStyleGridData(targetElem)[0])
+                let endNewRow = startNewRow + elemLenght
+
+                currentElem.style.gridArea =
+                    `${startNewRow} / ${getStyleGridData(targetElem)[1]} / ${endNewRow} / ${getStyleGridData(targetElem)[3]}`
+
+            }
+        })
+        // modalFromTask(dragElemData)
     })
+
+    // document.addEventListener(`dragover`, (evt) => {
+    //     if (evt.target.classList.contains('task')) {
+    //         evt.target.classList.add('hide')
+    //         console.log(evt.target)
+    //         // setTimeout(() => {
+    //         //     evt.target.classList.remove('hide')
+    //         // }, 500);
+    //     }
+    // })
 
 </script>

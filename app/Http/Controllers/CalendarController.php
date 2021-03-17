@@ -436,4 +436,19 @@ class CalendarController extends Controller
         }
         return $result;
     }
+
+    public function shiftTask(Request $request)
+    {
+        $startTime = Carbon::parse($request->start);
+        $endTime = clone $startTime;
+        $endTime->addMinutes($request->time);
+
+        $task = Tasks::find($request->id);
+        $task->master = $request->master;
+        $task->start = $startTime;
+        $task->end = $endTime;
+
+        $task->save();
+        return response()->json(true);
+    }
 }

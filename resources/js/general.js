@@ -5,8 +5,8 @@ window.ajax = function (url, data, callBack = null) {
             Accept: "application/json, text-plain, */*",
             "X-Requested-With": "XMLHttpRequest",
             "X-CSRF-TOKEN": document
-                .querySelector('meta[name="csrf-token"]')
-                .getAttribute("content"),
+            .querySelector('input[name="_token"]')
+            .value,
         },
         method: "post",
         credentials: "same-origin",

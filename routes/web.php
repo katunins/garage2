@@ -149,3 +149,5 @@ Route::get('/edittask/{taskId}', function ($id) {
 });
 Route::post('/saveedittask', [CalendarController::class, 'saveEditTask']);
 Route::get('/removestuck', [CalendarController::class, 'removeStuck']);
+
+Route::post('/shiftTask', [CalendarController::class, 'shiftTask']);
