@@ -324,8 +324,12 @@
 
     let mouseTopShift
 
+
     document.addEventListener(`dragstart`, (evt) => {
         mouseTopShift = evt.offsetY
+        let currentElem = evt.target
+        evt.target.classList.add('drop')
+        document.querySelectorAll('.task:not(.drop)').forEach(el => el.style.zIndex = 0)
     })
 
     function getStyleGridData(elem) {
@@ -337,11 +341,17 @@
         let x = evt.clientX
         let y = evt.clientY - mouseTopShift
         let currentElem = evt.target
+
+        currentElem.classList.remove('drop')
+        document.querySelectorAll('.task').forEach(el => el.style.zIndex = 2)
+
         let targetElem = document.elementFromPoint(x, y)
 
-        if (!targetElem.classList.contains('clickable')) {
-            return
-        }
+        if (targetElem.classList.contains('taskname') || targetElem.classList.contains('title'))
+            targetElem = targetElem.parentNode;
+
+        if (!targetElem.classList.contains('clickable') && !targetElem.classList.contains('task')) return
+
 
         let dragElemData = JSON.parse(currentElem.getAttribute('taskdata'))
 
@@ -353,24 +363,30 @@
         dragElemData.master = targetElem.getAttribute('userid')
         dragElemData.start = date + ' ' + hours + ':' + minutes + ':00'
 
-        ajax('/shiftTask', dragElemData, result => {
-            if (result) {
+        // console.log(dragElemData.start, dragElemData.master)
 
-                currentElem.setAttribute('taskdata', JSON.stringify(dragElemData))
-                // передвинем элемент в сетке
-                let rowsInMinute = document.querySelector('input[name="gridinhour"]').value / 60
+        if (date && hours && minutes && dragElemData.master)
 
-                let shiftFromTop = Math.round(rowsInMinute * minutes)
-                let elemLenght = getStyleGridData(currentElem)[2] - getStyleGridData(currentElem)[0]
+        {
+            ajax('/shiftTask', dragElemData, result => {
+                if (result) {
 
-                let startNewRow = shiftFromTop + Number(getStyleGridData(targetElem)[0])
-                let endNewRow = startNewRow + elemLenght
+                    currentElem.setAttribute('taskdata', JSON.stringify(dragElemData))
+                    // передвинем элемент в сетке
+                    let rowsInMinute = document.querySelector('input[name="gridinhour"]').value / 60
 
-                currentElem.style.gridArea =
-                    `${startNewRow} / ${getStyleGridData(targetElem)[1]} / ${endNewRow} / ${getStyleGridData(targetElem)[3]}`
+                    let shiftFromTop = Math.round(rowsInMinute * minutes)
+                    let elemLenght = getStyleGridData(currentElem)[2] - getStyleGridData(currentElem)[0]
 
-            }
-        })
+                    let startNewRow = shiftFromTop + Number(getStyleGridData(targetElem)[0])
+                    let endNewRow = startNewRow + elemLenght
+
+                    currentElem.style.gridArea =
+                        `${startNewRow} / ${getStyleGridData(targetElem)[1]} / ${endNewRow} / ${getStyleGridData(targetElem)[3]}`
+
+                }
+            })
+        }
         // modalFromTask(dragElemData)
     })
 
