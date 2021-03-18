@@ -141,6 +141,7 @@ Route::get('/updateavatar', [User::class, 'updateAvatar']);
 Route::get('/customtask', function () {
     return view('customtask')->with('Users', User::all());
 });
+
 Route::post('/newcustomtask', [CalendarController::class, 'newCustomTask']);
 Route::get('/edittask/{taskId}', function ($id) {
     $Task = Tasks::find($id);
@@ -152,3 +153,7 @@ Route::post('/saveedittask', [CalendarController::class, 'saveEditTask']);
 Route::get('/removestuck', [CalendarController::class, 'removeStuck']);
 
 Route::post('/shiftTask', [CalendarController::class, 'shiftTask']);
+
+Route::get('/startnewdeal', function () {
+    return view('startnewdeal')->with('newDeals', DealsController::newDeals());
+});

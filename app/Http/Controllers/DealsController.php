@@ -102,4 +102,19 @@ class DealsController extends Controller
 
         return json_decode($result);
     }
+
+    static function newDeals()
+    {
+
+        $resultArr = [];
+        // do {
+        //     $result = self::bitrixAPI([
+        //         'order' => ["ID" => "ASC"],
+        //         // 'filter' => ["STAGE_ID" => 3],
+        //         // 'select' => ["ID", "TITLE", "STAGE_ID", "PROBABILITY", "OPPORTUNITY", "CURRENCY_ID"]
+        //     ], 'crm.deal.list');
+        //     array_push($resultArr, $result);
+        // } while ($result->next);
+        dd($resultArr);
+    }
 }

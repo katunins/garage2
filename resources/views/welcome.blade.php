@@ -6,8 +6,9 @@
     <h1>korobook Администратор</h1>
     <div class="container">
         <div class="menu">
-            <li><a href="/customtask">Создать задачу</a></li>
+            <li><a href="/startnewdeal">Запустить сделки в работу</a></li>
             <br>
+            <li><a href="/customtask">Создать задачу</a></li>
             <li><a href="/templates">Шаблоны задач</a></li>
             <li><a href="/masters">Список мастеров</a></li>
             <li><a href="/checkDeadline" target="blank">Проверить Deadline сделок</a></li>
