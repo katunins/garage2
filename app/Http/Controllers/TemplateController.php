@@ -215,8 +215,8 @@ class TemplateController extends Controller
         }
 
         $dealArr = DealsController::getDeal((int)$request->dealid);
-        if (is_null($dealArr['products'])) dd ('Ошибка! Не распознан комментарий в сделке');
-        
+        if (is_null($dealArr['products'])) dd('Ошибка! Не распознан комментарий в сделке');
+
         if (isset($_GET['log']) == true) echo 'tasksFromDeal()' . 'Start' . '<br>';
         self::$scriptErrors = [];
 
@@ -238,41 +238,45 @@ class TemplateController extends Controller
 
             $tasks = self::taskGenegator($productDataArr, $key === count($dealArr['products'])); //сформированные по фильтрам задачи из шаблонов
             $tasks = self::linkAllTasks($tasks); //тут уже связанные друг с другом задачи
-            
+
             self::planGeneratorNew($tasks, $dealItem, $productDataArr);
-            
+
             if (isset($_GET['log'])) echo '<br><hr><br>';
             else Tasks::where('deal', $dealName)->where('status', 'temp')->update(['status' => 'wait']);
         }
-        
+
         // Уберем лишнюю упаковку. Оставим только позднюю
         $packageTasks = Tasks::where('dealid', (int)$dealArr['params']['dealid'])->where('name', 'Упаковка')->orderBy('end');
         if ($packageTasks->count()) $packageTasks->take($packageTasks->count() - 1)->delete();
 
         $calendarHref = '/calendar?filterdealname=' . explode('#', $dealArr['params']['deal'])[1];
-        $calendarHref .='&calendardays=7';
-        $calendarHref .='&calendarstyle=1';
-        $calendarHref .='&date=' . explode(' ', Tasks::where('deal', $dealName)->orderBy('start')->first()->start)[0];
+        $calendarHref .= '&calendardays=7';
+        $calendarHref .= '&calendarstyle=1';
+        $calendarHref .= '&date=' . explode(' ', Tasks::where('deal', $dealName)->orderBy('start')->first()->start)[0];
 
 
-        if (isset($_GET['log'])) {
-            if (Tasks::where('deal', $dealName)
-            ->where('status', 'temp')->count() > 0) {
-                echo '<div><a target="_blank" href="';
-                echo $calendarHref;
-                // echo '/calendar?filterdealname=' . explode('#', $dealArr['params']['deal'])[1];
-                // echo '&calendardays=7';
-                // echo '&calendarstyle=1';
-                // echo '&date=' . explode(' ', Tasks::where('deal', $dealName)->where('status', 'temp')->orderBy('start')->first()->start)[0];
-                echo '">Перейти в календарь</a></div>';
-            } else {
-                dump('Задачи не сфорированы');
-            }
-            dd(self::$scriptErrors);
+        // if (isset($_GET['log'])) {
+        //     if (Tasks::where('deal', $dealName)
+        //     ->where('status', 'temp')->count() > 0) {
+        //         echo '<div><a target="_blank" href="';
+        //         echo $calendarHref;
+        //         // echo '/calendar?filterdealname=' . explode('#', $dealArr['params']['deal'])[1];
+        //         // echo '&calendardays=7';
+        //         // echo '&calendarstyle=1';
+        //         // echo '&date=' . explode(' ', Tasks::where('deal', $dealName)->where('status', 'temp')->orderBy('start')->first()->start)[0];
+        //         echo '">Перейти в календарь</a></div>';
+        //     } else {
+        //         dump('Задачи не сфорированы');
+        //     }
+        //     dd(self::$scriptErrors);
+        // }
+
+        if (self::$scriptErrors == []) {
+            // сменим статус на 4
+            DealsController::bitrixAPI(['ID' => $request->dealid, 'fields' => ['STAGE_ID' => '1']], 'crm.deal.update');
+            return redirect($calendarHref);
         }
-
-        if (self::$scriptErrors == []) return redirect($calendarHref);
-        dd (self::$scriptErrors);
+        dd(self::$scriptErrors);
     }
 
     // получает массив выбранных по условию задач

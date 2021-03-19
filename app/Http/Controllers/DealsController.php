@@ -62,6 +62,7 @@ class DealsController extends Controller
     static function getDeal($id)
     {
         $arDeal = self::bitrixAPI(["ID" => $id], 'crm.deal.get');
+        // dd ($arDeal);
         if (isset($arDeal->error)) {
             dd($arDeal);
             return false;

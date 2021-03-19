@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
+    // dd (DealsController::getDeal(31251));
     return view('welcome')
         ->with('overTasks', CalendarController::getOverTasks())
         ->with('Users', User::all())
