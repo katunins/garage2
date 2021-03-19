@@ -36,6 +36,7 @@ class DealsController extends Controller
 
         $arr = explode('<br>', $comment);
         $prod = 0; //кол-во номер продукта в сделке
+        $deal = ['products' => null, 'params' => null];
         foreach ($arr as $row) {
             if ($row != "") {
                 if (strpos($row, ':')) {
@@ -119,7 +120,6 @@ class DealsController extends Controller
 
         foreach ($resultArr as $item) {
             $item->dublicateCount = Tasks::where('dealid', $item->ID)->count();
-
         }
         // dd ($resultArr);
         return $resultArr;
