@@ -152,20 +152,21 @@ window.modalFromTask = function (props) {
     html += "</div>";
 
     html += '<div class="form-elem form-elem__min">';
-
-
     html += '<label for="status">Статус задачи:</label><select id="status" name="status">'
     let statusArr = [
         { status: 'wait', name: 'Ожидает исполнения' },
         { status: 'pause', name: 'Остановлена' },
         { status: 'finished', name: 'Завершена' }
     ]
-
     statusArr.forEach(el => {
         html += `<option value="${el.status}" ${el.status === props.status ? 'selected' : ''}>${el.name}</option>`
     })
     html += '</select>'
+    html += "</div>";
 
+    html += '<div class="form-elem form-elem__min">';
+    html += '<label for="dealid">ID сделки</label>';
+    html += `<input type="text" name="dealid" value="${props.dealid ?? ''}">`;
     html += "</div>";
 
     html += "</div>";

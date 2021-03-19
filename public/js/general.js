@@ -93,6 +93,8 @@ window.modal = function (action) {
 };
 
 window.modalFromTask = function (props) {
+  var _props$dealid;
+
   // generalinfo: "Холсты 30х40" -
   // info: null -
   // master: 4 -
@@ -151,6 +153,10 @@ window.modalFromTask = function (props) {
     html += "<option value=\"".concat(el.status, "\" ").concat(el.status === props.status ? 'selected' : '', ">").concat(el.name, "</option>");
   });
   html += '</select>';
+  html += "</div>";
+  html += '<div class="form-elem form-elem__min">';
+  html += '<label for="dealid">ID сделки</label>';
+  html += "<input type=\"text\" name=\"dealid\" value=\"".concat((_props$dealid = props.dealid) !== null && _props$dealid !== void 0 ? _props$dealid : '', "\">");
   html += "</div>";
   html += "</div>";
   html += '<button class="form-modal-button" type="button" onclick="detailTaskFormSubmit()">Сохранить</button>';

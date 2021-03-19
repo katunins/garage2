@@ -260,41 +260,11 @@ class CalendarController extends Controller
     }
 
     public function saveEditTask(Request $request)
-    // array:8 [▼
-    //     "_token" => "ENVz3Aq95KbD37hm3VtTJbojhmNsXaldNIgBpvdf"
-    //     "taskid" => "737"
-    //     "master" => "2"
-    //     "taskname" => "Проверка фотографий"
-    //     "generalinfo" => "Фотокниги 15х15 см (минибук), 10 разворотов"
-    //     "info" => "Печать : Матовая, Формат : 15х15 см (минибук)"
-    //     "start" => "2021-03-11 09:00:00"
-    //     "time" => "2"
 
-    // "id" => "941"
-    // "_token" => "9UfOR6Q0kt5BH3WNTyeA0vgP1CmaSmRoRgmX4sJB"
-    // "name" => "Завершить задачи битрикс"
-    // "generalinfo" => "Завершить задачи битрикс"
-    // "info" => "null"
-    // "master" => "2"
-    // "start" => "2021-03-11 09:00:00"
-    // "time" => "60"
-    // "bufer" => "10"
 
 
     {
-        // $request->validate([
-        //     'master' => 'required',
-        //     'master' => 'required',
-        //     'taskname' => 'required',
-        //     'generalinfo' => 'required',
-        //     'start' => 'required',
-        //     'time' => 'required',
-        // ], [
-        //     // 'taskname.required' => 'Заполните название задачи',
-        //     // 'masters.0.required' => 'Хотя бы один мастер должен быть указан',
-        //     // 'producttime.required_without' => 'Должен быть заполнен хотя бы один параметр времени',
-        //     // 'paramtime.required_without'=>'Должен быть заполнен хотя бы один параметр времени'
-        // ]);
+
         // dd ($request->status);
         if ($request->deleteconfirm === 'on') {
             Tasks::find($request->id)->delete();
@@ -310,6 +280,7 @@ class CalendarController extends Controller
         $task->name = $request->name;
         $task->status = $request->status;
         $task->buffer = $request->bufer;
+        $task->dealid = $request->dealid;
         $task->line = 1;
 
         $task->generalinfo = $request->generalinfo;

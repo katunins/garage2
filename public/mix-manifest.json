@@ -1,10 +1,10 @@
 {
     "/js/general.js": "/js/general.js",
     "/css/general.css": "/css/general.css",
+    "/css/startnewdeal.css": "/css/startnewdeal.css",
     "/css/tasklist.css": "/css/tasklist.css",
     "/css/welcome.css": "/css/welcome.css",
     "/css/newtemplate.css": "/css/newtemplate.css",
     "/css/board.css": "/css/board.css",
-    "/css/calendar.css": "/css/calendar.css",
-    "/css/startnewdeal.css": "/css/startnewdeal.css"
+    "/css/calendar.css": "/css/calendar.css"
 }
