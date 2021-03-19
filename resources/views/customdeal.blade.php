@@ -1,5 +1,5 @@
-<link rel="stylesheet" href="css/newtemplate.css">
-<link rel="stylesheet" href="css/general.css">
+<link rel="stylesheet" href="/css/newtemplate.css">
+<link rel="stylesheet" href="/css/general.css">
 
 <h1>
     <a class="to-main-page" href="/"></a>
@@ -19,10 +19,11 @@
                     <label for="starttime">Время</label>
                     <input class="mini-size no-empty" type="time" id="starttime" name="starttime" placeholder="10">
                 </div>
-                <div>
+                {{-- <div>
                     <label for="dealid">ID сделки</label>
                     <input class="mini-size no-empty" type="text" id="dealid" name="dealid" placeholder="10">
-                </div>
+                </div> --}}
+                <input type="hidden" name="dealid" value="{{ $dealid }}">
             </div>
             <div>
                 <label>Основные параметры</label>
@@ -50,7 +51,7 @@
 
 </form>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         buidNewBlock()
     })
 

@@ -1,0 +1,65 @@
+.new-deals-block {
+  width: 900px;
+}
+.new-deals-block .new-deal-item {
+  margin: 20px;
+  background-color: #b7d1e7;
+  border-radius: 5px;
+  padding: 20px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 500px;
+}
+.new-deals-block .new-deal-item .title {
+  font-size: 20px;
+  font-weight: bold;
+}
+.new-deals-block .new-deal-item .dublicate-alert {
+  color: red;
+  font-weight: bold;
+  margin-left: 10px;
+}
+.new-deals-block .new-deal-item .data-block {
+  display: flex;
+  margin-top: 20px;
+  height: 100%;
+}
+.new-deals-block .new-deal-item .data-block .comments-block {
+  overflow: scroll;
+  height: 90%;
+  width: 400px;
+}
+.new-deals-block .new-deal-item .data-block .right-data-block {
+  margin-left: 20px;
+  flex: 1 1 auto;
+}
+.new-deals-block .new-deal-item .data-block .right-data-block .params-block {
+  margin-bottom: 10px;
+  width: 100%;
+}
+.new-deals-block .new-deal-item .data-block .right-data-block #manager_note {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  text-align: start;
+  border: none;
+  border-radius: 5px;
+  background-color: white;
+}
+.new-deals-block .new-deal-item .data-block .right-data-block .submit-button-block {
+  display: flex;
+  align-items: center;
+}
+.new-deals-block .new-deal-item .data-block .colud-style__title {
+  font-weight: bolder;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.cloud-style {
+  background-color: #f7f7f7;
+  padding: 20px;
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-size: 12px;
+}

@@ -20,6 +20,22 @@
   background-size: cover;
 }
 
+a.button,
+button.button,
+input.button {
+  width: 190px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  margin-right: 20px;
+  border-radius: 5px;
+  border: 1px solid grey;
+  min-height: 45px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
 a.to-main-page {
   /* border: 1px solid grey; */
   /* background: white; */
@@ -111,7 +127,8 @@ a.to-main-page:after {
   display: block;
   margin-bottom: 5px;
 }
-#modal .modal-container .modal-text .form-block .form-elem input, #modal .modal-container .modal-text .form-block .form-elem select {
+#modal .modal-container .modal-text .form-block .form-elem input,
+#modal .modal-container .modal-text .form-block .form-elem select {
   padding: 10px 20px;
   background-color: white;
   border-radius: 5px;

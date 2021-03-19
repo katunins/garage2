@@ -114,14 +114,17 @@ Route::get('master/{id}', function ($id) {
     return view('tasklist')->with('tasks', Tasks::where('master', $id)->get());
 });
 
-Route::get('/deal2tasks', function () {
-    $dealArr = DealsController::getDeal($_GET['id']);
-    if ($dealArr !== false) {
-        TemplateController::tasksFromDeal($dealArr);
-        return redirect('/calendar');
-    } else
-        return redirect('/')->withErrors(['deal' => 'такой сделки']);
-});
+// Route::get('/deal2tasks', function () {
+//     $dealArr = DealsController::getDeal($_GET['id']);
+//     if ($dealArr !== false) {
+//         TemplateController::tasksFromDeal($dealArr);
+//         return redirect('/calendar');
+//     } else
+//         return redirect('/')->withErrors(['deal' => 'такой сделки']);
+// });
+
+Route::post('/deal2tasks', [TemplateController::class, 'tasksFromDeal']);
+
 Route::get('/deletealltasks', function () {
     if ($_GET['time'] - time() > 1) return redirect()->back(); //защитимся от перехода в браузере назад
     Tasks::whereIn('id', json_decode($_GET['taskstodelete']))->delete();
@@ -138,8 +141,8 @@ Route::get('/rebuildtemplate/{productid}', function ($productid) {
 Route::get('/repair', [TemplateController::class, 'repair']);
 Route::get('/updateavatar', [User::class, 'updateAvatar']);
 
-Route::get('/customtask', function () {
-    return view('customtask')->with('Users', User::all());
+Route::get('/customdeal/{dealid}', function ($dealid) {
+    return view('customdeal')->with('Users', User::all())->with('dealid', $dealid);
 });
 
 Route::post('/newcustomtask', [CalendarController::class, 'newCustomTask']);

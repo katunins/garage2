@@ -175,6 +175,19 @@ window.detailTaskFormSubmit = function () {
 
 /***/ }),
 
+/***/ "./resources/sass/calendar.scss":
+/*!**************************************!*\
+  !*** ./resources/sass/calendar.scss ***!
+  \**************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+// extracted by mini-css-extract-plugin
+
+
+/***/ }),
+
 /***/ "./resources/sass/board.scss":
 /*!***********************************!*\
   !*** ./resources/sass/board.scss ***!
@@ -240,10 +253,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./resources/sass/calendar.scss":
-/*!**************************************!*\
-  !*** ./resources/sass/calendar.scss ***!
-  \**************************************/
+/***/ "./resources/sass/startnewdeal.scss":
+/*!******************************************!*\
+  !*** ./resources/sass/startnewdeal.scss ***!
+  \******************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -283,11 +296,11 @@ __webpack_require__.r(__webpack_exports__);
 /******/ 	
 /******/ 	// the startup function
 /******/ 	// It's empty as some runtime module handles the default behavior
-/******/ 	__webpack_require__.x = x => {};
+/******/ 	__webpack_require__.x = x => {}
 /************************************************************************/
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
 /******/ 	(() => {
-/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 		__webpack_require__.o = (obj, prop) => Object.prototype.hasOwnProperty.call(obj, prop)
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
@@ -318,6 +331,7 @@ __webpack_require__.r(__webpack_exports__);
 /******/ 			["./resources/sass/welcome.scss"],
 /******/ 			["./resources/sass/general.scss"],
 /******/ 			["./resources/sass/tasklist.scss"],
+/******/ 			["./resources/sass/startnewdeal.scss"],
 /******/ 			["./resources/sass/calendar.scss"],
 /******/ 			["./resources/sass/board.scss"]
 /******/ 		];
@@ -397,9 +411,7 @@ __webpack_require__.r(__webpack_exports__);
 /******/ 	})();
 /******/ 	
 /************************************************************************/
-/******/ 	
 /******/ 	// run startup
-/******/ 	var __webpack_exports__ = __webpack_require__.x();
-/******/ 	
+/******/ 	__webpack_require__.x();
 /******/ })()
 ;

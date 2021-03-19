@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Tasks;
+
 class DealsController extends Controller
 {
 
@@ -17,7 +19,6 @@ class DealsController extends Controller
             CURLOPT_POST => 1,
             CURLOPT_HEADER => 0,
             CURLOPT_RETURNTRANSFER => 1,
-            // CURLOPT_URL => 'https://korobook.bitrix24.ru/rest/1/h12qo8y69ztxnzal/' . $action,
             CURLOPT_URL => 'https://korobook.bitrix24.ru/rest/1/re5kvosyn1spsrv8/' . $action,
             CURLOPT_POSTFIELDS => $queryData,
         ));
@@ -105,16 +106,22 @@ class DealsController extends Controller
 
     static function newDeals()
     {
-
         $resultArr = [];
-        // do {
-        //     $result = self::bitrixAPI([
-        //         'order' => ["ID" => "ASC"],
-        //         // 'filter' => ["STAGE_ID" => 3],
-        //         // 'select' => ["ID", "TITLE", "STAGE_ID", "PROBABILITY", "OPPORTUNITY", "CURRENCY_ID"]
-        //     ], 'crm.deal.list');
-        //     array_push($resultArr, $result);
-        // } while ($result->next);
-        dd($resultArr);
+        do {
+            $result = self::bitrixAPI([
+                'order' => ["ID" => "ASC"],
+                'start' => $result->next ?? 0,
+                'filter' => ["STAGE_ID" => 3],
+                'select' => ["UF_*", "*"]
+            ], 'crm.deal.list');
+            $resultArr = array_merge($resultArr, $result->result);
+        } while (isset($result->next));
+
+        foreach ($resultArr as $item) {
+            $item->dublicateCount = Tasks::where('dealid', $item->ID)->count();
+
+        }
+        // dd ($resultArr);
+        return $resultArr;
     }
 }

@@ -17,5 +17,6 @@ mix
     .sass('resources/sass/welcome.scss', 'public/css')
     .sass('resources/sass/general.scss', 'public/css')
     .sass('resources/sass/tasklist.scss', 'public/css')
+    .sass('resources/sass/startnewdeal.scss', 'public/css')
     .sass('resources/sass/calendar.scss', 'public/css')
     .sass('resources/sass/board.scss', 'public/css');

@@ -198,8 +198,21 @@ class TemplateController extends Controller
     }
 
     // проходит по каждому продукту в сделке
-    static function tasksFromDeal($dealArr)
+    static function tasksFromDeal(Request $request)
     {
+        // "dealid" => "31199"
+        // "old-manager-note" => null
+        // "manager-note" => "qwe"
+        // "custom-deal" => "on"
+
+        if (isset($request->custom_deal)) {
+            return redirect('/customdeal/' . $request->dealid);
+        }
+
+        if (!is_null($request->manager_note) && $request->manager_note !== $request->old_manager_note) {
+            dd ($request->dealid, DealsController::bitrixAPI(['ID' => $request->dealid, ['UF_CRM_1476173890' => $request->manager_note]], 'crm.deal.update'));
+        }
+        dd('stop', $request->all());
 
         if (isset($_GET['log']) == true) echo 'tasksFromDeal()' . 'Start' . '<br>';
         self::$scriptErrors = [];
@@ -231,7 +244,7 @@ class TemplateController extends Controller
 
         // Уберем лишнюю упаковку. Оставим только позднюю
         $packageTasks = Tasks::where('dealid', (int)$dealArr['params']['dealid'])->where('name', 'Упаковка')->orderBy('end');
-        if ($packageTasks->count()) $packageTasks->take($packageTasks->count()-1)->delete();
+        if ($packageTasks->count()) $packageTasks->take($packageTasks->count() - 1)->delete();
 
 
 
