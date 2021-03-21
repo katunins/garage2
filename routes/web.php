@@ -139,7 +139,6 @@ Route::get('/rebuildtemplate/{productid}', function ($productid) {
     return redirect('/board/' . $productid);
 });
 
-Route::get('/repair', [TemplateController::class, 'repair']);
 Route::get('/updateavatar', [User::class, 'updateAvatar']);
 
 Route::get('/customdeal/{dealid}', function ($dealid) {

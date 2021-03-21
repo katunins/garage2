@@ -62,27 +62,35 @@ class DealsController extends Controller
     static function getDeal($id)
     {
         $arDeal = self::bitrixAPI(["ID" => $id], 'crm.deal.get');
-        // dd ($arDeal);
         if (isset($arDeal->error)) {
             dd($arDeal);
             return false;
         }
-        $dealTitle =  $arDeal->result->TITLE;
-        $comment = $arDeal->result->COMMENTS;
+        
 
-        $dealArr = self::commentParser($comment);
-        $dealArr['params']['deal'] = $dealTitle;
-        $dealArr['params']['addinfo'] = unserialize($arDeal->result->ADDITIONAL_INFO);
+        // если сделка синхронизирована по новой технологии, то в $arDeal->result->ADDITIONAL_INFO лежит массив данных
+        // парсить комментарий не нужно
+        if (is_string($arDeal->result->ADDITIONAL_INFO) && is_array(json_decode($arDeal->result->ADDITIONAL_INFO, true))) {
+            $dealArr = json_decode($arDeal->result->ADDITIONAL_INFO, true);
+        }  else {
+            $dealArr = self::commentParser($arDeal->result->COMMENTS);
+            if ($arDeal->result->UF_CRM_1615928997) $dealArr['params']['Объединен'] = $arDeal->result->UF_CRM_1615928997;
+        }
+
+        $dealArr['params']['deal'] = $arDeal->result->TITLE;
         $dealArr['params']['dealid'] = $id;
         $dealArr['params']['managernote'] = $arDeal->result->UF_CRM_1476173890;
         $dealArr['params']['Срок готовности'] = explode('T', $arDeal->result->CLOSEDATE)[0];
+        
+        // $dealArr['params']['addinfo'] = unserialize($arDeal->result->ADDITIONAL_INFO);
+        
+        
+        
         $manager = self::bitrixAPI(['ID' => $arDeal->result->ASSIGNED_BY_ID], 'user.get');
 
         if (!isset($manager->error))
             $dealArr['params']['manager'] = $manager->result[0]->NAME . ' ' . $manager->result[0]->LAST_NAME;
         else $dealArr['params']['manager'] = '';
-
-        if ($arDeal->result->UF_CRM_1615928997) $dealArr['params']['Объединен'] = $arDeal->result->UF_CRM_1615928997;
         return $dealArr;
     }
 

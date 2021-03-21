@@ -27,14 +27,6 @@ class TemplateController extends Controller
         ];
     }
 
-    // test - можно удалять
-    static function repair()
-    {
-        // dump (DealsController::getDeal(Tasks::find(1528)->dealid)['params']['deal']);
-        dd('stop');
-    }
-
-
     static  $isHoliday; //праздники
     // 0	Рабочий день	200
     // 1	Нерабочий день	200
