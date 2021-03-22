@@ -22,8 +22,18 @@
     filter: drop-shadow(1px 1px 2px rgb(179, 179, 179)) !important;
 }
 
+.calendar-container {
+    margin-top: 90px;
+}
+
 .head-block {
     display: flex;
+
+    background: white;
+    position: fixed;
+    top: 0px;
+    z-index: 9999;
+
     .date-block {
         form {
             margin: 0;

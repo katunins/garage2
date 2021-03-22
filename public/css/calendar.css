@@ -18,8 +18,16 @@
   background-color: #f8f8f8 !important;
 }
 
+.calendar-container {
+  margin-top: 90px;
+}
+
 .head-block {
   display: flex;
+  background: white;
+  position: fixed;
+  top: 0px;
+  z-index: 9999;
 }
 .head-block .date-block {
   width: 380px;
