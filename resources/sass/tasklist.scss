@@ -1,8 +1,9 @@
 .container {
-    .date{
+    .date {
         margin: 25px 10px 10px;
         font-size: 20px;
     }
+
     .task-elem {
         width: 500px;
         // height: 70px;
@@ -14,6 +15,28 @@
         margin-bottom: 5px;
         list-style: none;
 
+        .flex-line {
+            display: flex;
+        }
+
+        .stuck-icon {
+            position: absolute;
+            right: 100px;
+            top: 10px;
+            // margin-left: 10px;
+            background: #f5f53d;
+            padding: 1px 9px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .start {
+            position: absolute;
+            right: 57px;
+            top: 10px;
+        }
 
         .deal {
             background: white;
@@ -28,7 +51,7 @@
             margin-top: 5px;
         }
 
-        .task-avatar{
+        .task-avatar {
             position: absolute;
             right: 10px;
             top: 10px;

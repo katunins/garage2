@@ -6,30 +6,36 @@
     <div class="filter-block">
         <div class="dealname-filter">
             <div>
-                <input type="text" class="text-filter input-filter" name="deal" equality='like' exact=false
+                <input type="text" class="text-filter input-filter" name="deal" equality='like' exact='false'
                     value={{ $_GET['dealname-filter'] ?? '' }}>
                 <label for="dealname-filter">Название сделки или задачи</label>
                 <button class="input-reset" onclick="inputReset()">x</button>
             </div>
             <div>
-                <input type="text" class="text-filter input-filter" name="master" equality='=' exact=true
+                <input type="text" class="text-filter input-filter" name="master" equality='=' exact='true'
                     value={{ $_GET['master-filter'] ?? '' }}>
                 <label for="master-filter">ID мастера</label>
                 <button class="input-reset" onclick="inputReset()">x</button>
             </div>
             <div>
-                @foreach ([['status'=>'wait', 'name'=>'В ожидании'], ['status'=>'finished', 'name'=>'Завершены']] as $item)
+                @php
+                    $statusArr = [
+                    ['param'=>'status','name'=>'В ожидании', 'value'=>'wait'],
+                    ['param'=>'status','name'=>'Завершены', 'value'=>'finished'],
+                    ['param'=>'stuck','name'=>'Линия приостановлена', 'value'=>true],
+                    ];
+                @endphp
+                @foreach ($statusArr as $item)
                     @php
-                        $checked = (isset($_GET['status-'.$item['status']]) && $_GET['status-'.$item['status']]==='1')?
-                        true :false;
+                        $checked = isset($_GET[$item['param'].'-'.$item['value']]);
                     @endphp
                     <li>
-                        <input type="checkbox" class="checkbox-filter input-filter" equality='=' exact=true
-                            id="status-{{ $item['status'] }}" name="status" @if ($checked)
-                            checked @endif value="{{ $item['status'] }}">
+                        <input type="checkbox" class="checkbox-filter input-filter"
+                            id={{ $item['param'].'-'.$item['value'] }}
+                            name={{ $item['param'] }}
+                            value={{ $item['value'] }} @if ($checked) checked @endif>
                         <label
-                            for="status-{{ $item['status'] }}">{{ $item['name'] }}</label>
-
+                            for={{ $item['param'].'-'.$item['value'] }}>{{ $item['name'] }}</label>
                     </li>
                 @endforeach
             </div>
@@ -60,23 +66,25 @@
         let filterData = []
         document.querySelectorAll('.text-filter').forEach(el => {
             if (el.value) filterData.push({
-                param: el.name,
-                equality: el.getAttribute('equality'),
-                value: el.getAttribute('exact') === true ? el.value : '%' + el.value + '%'
+                text: {
+                    param: el.name,
+                    equality: el.getAttribute('equality'),
+                    value: el.getAttribute('exact') === 'true' ? el.value : '%' + el.value + '%'
+                }
             })
 
         })
 
+        let filterCheckbox = {}
         document.querySelectorAll('.checkbox-filter').forEach(el => {
-
-            if (el.checked) filterData.push({
-                param: el.name,
-                equality: el.getAttribute('equality'),
-                value: el.value
-            })
-
+            if (el.checked) {
+                if (!filterCheckbox[el.name]) filterCheckbox[el.name] = []
+                filterCheckbox[el.name].push(el.value)
+            }
         })
-        console.log(filterData)
+        filterData.push({
+            checkbox: filterCheckbox
+        })
         return filterData
     }
 
@@ -118,9 +126,15 @@
     function getTaskElem(task) {
         // console.log (task)
         let html = ''
+        html += '<div class="flex-line">'
         html += `<div class="deal">${task.deal}</div>`
+        if (typeof task.stuck !== 'undefined') html += `<div class="stuck-icon">i</div>`
+        html += '</div>'
         html += `<div class="name">${task.name}</div>`
+
+        html += `<div class="start">${task.start.slice(11, 16)}</div>`
         html += `<div class="avatar task-avatar" style="background-image: url(${task.masteravatar})"></div>`
+        
 
         return html
     }

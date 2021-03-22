@@ -46,18 +46,42 @@ class ApiController extends Controller
 
             return response()->json(['tasks' => $tasks, 'notfinished' => $notFinished], 200);
         } elseif ($request->has('type') && $request->type === 'filterData' && isset($request->filterData)) {
+
             $filter = [];
             foreach ($request->filterData as $item) {
-                $filter[] = [$item['param'], $item['equality'], $item['value']];
-            }
-            // if ($request->filterData['deal'] ?? false) $filter[] = ['deal', 'like', '%' . $request->filterData['deal'] . '%'];
-            // if ($request->filterData['master'] ?? false) $filter[] = ['master', '=', $request->filterData['master']];
-            $tasks = Tasks::where($filter)->orderBy('start')->get();
+                if (isset($item['text'])) $filter[] = ['type' => 'where', 'condition' => [$item['text']['param'], $item['text']['equality'], $item['text']['value']]];
+                if (isset($item['checkbox'])) {
+                    foreach ($item['checkbox'] as $key => $checkbox) {
 
+                        $checkFilter = [];
+                        foreach ($checkbox as $el) {
+                            $checkFilter[] = $el;
+                        }
+                        $filter[] = ['type' => 'whereIn', 'condition' => [$key, $checkFilter]];
+                    }
+                }
+            }
+            $tasks = Tasks::where('master', '<>', 9999); //уберем подрядчика
+            $stuckIdArr = StuckDeals::pluck('taskid')->toArray();
+            foreach ($filter as $item) {
+                if ($item['type'] === 'where') $tasks = $tasks->where($item['condition'][0], $item['condition'][1], $item['condition'][2]);
+                if ($item['type'] === 'whereIn') {
+                    if ($item['condition'][0] === 'stuck') {
+                        $stuckIds = [];
+                        $tasks = $tasks->whereIn('id', $stuckIdArr);
+                    } else $tasks = $tasks->whereIn($item['condition'][0], $item['condition'][1]);
+                }
+            }
+
+            $tasks = $tasks->orderBy('start')->get();
+
+            // окончательная подготовка - добавление параметров\
+            $stuckDealIdArr = StuckDeals::pluck('dealid')->toArray();
             foreach ($tasks as $item) {
                 $user = User::find($item->master);
                 $item->mastername = $user->name;
                 $item->masteravatar = $user->avatar ?? '';
+                if (array_search($item->dealid, $stuckDealIdArr) !== false) $item->stuck = StuckDeals::where('dealid', $item->dealid)->first();
             }
 
             return response()->json(['tasks' => $tasks, 'filter' => $filter], 200);

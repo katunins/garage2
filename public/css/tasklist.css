@@ -12,6 +12,25 @@
   margin-bottom: 5px;
   list-style: none;
 }
+.container .task-elem .flex-line {
+  display: flex;
+}
+.container .task-elem .stuck-icon {
+  position: absolute;
+  right: 100px;
+  top: 10px;
+  background: #f5f53d;
+  padding: 1px 9px;
+  border-radius: 5px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+}
+.container .task-elem .start {
+  position: absolute;
+  right: 57px;
+  top: 10px;
+}
 .container .task-elem .deal {
   background: white;
   width: -webkit-fit-content;
