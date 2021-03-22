@@ -1,7 +1,37 @@
 .container {
-    display: flex;
-    .filters {
-        width: 300px;
-        background-color: aqua;
+    .date{
+        margin: 25px 10px 10px;
+        font-size: 20px;
+    }
+    .task-elem {
+        width: 500px;
+        // height: 70px;
+        border-radius: 5px;
+        position: relative;
+        padding: 10px;
+        box-sizing: border-box;
+        font-size: 14px;
+        margin-bottom: 5px;
+        list-style: none;
+
+
+        .deal {
+            background: white;
+            width: fit-content;
+            margin: 0;
+            padding: 2px 8px;
+            height: fit-content;
+            border-radius: 5px;
+        }
+
+        .name {
+            margin-top: 5px;
+        }
+
+        .task-avatar{
+            position: absolute;
+            right: 10px;
+            top: 10px;
+        }
     }
 }

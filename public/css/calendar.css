@@ -24,6 +24,7 @@
 
 .head-block {
   display: flex;
+  padding: 10px;
   background: white;
   position: fixed;
   top: 0px;

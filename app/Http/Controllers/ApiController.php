@@ -32,7 +32,7 @@ class ApiController extends Controller
             // пометим задачи, которые застряли
             foreach (StuckDeals::all() as $item) {
                 $stuckTask = Tasks::find($item->taskId);
-                foreach ($tasks->where('dealid', $stuckTask->dealid)->where('deal', $stuckTask->deal) as $el) {
+                foreach ($tasks->where('dealid', $stuckTask->dealid)->where('deal', $stuckTask->deal)->where('line', $stuckTask->line) as $el) {
                     $stuckTask->masterName = User::find($stuckTask->master)->name;
                     $el->stuck = $stuckTask;
                 }
@@ -45,6 +45,22 @@ class ApiController extends Controller
                 ->count();
 
             return response()->json(['tasks' => $tasks, 'notfinished' => $notFinished], 200);
+        } elseif ($request->has('type') && $request->type === 'filterData' && isset($request->filterData)) {
+            $filter = [];
+            foreach ($request->filterData as $item) {
+                $filter[] = [$item['param'], $item['equality'], $item['value']];
+            }
+            // if ($request->filterData['deal'] ?? false) $filter[] = ['deal', 'like', '%' . $request->filterData['deal'] . '%'];
+            // if ($request->filterData['master'] ?? false) $filter[] = ['master', '=', $request->filterData['master']];
+            $tasks = Tasks::where($filter)->orderBy('start')->get();
+
+            foreach ($tasks as $item) {
+                $user = User::find($item->master);
+                $item->mastername = $user->name;
+                $item->masteravatar = $user->avatar ?? '';
+            }
+
+            return response()->json(['tasks' => $tasks, 'filter' => $filter], 200);
         } else return response()->json($request->all(), 400);
     }
 

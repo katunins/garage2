@@ -160,3 +160,7 @@ Route::post('/shiftTask', [CalendarController::class, 'shiftTask']);
 Route::get('/startnewdeal', function () {
     return view('startnewdeal')->with('newDeals', DealsController::newDeals());
 });
+
+Route::get('/tasklist', function () {
+    return view('tasklist')->with('Users', User::all());
+});

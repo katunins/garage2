@@ -14,6 +14,8 @@
             <li><a href="/checkDeadline" target="blank">Проверить Deadline сделок</a></li>
             {{-- <li><a href="/stuck">Сделки под угрозой</a></li> --}}
             <li><a href="/calendar">Календарь</a></li>
+            <li><a href="/tasklist">Список задач</a></li>
+
             <br>
             <li><a href="http://fixtome.ru/research/Z5VKIU3xtynTR2wKPIrb8yri5P4WB2LSqumMSyMcqH">Посоветуй что добавить в
                     приложение</a></li>
