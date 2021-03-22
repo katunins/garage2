@@ -283,6 +283,10 @@ class CalendarController extends Controller
         $task->dealid = $request->dealid;
         $task->line = 1;
 
+        if ($request->id === 'undefined' && $request->dealid) {
+            $task->deal = DealsController::bitrixAPI(['id'=>$request->dealid], 'crm.deal.get')->result->TITLE;
+        }
+
         $task->generalinfo = $request->generalinfo;
         $task->info = $request->info;
 
