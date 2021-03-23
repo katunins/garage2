@@ -51,7 +51,9 @@
     </div>
     <div class="count-block"><span id="tasks-count"></span></div>
 </div>
-
+<div class="hide" id="loader">
+        <img src="/images/7plQ.gif" alt="">
+</div>
 @include ('modal')
 
 <script>
@@ -90,6 +92,8 @@
 
     // показывает загрузчик
     function loader(type) {
+        let loaderElem = document.getElementById('loader')
+        if (type) loaderElem.className=''; else loaderElem.className='hide';
         return
     }
 

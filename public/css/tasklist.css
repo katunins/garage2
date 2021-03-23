@@ -1,3 +1,18 @@
+#loader {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#loader img {
+  width: 300px;
+  height: 300px;
+}
+
 .container .date {
   margin: 25px 10px 10px;
   font-size: 20px;
