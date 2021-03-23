@@ -20,16 +20,16 @@
         }
 
         .stuck-icon {
-            position: absolute;
-            right: 100px;
-            top: 10px;
-            // margin-left: 10px;
+            margin-left: 10px;
             background: #f5f53d;
-            padding: 1px 9px;
+            /* padding: 1px 9px; */
             border-radius: 5px;
             font-weight: bold;
             display: flex;
             align-items: center;
+            width: 19px;
+            height: 19px;
+            justify-content: center;
         }
 
         .start {
@@ -45,16 +45,23 @@
             padding: 2px 8px;
             height: fit-content;
             border-radius: 5px;
+            margin-bottom: 5px;
         }
 
         .name {
-            margin-top: 5px;
+            font-weight: bold;
+            margin-left: 10px;
         }
 
         .task-avatar {
             position: absolute;
             right: 10px;
             top: 10px;
+        }
+
+        .stuck-message {
+            font-size: 13px;
+    // text-align: right;
         }
     }
 }

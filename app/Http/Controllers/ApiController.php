@@ -81,7 +81,13 @@ class ApiController extends Controller
                 $user = User::find($item->master);
                 $item->mastername = $user->name;
                 $item->masteravatar = $user->avatar ?? '';
-                if (array_search($item->dealid, $stuckDealIdArr) !== false) $item->stuck = StuckDeals::where('dealid', $item->dealid)->first();
+                if (array_search($item->dealid, $stuckDealIdArr) !== false) {
+                    $item->stuck = StuckDeals::where('dealid', $item->dealid)->first();
+                    $stTask=Tasks::find($item->stuck->taskId);
+                    $item->stuck->mastername=User::find($stTask->master)->name;
+                    $item->stuck->task=$stTask;
+                    // dd ($item->stuck);
+                }
             }
 
             return response()->json(['tasks' => $tasks, 'filter' => $filter], 200);

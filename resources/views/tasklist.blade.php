@@ -128,13 +128,19 @@
         let html = ''
         html += '<div class="flex-line">'
         html += `<div class="deal">${task.deal}</div>`
-        if (typeof task.stuck !== 'undefined') html += `<div class="stuck-icon">i</div>`
-        html += '</div>'
+        if (typeof task.stuck !== 'undefined')  html += `<div class="stuck-icon">i</div>`
         html += `<div class="name">${task.name}</div>`
+        html += '</div>'
 
         html += `<div class="start">${task.start.slice(11, 16)}</div>`
         html += `<div class="avatar task-avatar" style="background-image: url(${task.masteravatar})"></div>`
-        
+        if (typeof task.stuck !== 'undefined') {
+            html += '<div class="flex-line">'
+            // html += `<div class="stuck-icon">i</div>`
+            html +=
+                `<div class="stuck-message">${task.stuck.mastername}, ${task.stuck.task.name}, ${task.stuck.comment}</div>`
+            html += '</div>'
+        }
 
         return html
     }
