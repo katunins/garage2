@@ -22,7 +22,7 @@
                     $statusArr = [
                     ['param'=>'status','name'=>'В ожидании', 'value'=>'wait'],
                     ['param'=>'status','name'=>'Завершены', 'value'=>'finished'],
-                    ['param'=>'stuck','name'=>'Линия приостановлена', 'value'=>true],
+                    ['param'=>'stuck','name'=>'Задачи, остановленные мастером', 'value'=>true],
                     ];
                 @endphp
                 @foreach ($statusArr as $item)
