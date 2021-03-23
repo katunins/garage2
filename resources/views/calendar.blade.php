@@ -163,6 +163,7 @@
 
 
                 @php
+                    if ($item->master === 9999) continue;
                     if ($calendarStyle!=0) $tasksToDelete[]=$item->id;
                 @endphp
 
