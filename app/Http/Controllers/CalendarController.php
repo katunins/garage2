@@ -8,8 +8,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
-use function PHPUnit\Framework\isNull;
-
 class CalendarController extends Controller
 {
     // преобразуем дату в русский формат
@@ -243,6 +241,9 @@ class CalendarController extends Controller
             $endTime->addMinutes($newTask->buffer);
             TemplateController::$startTime = clone $endTime;
         }
+
+            // сменим статус на 4
+            DealsController::bitrixAPI(['ID' => $request->dealid, 'fields' => ['STAGE_ID' => '1']], 'crm.deal.update');
         return redirect('/calendar?calendarstyle=1&filterdealname=' . $dealData['params']['deal']);
     }
 
