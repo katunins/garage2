@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    // dd (DealsController::getDeal(31251));
+    // dd (DealsController::bitrixAPI(['id'=>31477], 'crm.deal.get'));
     return view('welcome')
         ->with('overTasks', CalendarController::getOverTasks())
         ->with('Users', User::all())
