@@ -1,7 +1,9 @@
 <link rel="stylesheet" href="css/general.css">
 <link rel="stylesheet" href="css/tasklist.css">
 @csrf
-
+<h1>
+    <a class="to-main-page" href="/"></a>
+    Список задач</h1>
 <div class="head">
     <div class="filter-block">
         <div class="dealname-filter">
@@ -20,14 +22,14 @@
             <div>
                 @php
                     $statusArr = [
-                    ['param'=>'status','name'=>'В ожидании', 'value'=>'wait'],
-                    ['param'=>'status','name'=>'Завершены', 'value'=>'finished'],
-                    ['param'=>'stuck','name'=>'Задачи, остановленные мастером', 'value'=>true],
+                    ['param'=>'status','name'=>'В ожидании', 'value'=>'wait', 'checked'=>true],
+                    ['param'=>'status','name'=>'Завершены', 'value'=>'finished', 'checked'=>false],
+                    ['param'=>'stuck','name'=>'Задачи, остановленные мастером', 'value'=>true, 'checked'=>false],
                     ];
                 @endphp
                 @foreach ($statusArr as $item)
                     @php
-                        $checked = isset($_GET[$item['param'].'-'.$item['value']]);
+                        $checked = isset($_GET[$item['param'].'-'.$item['value']]) || $item['checked'];
                     @endphp
                     <li>
                         <input type="checkbox" class="checkbox-filter input-filter"
@@ -162,7 +164,7 @@
                 day = start.getDate()
                 let dateElem = document.createElement('div')
                 dateElem.className = `date`
-                dateElem.innerHTML = start.getDate() + '.' + start.getMonth()
+                dateElem.innerHTML = start.getDate() + '.' + Number(start.getMonth()+1)
                 container.appendChild(dateElem)
             }
             let elem = document.createElement('li')

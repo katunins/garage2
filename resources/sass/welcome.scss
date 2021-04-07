@@ -32,6 +32,7 @@ td {
     }
 
     li {
+        position: relative;
         border: 1px solid grey;
         width: 500px;
         height: 50px;
@@ -53,4 +54,10 @@ td {
         position: absolute;
         right: 10px;
     }
+}
+
+.right-labels {
+    display: flex;
+    position: absolute;
+    right: 0px;
 }

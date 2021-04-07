@@ -43,12 +43,12 @@ class CalendarController extends Controller
         }
 
         foreach ([
-            'temp' => 'Временный',
-            'wait' => 'Ожидает выполнения',
-            'repair' => 'В ремонте',
-            'pause' => 'Задерживается',
-            'finished' => 'Завершена',
-        ] as $key => $item) {
+                     'temp' => 'Временный',
+                     'wait' => 'Ожидает выполнения',
+                     'repair' => 'В ремонте',
+                     'pause' => 'Задерживается',
+                     'finished' => 'Завершена',
+                 ] as $key => $item) {
             if (isset($_GET['status-' . $key]) !== false) {
                 $statusFilter['status-' . $key] = $_GET['status-' . $key];
                 session()->put('status-' . $key, $_GET['status-' . $key]);
@@ -242,8 +242,8 @@ class CalendarController extends Controller
             TemplateController::$startTime = clone $endTime;
         }
 
-            // сменим статус на 4
-            DealsController::bitrixAPI(['ID' => $request->dealid, 'fields' => ['STAGE_ID' => '1']], 'crm.deal.update');
+        // сменим статус на 4
+        DealsController::bitrixAPI(['ID' => $request->dealid, 'fields' => ['STAGE_ID' => '1']], 'crm.deal.update');
         return redirect('/calendar?calendarstyle=1&filterdealname=' . $dealData['params']['deal']);
     }
 
@@ -252,16 +252,21 @@ class CalendarController extends Controller
     {
         $currentTime = Carbon::now();
         $resultTask = [];
+        $allStuck = StuckDeals::all();
+
+
+//        dd($allStuck->all());
         foreach (Tasks::whereNotIn('status', ['finished'])->get() as $taskItem) {
             $endTime = Carbon::parse($taskItem->end);
-            if ($whithBuffer) $endTime->addMinutes($taskItem->buffer);
+//            dump ($allStuck->where('dealId', $taskItem->dealid)->count());
+//            if ($whithBuffer) $endTime->addMinutes($taskItem->buffer);
+            if ($allStuck->where('dealId', $taskItem->dealid)->count() > 0) $taskItem->stuck = true;
             if ($endTime->lessThan($currentTime)) $resultTask[] = $taskItem;
         }
         return collect($resultTask);
     }
 
     public function saveEditTask(Request $request)
-
 
 
     {
@@ -285,7 +290,7 @@ class CalendarController extends Controller
         $task->line = 1;
 
         if ($request->id === 'undefined' && $request->dealid) {
-            $task->deal = DealsController::bitrixAPI(['id'=>$request->dealid], 'crm.deal.get')->result->TITLE;
+            $task->deal = DealsController::bitrixAPI(['id' => $request->dealid], 'crm.deal.get')->result->TITLE;
         }
 
         $task->generalinfo = $request->generalinfo;
@@ -307,25 +312,11 @@ class CalendarController extends Controller
         //     // "type" => "pause"
         //     $result = [];
         $allStuck = StuckDeals::all();
-            foreach ($allStuck as $item) {
-                $stuckTask = Tasks::find($item->taskId);
-                $item->masterName =User::find($stuckTask->master)->name;
-                $item->taskName = $stuckTask->master;
-                // array_push($item, ['taskName'=>$stuckTask->master->name]);
-                // $result[]=$item;
-        //         // $stuckTask = Tasks::find($item->taskId)->name;
-        //         // $dealId = Tasks::find($item->taskId)->dealid;
-        //         if ($stuckTask) {
-        //             // $stuckDeal = is_null($dealId) ? 'Без сделки' : DealsController::getDeal(Tasks::find($item->taskId)->dealid)["params"]["deal"];
-        //             $result[] = (object)[
-        //                 // 'id' => $item->id,
-
-        //                 'task' => Tasks::find($item->taskId)->name;
-        //                 'deal' => $stuckDeal,
-        //                 // 'type' => $item->type
-        //             ];
-        //         }
-            }
+        foreach ($allStuck as $item) {
+            $stuckTask = Tasks::find($item->taskId);
+            $item->masterName = User::find($stuckTask->master)->name;
+            $item->taskName = $stuckTask->master;
+        }
         return $allStuck;
     }
 
@@ -364,21 +355,21 @@ class CalendarController extends Controller
                 }
                 break;
 
-                // case 'pause':
-                //     $task = Tasks::find($id);
-                //     if ($task) {
-                //         $task->status = $status;
-                //         $task->save();
+            // case 'pause':
+            //     $task = Tasks::find($id);
+            //     if ($task) {
+            //         $task->status = $status;
+            //         $task->save();
 
-                //         if (StuckDeals::where('taskId', $id)->count() === 0) {
-                //             $stuck = new StuckDeals();
-                //             $stuck->taskId = (int)$id;
-                //             $stuck->type = $status;
-                //             $stuck->save();
-                //             $result = $stuck->id;
-                //         }
-                //     }
-                //     break;
+            //         if (StuckDeals::where('taskId', $id)->count() === 0) {
+            //             $stuck = new StuckDeals();
+            //             $stuck->taskId = (int)$id;
+            //             $stuck->type = $status;
+            //             $stuck->save();
+            //             $result = $stuck->id;
+            //         }
+            //     }
+            //     break;
 
             case 'mastermessage':
                 $task = Tasks::find($id);
@@ -407,29 +398,29 @@ class CalendarController extends Controller
                 }
                 break;
 
-                // case 'empty':
-                //     $task = Tasks::find($id);
-                //     if ($task) {
+            // case 'empty':
+            //     $task = Tasks::find($id);
+            //     if ($task) {
 
-                //         $taskBefore = Tasks::find($task->taskidbefore);
+            //         $taskBefore = Tasks::find($task->taskidbefore);
 
-                //         $B24message = 'Сделка: ' . $task->deal . ', ' . 'Задача: ' . $task->name . '[br]';
-                //         if ($taskBefore) {
-                //             $B24message .= 'от ' . User::find($taskBefore->master)->name . ', задача ' . $taskBefore->name;
+            //         $B24message = 'Сделка: ' . $task->deal . ', ' . 'Задача: ' . $task->name . '[br]';
+            //         if ($taskBefore) {
+            //             $B24message .= 'от ' . User::find($taskBefore->master)->name . ', задача ' . $taskBefore->name;
 
-                //             if (StuckDeals::where('taskId', $id)->count() === 0) {
-                //                 $stuck = new StuckDeals();
-                //                 $stuck->taskId = $taskBefore->id;
-                //                 $stuck->type = $status;
-                //                 $stuck->save();
-                //                 $result = $stuck->id;
-                //             }
-                //         } else $B24message .= 'Странно, но предыдущей задачи не существует';
+            //             if (StuckDeals::where('taskId', $id)->count() === 0) {
+            //                 $stuck = new StuckDeals();
+            //                 $stuck->taskId = $taskBefore->id;
+            //                 $stuck->type = $status;
+            //                 $stuck->save();
+            //                 $result = $stuck->id;
+            //             }
+            //         } else $B24message .= 'Странно, но предыдущей задачи не существует';
 
-                //         DealsController::bitrixAPI(array("TO" => [1, 8, 38], "MESSAGE" => 'У ' . User::find($task->master)->name . '  нет предыдущей поставки:[br]' . $B24message), 'im.notify');
-                //     }
+            //         DealsController::bitrixAPI(array("TO" => [1, 8, 38], "MESSAGE" => 'У ' . User::find($task->master)->name . '  нет предыдущей поставки:[br]' . $B24message), 'im.notify');
+            //     }
 
-                //     break;
+            //     break;
 
             default:
                 break;

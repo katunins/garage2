@@ -29,6 +29,7 @@ td {
   margin-right: 30px;
 }
 .dashboard li {
+  position: relative;
   border: 1px solid grey;
   width: 500px;
   height: 50px;
@@ -48,4 +49,10 @@ td {
 .block-right-button .right-button {
   position: absolute;
   right: 10px;
+}
+
+.right-labels {
+  display: flex;
+  position: absolute;
+  right: 0px;
 }

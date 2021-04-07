@@ -170,3 +170,16 @@ a.to-main-page:after {
         }
     }
 }
+
+.stuck-icon {
+    margin-left: 10px;
+    background: #f5f53d;
+    /* padding: 1px 9px; */
+    border-radius: 5px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    width: 19px;
+    height: 19px;
+    justify-content: center;
+}

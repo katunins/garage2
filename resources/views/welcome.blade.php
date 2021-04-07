@@ -23,7 +23,7 @@
         {{-- <br>
         <div class="">
             <form action="/deal2tasks" method="GET">
-                
+
 @error ('deal')
                     <p>{{ $message }}</p>
         @enderror
@@ -36,14 +36,14 @@
         <p><input type="submit" name="" value="Создать"></p>
         </form>
     </div> --}}
-    <div class="dashboard">
-        <div>
-            <h2>Задачи с проблемами</h2>
-            <ul class="stuck-deals">
-                @foreach ($Stuck as $item)
-                    <li class="block-right-button task-status-pause">
-                        <span class="dealname">{{ $item->deal }}</span>
-                        <span>
+        <div class="dashboard">
+            <div>
+                <h2>Задачи с проблемами</h2>
+                <ul class="stuck-deals">
+                    @foreach ($Stuck as $item)
+                        <li class="block-right-button task-status-pause">
+                            <span class="dealname">{{ $item->deal }}</span>
+                            <span>
                             {{ $item->masterName }},
                             {{ $item->taskName }}
                             <br>
@@ -54,28 +54,33 @@
                                 <input class="right-button" type="submit" value="Удалить">
                             </form>
                         </span>
-                    </li>
-                @endforeach
-            </ul>
-        </div>
-        <div>
-            <h2>Просроченные задачи</h2>
-            <ul class="over-tasks">
-                @foreach ($overTasks->sortBy('master') as $itemTask)
-                    <li class="task-status-{{ $itemTask->status }}"
-                        onclick="modalFromTask({{ json_encode($itemTask) }})">
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+            <div>
+                <h2>Просроченные задачи</h2>
+                <ul class="over-tasks">
+                    @foreach ($overTasks->sortBy('master') as $itemTask)
+                        <li class="task-status-{{ $itemTask->status }}"
+                            onclick="modalFromTask({{ json_encode($itemTask) }})">
                         <span class="avatar"
-                            style="background-image: url({{ $Users->find($itemTask->master)->avatar ?? '' }})"></span>
-                        <span>{{ $itemTask->name }}</span>
-                        <span>{{ $itemTask->end }}</span>
-                        <span class="dealname">{{ $itemTask->deal }}</span>
-                    </li>
-                @endforeach
-            </ul>
+                              style="background-image: url({{ $Users->find($itemTask->master)->avatar ?? '' }})"></span>
+                            <span>{{ $itemTask->name }}</span>
+                            <span>{{ $itemTask->end }}</span>
+                            <span class="right-labels">
+                                @if($itemTask->stuck)
+                                    <span class="stuck-icon">!</span>
+                                @endif
+                            <span class="dealname">{{ $itemTask->deal }}</span>
+                            </span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
         </div>
     </div>
-</div>
 
-@include ('modal')
+    @include ('modal')
 </div>
 <script src="js/general.js"></script>
