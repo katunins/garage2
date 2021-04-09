@@ -39,12 +39,17 @@ class ApiController extends Controller
             }
 
             // добавим не закрытые задачи до этого периода
+//            $notFinished = Tasks::where('master', $request->data['user_id'])
+//                ->where('status', '<>', 'finished')
+//                ->whereDate('end', '<', Carbon::parse($request->data['date']))
+//                ->count();
             $notFinished = Tasks::where('master', $request->data['user_id'])
                 ->where('status', '<>', 'finished')
-                ->whereDate('end', '<', Carbon::parse($request->data['date']))
-                ->count();
+                ->whereDate('end', '<', Carbon::parse($request->data['date']))->get();
+            $notFinishedStuck = self::getStuckTasks($notFinished)->count();
+            $notFinishedDeadline = $notFinished->count()-$notFinishedStuck;
+            return response()->json(['tasks' => $tasks, 'notfinished' => ['deadline' => $notFinishedDeadline, 'stuck' => $notFinishedStuck]], 200);
 
-            return response()->json(['tasks' => $tasks, 'notfinished' => $notFinished], 200);
         } elseif ($request->has('type') && $request->type === 'filterData' && isset($request->filterData)) {
 
             $filter = [];
@@ -83,9 +88,9 @@ class ApiController extends Controller
                 $item->masteravatar = $user->avatar ?? '';
                 if (array_search($item->dealid, $stuckDealIdArr) !== false) {
                     $item->stuck = StuckDeals::where('dealid', $item->dealid)->first();
-                    $stTask=Tasks::find($item->stuck->taskId);
-                    $item->stuck->mastername=User::find($stTask->master)->name;
-                    $item->stuck->task=$stTask;
+                    $stTask = Tasks::find($item->stuck->taskId);
+                    $item->stuck->mastername = User::find($stTask->master)->name;
+                    $item->stuck->task = $stTask;
                     // dd ($item->stuck);
                 }
             }
@@ -108,10 +113,10 @@ class ApiController extends Controller
     }
 
     public function taskAction(Request $request)
-    // {action: "completed", taskId: 937}
-    // detailitem.js:42 {action: "pause", taskId: 937}
-    // detailitem.js:42 {action: "alert", taskId: 937}
-    // detailitem.js:42 {action: "empty", taskId: 937
+        // {action: "completed", taskId: 937}
+        // detailitem.js:42 {action: "pause", taskId: 937}
+        // detailitem.js:42 {action: "alert", taskId: 937}
+        // detailitem.js:42 {action: "empty", taskId: 937
     {
         if ($request->has('data') && isset($request->data['action']) && isset($request->data['taskId'])) {
             return response()->json(CalendarController::newTaskStatus($request->data['taskId'], $request->data['action'], $request), 200);
@@ -123,5 +128,25 @@ class ApiController extends Controller
         if ($request->has('data')) {
             return response()->json($request->data, 200);
         } else return response()->json($request->all(), 400);
+    }
+
+//возвращает обратно массив задач, если они есть в Stuck
+    static function getStuckTasks($tasks)
+    {
+        $result = collect([]);
+        foreach ($tasks as $task){
+            foreach (StuckDeals::all() as $item) {
+                $stuckTask = Tasks::find($item->taskId);
+                if ($task->dealid === $stuckTask->dealid && $task->deal===$stuckTask->deal && $task->line === $stuckTask->line) {
+                    $result->push($task);
+                    continue 1;
+                }
+            }
+        }
+//        foreach (StuckDeals::all() as $item) {
+//            $stuckTask = Tasks::find($item->taskId);
+//            return $tasks->where('dealid', $stuckTask->dealid)->where('deal', $stuckTask->deal)->where('line', $stuckTask->line);
+//        }
+        return $result;
     }
 }

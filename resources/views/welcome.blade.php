@@ -60,10 +60,13 @@
             </div>
             <div>
                 <h2>Просроченные задачи</h2>
+                <input type="checkbox" id="overtask_nostuck" onchange="overtaskNostuck()">
+                <label for="overtask_nostuck">Скрыть задачи в "замороженных" продуктах</label>
+
                 <ul class="over-tasks">
                     @foreach ($overTasks->sortBy('master') as $itemTask)
-                        <li class="task-status-{{ $itemTask->status }}"
-                            onclick="modalFromTask({{ json_encode($itemTask) }})">
+                        <li class="task-status-{{ $itemTask->status }} overtasks"
+                            onclick="modalFromTask({{ json_encode($itemTask) }})" data-stuck="{{$itemTask->stuck}}">
                         <span class="avatar"
                               style="background-image: url({{ $Users->find($itemTask->master)->avatar ?? '' }})"></span>
                             <span>{{ $itemTask->name }}</span>
@@ -83,4 +86,20 @@
 
     @include ('modal')
 </div>
+<script>
+    function overtaskNostuck(){
+        let elems = document.querySelectorAll('.overtasks')
+        elems.forEach(el=>{
+            if (event.target.checked) {
+                if  (el.getAttribute('data-stuck')==="1"){
+                    el.classList.add('hide')
+                }
+            } else {
+                if  (el.getAttribute('data-stuck')==="1" && el.classList.contains('hide')){
+                    el.classList.remove('hide')
+                }
+            }
+        })
+    }
+</script>
 <script src="js/general.js"></script>
